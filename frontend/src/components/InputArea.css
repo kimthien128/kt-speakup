@@ -1,0 +1,66 @@
+.input-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    background-color: #f0f0f0;
+    border-top: 1px solid #ccc;
+}
+select,
+button,
+textarea {
+    margin: 10px;
+}
+
+.record-btn {
+    background-color: #ff4444;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.record-btn:hover {
+    background-color: #cc0000;
+}
+
+textarea {
+    width: 80%;
+    max-height: 100px;
+    overflow-y: auto;
+}
+
+.latest-response {
+    width: 80%;
+    padding: 10px;
+    background-color: #d0d0d0;
+    border-radius: 5px;
+}
+
+.chat-history {
+    width: 80%;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.chat-bubble {
+    background-color: #e0e0e0;
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.send-btn {
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+}
+
+.send-btn:hover {
+    background-color: #45a049;
+}

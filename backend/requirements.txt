@@ -1,0 +1,11 @@
+flask
+flask-cors
+vosk
+ffmpeg-python
+requests
+python-dotenv
+assemblyai
+gtts
+transformers
+torch==2.2.1+cpu
+huggingface_hub

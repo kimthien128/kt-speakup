@@ -32,7 +32,6 @@ nav {
 
 /* Chat Area */
 .chat-area {
-    height: 400px;
     background-color: #f1f5ff;
     padding: 20px;
     overflow-y: auto; /* cuộn nếu nhiều tin nhắn */
