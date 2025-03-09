@@ -1,11 +1,12 @@
-flask
-flask-cors
+fastapi
+uvicorn  # Server ASGI để chạy FastAPI
+python-multipart # Xử lý file upload
 vosk
 ffmpeg-python
-requests
+requests #Dùng để gọi API Hugging Face (blenderbot)
 python-dotenv
 assemblyai
 gtts
 transformers
-torch==2.2.1+cpu
+torch
 huggingface_hub

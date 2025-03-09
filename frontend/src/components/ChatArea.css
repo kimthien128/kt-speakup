@@ -1,0 +1,33 @@
+/* Chat Area */
+.chat-area {
+    background-color: #f1f5ff;
+    padding: 20px;
+    overflow-y: auto; /* cuộn nếu nhiều tin nhắn */
+    flex: 1;
+}
+
+.message {
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 10px;
+    max-width: 70%;
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    width: fit-content;
+    word-wrap: break-word;
+}
+
+.message span {
+    white-space: nowrap; /* Giữ từ nguyên vẹn, không ngắt giữa chừng */
+}
+
+.system {
+    background-color: #fff;
+    text-align: left;
+}
+
+.user {
+    background-color: #85c3e8;
+    color: white;
+    text-align: right;
+    margin-left: auto; /* Đẩy sang phải */
+}

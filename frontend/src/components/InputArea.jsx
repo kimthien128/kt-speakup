@@ -1,14 +1,16 @@
 import React, {useState, useRef} from 'react';
+import ChatArea from './ChatArea';
 import './InputArea.css';
 
 function InputArea() {
     const [transcript, setTranscript] = useState('');
     const [response, setResponse] = useState('');
+    const [suggestions, setSuggestions] = useState([]);
+    const [chatHistory, setChatHistory] = useState([]);
     const [isRecording, setIsRecording] = useState(false);
     const [sttMethod, setSttMethod] = useState('vosk');
     const [ttsMethod, setTtsMethod] = useState('gtts');
     const [generateMethod, setGenerateMethod] = useState('blenderbot');
-    const [chatHistory, setChatHistory] = useState([]);
     const mediaRecorderRef = useRef(null);
 
     const startRecording = async () => {
@@ -18,61 +20,25 @@ function InputArea() {
             mediaRecorderRef.current.start();
             setIsRecording(true);
 
+            // Ghi âm theo từng đoạn 100ms để đảm bảo có dữ liệu
             mediaRecorderRef.current.ondataavailable = async (e) => {
-                const audioBlob = new Blob([e.data], {type: 'audio/webm'});
+                const audioBlob = e.data; // Lấy trực tiếp từ event
+                // Gửi audioBlob tới /stt
                 try {
-                    // Gửi đến /stt (kèm method) để lấy transcript
                     const sttResponse = await fetch(`${import.meta.env.VITE_API_URL}/stt?method=${sttMethod}`, {
                         method: 'POST',
                         headers: {'Content-Type': 'audio/webm'},
                         body: audioBlob,
+                        credentials: 'include',
                     });
+                    if (!sttResponse.ok) {
+                        throw new Error(`STT failed with status: ${sttResponse.status}`);
+                    }
                     const sttData = await sttResponse.json();
-                    if (sttData.error) {
-                        setTranscript(`Error: ${sttData.error}`);
-                        setResponse('');
-                        return;
-                    }
-                    setTranscript(sttData.transcript);
-
-                    // Gửi transcript đến /generate để lấy phản hồi từ BlenderBot
-                    const generateResponse = await fetch(
-                        `${import.meta.env.VITE_API_URL}/generate?method=${generateMethod}`,
-                        {
-                            method: 'POST',
-                            headers: {'Content-Type': 'application/json'},
-                            body: JSON.stringify({transcript: sttData.transcript}),
-                        }
-                    );
-                    const generateData = await generateResponse.json();
-                    if (generateData.error) {
-                        setResponse(`Error: ${generateData.error}`);
-                        setChatHistory([...chatHistory, {text: `Error: ${generateData.error}`, audioPath: null}]);
-                    } else {
-                        setResponse(generateData.response);
-                        // Gửi đến /tts để phát âm thanh
-                        const ttsResponse = await fetch(`${import.meta.env.VITE_API_URL}/tts?method=${ttsMethod}`, {
-                            method: 'POST',
-                            headers: {'Content-Type': 'application/json'},
-                            body: JSON.stringify({text: generateData.response}),
-                        });
-                        if (!ttsResponse.ok) {
-                            throw new Error('TTS request failed');
-                        }
-                        const audioBlob = await ttsResponse.blob();
-                        const audioUrl = URL.createObjectURL(audioBlob);
-                        const audio = new Audio(audioUrl);
-                        audio.play();
-
-                        // Lưu lịch sử với tên file
-                        const filename = ttsResponse.headers.get('X-Audio-Filename');
-                        setChatHistory([...chatHistory, {text: generateData.response, audioPath: filename}]);
-                    }
+                    setTranscript(sttData.transcript || '');
                 } catch (err) {
                     console.log('Fetch error:', err);
                     setTranscript('Failed to process audio');
-                    setResponse('');
-                    setChatHistory([...chatHistory, {text: 'Failed to process audio', audioPath: null}]);
                 }
             };
 
@@ -91,67 +57,135 @@ function InputArea() {
         }
     };
 
-    const playAudio = (audioPath) => {
-        fetch(`${import.meta.env.VITE_API_URL}/audio/${audioPath}`)
-            .then((res) => {
-                if (!res.ok) {
-                    throw new Error(`Audio not found: ${res.status}`);
-                }
-                return res.blob();
-            })
-            .then((blob) => {
-                const audioUrl = URL.createObjectURL(blob);
-                new Audio(audioUrl).play();
-            })
-            .catch((err) => console.log('Error playing audio:', err));
+    const fetchSuggestions = async (baseText) => {
+        const suggestionPrompts = [`Short follow-up to: "${baseText}"`, `Short next question after: "${baseText}"`];
+        const newSuggestions = [];
+        for (const prompt of suggestionPrompts) {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/generate?method=${generateMethod}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({transcript: prompt}),
+                credentials: 'include',
+            });
+            const data = await res.json();
+            if (!data.error) newSuggestions.push(data.response);
+        }
+        setSuggestions(newSuggestions.slice(0, 2)); // Lấy 2 gợi ý
+    };
+
+    const handleSend = async () => {
+        if (!transcript.trim()) return; // Ngăn gửi nếu transcript rỗng
+        console.log('Sending transcript:', transcript);
+        // Thêm transcript vào chatHistory ngay lập tức để hiển thị lên khung chat
+        const newMessage = {user: transcript, ai: '...'};
+        setChatHistory([...chatHistory, newMessage]);
+        setTranscript(''); // Xóa textarea
+        try {
+            // Gửi transcript đến /generate để lấy phản hồi từ AI
+            const generateResponse = await fetch(`${import.meta.env.VITE_API_URL}/generate?method=${generateMethod}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({transcript}),
+                credentials: 'include',
+            });
+            if (!generateResponse.ok) throw new Error('Generate failed');
+            const generateData = await generateResponse.json();
+            if (generateData.error) throw new Error(generateData.error);
+
+            // Gửi đến /tts để phát âm thanh
+            const ttsResponse = await fetch(`${import.meta.env.VITE_API_URL}/tts?method=${ttsMethod}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({text: generateData.response}),
+                credentials: 'include',
+            });
+            if (!ttsResponse.ok) {
+                throw new Error('TTS request failed');
+            }
+            const audioBlob = await ttsResponse.blob();
+            const audioUrl = URL.createObjectURL(audioBlob);
+            const audio = new Audio(audioUrl);
+            audio.play();
+
+            // Lưu lịch sử với tên file
+            const filename = ttsResponse.headers.get('X-Audio-Filename');
+            // Cập nhật phản hồi AI vào tin nhắn cuối
+            setChatHistory((prev) => {
+                const updated = [...prev];
+                updated[updated.length - 1] = {
+                    user: transcript,
+                    ai: generateData.response || 'No response',
+                    audioPath: filename || '',
+                };
+                return updated;
+            });
+
+            // Lấy gợi ý dựa trên response
+            await fetchSuggestions(generateData.response);
+        } catch (err) {
+            console.log('Error:', err);
+            setChatHistory((prev) => {
+                const updated = [...prev];
+                updated[updated.length - 1] = {user: transcript, ai: `Error: ${err.message}`};
+                return updated;
+            });
+        }
+    };
+
+    const handleWordClick = (word, event) => {
+        console.log(`Clicked word: ${word}`); // Xử lý thêm nếu cần
     };
 
     return (
-        <footer className="input-area">
-            {/* Select cho STT */}
-            <select value={sttMethod} onChange={(e) => setSttMethod(e.target.value)}>
-                <option value="vosk">Vosk (Local)</option>
-                <option value="assemblyai">AssemblyAI (API)</option>
-            </select>
+        <>
+            <ChatArea chatHistory={chatHistory} onWordClick={handleWordClick} />
+            <footer className="input-area">
+                {/* Select cho STT */}
+                <select value={sttMethod} onChange={(e) => setSttMethod(e.target.value)}>
+                    <option value="assemblyai">AssemblyAI (API)</option>
+                    <option value="vosk">Vosk (Local)</option>
+                </select>
 
-            {/* Select cho generate models */}
-            <select value={generateMethod} onChange={(e) => setGenerateMethod(e.target.value)}>
-                <option value="blenderbot">BlenderBot</option>
-                <option value="zephyr">Zephyr</option>
-                <option value="distilgpt2">DistilGPT2</option>
-            </select>
+                {/* Select cho generate models */}
+                <select value={generateMethod} onChange={(e) => setGenerateMethod(e.target.value)}>
+                    <option value="blenderbot">BlenderBot (API)</option>
+                    <option value="distilgpt2">DistilGPT2 (Local)</option>
+                </select>
 
-            {/* Select cho TTS */}
-            <select value={ttsMethod} onChange={(e) => setTtsMethod(e.target.value)}>
-                <option value="gtts">gTTS (Google)</option>
-                <option value="piper">Piper (Local)</option>
-            </select>
+                {/* Select cho TTS */}
+                <select value={ttsMethod} onChange={(e) => setTtsMethod(e.target.value)}>
+                    <option value="gtts">gTTS (Google)</option>
+                    <option value="piper">Piper (Local)</option>
+                </select>
 
-            <button className="record-btn" onClick={isRecording ? stopRecording : startRecording}>
-                <i className={`fas ${isRecording ? 'fa-stop' : 'fa-microphone'}`}></i>
-            </button>
+                <div className="suggestions">
+                    <h4>Suggestions:</h4>
+                    {suggestions.map((suggestion, index) => (
+                        <p key={index}>
+                            {suggestion.split(' ').map((word, i) => (
+                                <span key={i} onDoubleClick={(e) => handleWordClick(word, e)}>
+                                    {word}&nbsp;
+                                </span>
+                            ))}
+                        </p>
+                    ))}
+                </div>
 
-            <textarea
-                value={transcript}
-                onChange={(e) => setTranscript(e.target.value)}
-                placeholder="Your speech here..."
-            />
+                <button className="record-btn" onClick={isRecording ? stopRecording : startRecording}>
+                    <i className={`fas ${isRecording ? 'fa-stop' : 'fa-microphone'}`}></i>
+                </button>
 
-            <div className="latest-response">{response ? `AI: ${response}` : ''}</div>
+                <textarea
+                    value={transcript}
+                    onChange={(e) => setTranscript(e.target.value)}
+                    placeholder="Your speech here..."
+                />
 
-            <div className="chat-history">
-                {chatHistory.map((msg, index) => (
-                    <div key={index} className="chat-bubble">
-                        AI: {msg.text}
-                        {msg.audioPath && (
-                            <button onClick={() => playAudio(msg.audioPath)}>Play {msg.audioPath}</button>
-                        )}
-                    </div>
-                ))}
-            </div>
-
-            <button className="send-btn">Send</button>
-        </footer>
+                <button className="send-btn" onClick={handleSend}>
+                    Send
+                </button>
+            </footer>
+        </>
     );
 }
 

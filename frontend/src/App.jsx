@@ -13,7 +13,6 @@ function App() {
             <div className="main-container">
                 <HistorySidebar />
                 <div className="content">
-                    <ChatArea />
                     <InputArea />
                 </div>
                 <VocabSidebar />
