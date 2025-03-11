@@ -1,6 +1,7 @@
 fastapi
 uvicorn  # Server ASGI để chạy FastAPI
 python-multipart # Xử lý file upload
+httpx
 vosk
 ffmpeg-python
 requests #Dùng để gọi API Hugging Face (blenderbot)
