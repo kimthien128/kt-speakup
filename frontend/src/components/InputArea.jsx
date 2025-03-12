@@ -149,7 +149,7 @@ function InputArea() {
                 {/* Select cho generate models */}
                 <select value={generateMethod} onChange={(e) => setGenerateMethod(e.target.value)}>
                     <option value="blenderbot">BlenderBot (API)</option>
-                    <option value="distilgpt2">DistilGPT2 (Local)</option>
+                    <option value="gemini">Gemini (Google)</option>
                 </select>
 
                 {/* Select cho TTS */}

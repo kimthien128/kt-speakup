@@ -77,7 +77,7 @@ function ChatArea({chatHistory, onWordClick}) {
 
     // Dùng trực tiếp phát âm từ api
     const playWord = (audioUrl) => {
-        console.log(tooltip);
+        // console.log(tooltip);
         if (audioUrl && typeof audioUrl === 'string') {
             console.log('Attempting to play audio from URL:', audioUrl);
             if (audioRef.current) {

@@ -55,7 +55,7 @@ async def generate(request: Request):
             if generated_text.startswith(prompt):
                 generated_text = generated_text[len(prompt):].strip()
                 
-        # elif method == 'distilgpt2':
+        # elif method == 'gemini':
         #     prompt = f"Respond briefly to: {transcript}\nResponse: "
         #     inputs = tokenizer(prompt, return_tensors="pt")
         #     with torch.no_grad():

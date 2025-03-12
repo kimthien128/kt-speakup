@@ -1,35 +1,34 @@
 from fastapi import APIRouter, Request
-import json
-import os
-from utils import BASE_DIR
+from database import db
 
 router = APIRouter()
-
-VOCAB_FILE = os.path.join(BASE_DIR, "vocab.json")
 
 @router.post("")
 async def add_vocab(request: Request):
     try:
         data = await request.json()
         word_data = {
-            "word" : data.get("word"),
-            "definition": data.get("definition"),
-            "phonetic": data.get("phonetic"),
+            "word" : data.get("word", ""),
+            "definition": data.get("definition", "No definition found"),
+            "phonetic": data.get("phonetic", "N/A"),
             "audio": data.get("audio", ""),
             "topic": data.get("topic", "Daily Life")
         }
-        # Lưu vào file JSON (hoặc database sau này)
-        if os.path.exists(VOCAB_FILE):
-            with open(VOCAB_FILE, 'r', encoding='utf-8') as f:
-                vocab_list = json.load(f)
-        else:
-            vocab_list = []
-            
-        vocab_list.append(word_data)
-        with open(VOCAB_FILE, 'w', encoding='utf-8') as f:
-            json.dump(vocab_list, f, indent=4)
-            
+        result = await db.vocab.insert_one(word_data)
         return {"message" : f'Added {word_data['word']} to vocab'}
+        
     except Exception as e:
         print(f"Error adding vocab: {e}")
         return {'error': 'Failed to add vocab'}, 500
+    
+@router.get("")
+async def get_vocab():
+    try:
+        vocab_list = []
+        async for vocab in db.vocab.find():
+            vocab["id"] = str(vocab["_id"]) # Chuyển ObjectId thành string
+            vocab_list.append(vocab)
+        return vocab_list
+    except Exception as e:
+        print(f"Error fetching vocab: {e}")
+        return {"error": "Failed to fetch vocab"}, 500
