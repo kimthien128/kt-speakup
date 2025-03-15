@@ -1,16 +1,49 @@
 import React, {useState, useRef, useEffect} from 'react';
 import './ChatArea.css';
 
-function ChatArea({chatHistory, onWordClick}) {
+function ChatArea({chatId, onWordClick, onSendMessage}) {
     const [tooltip, setTooltip] = useState(null);
+    const [chatHistory, setChatHistory] = useState([]);
     const audioRef = useRef(null); // Ref để quản lý audio element
     const tooltipRef = useRef(null); // Ref để tham chiếu vùng tooltip
+
+    // Lấy lịch sử chat từ backend khi chatId thay đổi
+    useEffect(() => {
+        if (chatId) {
+            fetch(`${import.meta.env.VITE_API_URL}/chats/${chatId}/history`, {credentials: 'include'})
+                .then((res) => res.json())
+                .then((data) => setChatHistory(data.history || []))
+                .catch((err) => console.error('Error fetching history:', err));
+        } else {
+            setChatHistory([]); // Xóa lịch sử khi không có chatId
+        }
+    }, [chatId]);
+
+    // Gán onSendMessage để cập nhật chatHistory ngay lập tức
+    useEffect(() => {
+        if (onSendMessage) {
+            onSendMessage.current = (message) => {
+                setChatHistory((prev) => {
+                    const index = prev.findIndex((msg) => msg.user === message.user && msg.ai === '...');
+                    if (index !== -1) {
+                        // Nếu tìm thấy tin nhắn tạm (ai: '...'), thay thế nó
+                        const updatedHistory = [...prev];
+                        updatedHistory[index] = message;
+                        return updatedHistory;
+                    }
+                    // Nếu không, thêm mới (trường hợp tin nhắn đầu tiên)
+                    return [...prev, message];
+                });
+            };
+        }
+    }, [onSendMessage]);
 
     // Loại bỏ dấu câu ở đầu và cuối từ
     const cleanWord = (word) => {
         return word.replace(/^[^a-zA-Z']+|[^a-zA-Z']+$/g, '');
     };
 
+    // Xử lý double-click từ
     const handleWordClick = (word, event) => {
         const cleanedWord = cleanWord(word);
         if (!cleanedWord) return;
@@ -79,7 +112,7 @@ function ChatArea({chatHistory, onWordClick}) {
     const playWord = (audioUrl) => {
         // console.log(tooltip);
         if (audioUrl && typeof audioUrl === 'string') {
-            console.log('Attempting to play audio from URL:', audioUrl);
+            console.log('Playing audio from URL:', audioUrl);
             if (audioRef.current) {
                 audioRef.current.src = audioUrl;
                 audioRef.current.play().catch((err) => {
@@ -109,17 +142,17 @@ function ChatArea({chatHistory, onWordClick}) {
     // };
 
     const addToVocab = async () => {
-        if (!tooltip) return;
+        if (!tooltip || !chatId) return;
         try {
             const res = await fetch(`${import.meta.env.VITE_API_URL}/add-vocab`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({...tooltip, topic: 'Daily Life'}), // Topic mặc định, sau này làm động
+                body: JSON.stringify({...tooltip, chat_id: chatId}), // Backend tự lấy topic
                 credentials: 'include',
             });
             if (!res.ok) throw new Error('Failed to add vocab');
             console.log(`Added ${tooltip.word} to vocab`);
-            // setTooltip(null);
+            // setTooltip(null); // Tắt tooltip
         } catch (err) {
             console.error('Error adding to vocab:', err);
         }
@@ -145,25 +178,29 @@ function ChatArea({chatHistory, onWordClick}) {
 
     return (
         <main className="chat-area">
-            {chatHistory?.map((msg, index) => (
-                <div key={index} className="message-group">
-                    <div className="message user">
-                        {(msg.user || '').split(' ').map((word, i) => (
-                            <span key={i} onDoubleClick={(e) => handleWordClick(word, e)}>
-                                {word}&nbsp;
-                            </span>
-                        ))}
+            {chatHistory.length > 0 ? (
+                chatHistory.map((msg, index) => (
+                    <div key={index} className="message-group">
+                        <div className="message user">
+                            {(msg.user || '').split(' ').map((word, i) => (
+                                <span key={i} onDoubleClick={(e) => handleWordClick(word, e)}>
+                                    {word}&nbsp;
+                                </span>
+                            ))}
+                        </div>
+                        <div className="message system">
+                            {(msg.ai || '').split(' ').map((word, i) => (
+                                <span key={i} onDoubleClick={(e) => handleWordClick(word, e)}>
+                                    {word}&nbsp;
+                                </span>
+                            ))}
+                            {msg.audioPath && <button onClick={() => playAudio(msg.audioPath)}>Play</button>}
+                        </div>
                     </div>
-                    <div className="message system">
-                        {(msg.ai || '').split(' ').map((word, i) => (
-                            <span key={i} onDoubleClick={(e) => handleWordClick(word, e)}>
-                                {word}&nbsp;
-                            </span>
-                        ))}
-                        {msg.audioPath && <button onClick={() => playAudio(msg.audioPath)}>Play</button>}
-                    </div>
-                </div>
-            ))}
+                ))
+            ) : (
+                <p>No chat history available</p>
+            )}
             {tooltip && (
                 <div
                     ref={tooltipRef} // Gán ref cho vùng tooltip

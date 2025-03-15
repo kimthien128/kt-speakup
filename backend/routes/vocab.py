@@ -7,28 +7,29 @@ router = APIRouter()
 async def add_vocab(request: Request):
     try:
         data = await request.json()
+        chat_id = data.get("chat_id", "")
+        topic = "Common"
+        if chat_id:
+            chat = await db.chats.find_one({"_id": chat_id})
+            if chat:
+                topic = chat.get("title", "Common")
         word_data = {
             "word" : data.get("word", ""),
             "definition": data.get("definition", "No definition found"),
             "phonetic": data.get("phonetic", "N/A"),
             "audio": data.get("audio", ""),
-            "topic": data.get("topic", "Daily Life")
+            "topic": topic,
+            "chat_id": chat_id
         }
         result = await db.vocab.insert_one(word_data)
+        # Cập nhật vocab_ids trong chats
+        if chat_id:
+            await db.chats.update_one(
+                {"_id": chat_id},
+                {"$push": {"vocab_ids": str(result.inserted_id)}}
+            )
         return {"message" : f'Added {word_data['word']} to vocab'}
         
     except Exception as e:
         print(f"Error adding vocab: {e}")
         return {'error': 'Failed to add vocab'}, 500
-    
-@router.get("")
-async def get_vocab():
-    try:
-        vocab_list = []
-        async for vocab in db.vocab.find():
-            vocab["id"] = str(vocab["_id"]) # Chuyển ObjectId thành string
-            vocab_list.append(vocab)
-        return vocab_list
-    except Exception as e:
-        print(f"Error fetching vocab: {e}")
-        return {"error": "Failed to fetch vocab"}, 500

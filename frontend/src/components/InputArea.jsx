@@ -1,12 +1,9 @@
 import React, {useState, useRef} from 'react';
-import ChatArea from './ChatArea';
 import './InputArea.css';
 
-function InputArea() {
+function InputArea({chatId, onSendMessage}) {
     const [transcript, setTranscript] = useState('');
-    const [response, setResponse] = useState('');
     const [suggestions, setSuggestions] = useState([]);
-    const [chatHistory, setChatHistory] = useState([]);
     const [isRecording, setIsRecording] = useState(false);
     const [sttMethod, setSttMethod] = useState('vosk');
     const [ttsMethod, setTtsMethod] = useState('gtts');
@@ -76,10 +73,12 @@ function InputArea() {
     const handleSend = async () => {
         if (!transcript.trim()) return; // Ngăn gửi nếu transcript rỗng
         console.log('Sending transcript:', transcript);
-        // Thêm transcript vào chatHistory ngay lập tức để hiển thị lên khung chat
-        const newMessage = {user: transcript, ai: '...'};
-        setChatHistory([...chatHistory, newMessage]);
+
+        // Hiển thị tin nhắn người dùng ngay lập tức
+        const userMessage = {user: transcript, ai: '...'};
+        if (onSendMessage) onSendMessage(userMessage); // Hiển thị ngay trong ChatArea
         setTranscript(''); // Xóa textarea
+
         try {
             // Gửi transcript đến /generate để lấy phản hồi từ AI
             const generateResponse = await fetch(`${import.meta.env.VITE_API_URL}/generate?method=${generateMethod}`, {
@@ -91,12 +90,13 @@ function InputArea() {
             if (!generateResponse.ok) throw new Error('Generate failed');
             const generateData = await generateResponse.json();
             if (generateData.error) throw new Error(generateData.error);
+            const aiResponse = generateData.response;
 
             // Gửi đến /tts để phát âm thanh
             const ttsResponse = await fetch(`${import.meta.env.VITE_API_URL}/tts?method=${ttsMethod}`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({text: generateData.response}),
+                body: JSON.stringify({text: aiResponse}),
                 credentials: 'include',
             });
             if (!ttsResponse.ok) {
@@ -109,26 +109,32 @@ function InputArea() {
 
             // Lưu lịch sử với tên file
             const filename = ttsResponse.headers.get('X-Audio-Filename');
-            // Cập nhật phản hồi AI vào tin nhắn cuối
-            setChatHistory((prev) => {
-                const updated = [...prev];
-                updated[updated.length - 1] = {
-                    user: transcript,
-                    ai: generateData.response || 'No response',
-                    audioPath: filename || '',
-                };
-                return updated;
+
+            // Lưu vào backend /chats/{chat_id}/history
+            const historyResponse = await fetch(`${import.meta.env.VITE_API_URL}/chats/${chatId}/history`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({user: transcript, ai: aiResponse, audioPath: filename}),
+                credentials: 'include',
             });
+            if (!historyResponse.ok) {
+                const errorData = await historyResponse.json();
+                console.log('History response error:', errorData);
+                throw new Error('Failed to save history');
+            }
+            console.log('History response:', await historyResponse.json());
+
+            // Cập nhật ChatArea với phản hồi AI
+            const updatedMessage = {user: transcript, ai: aiResponse, audioPath: filename};
+            if (onSendMessage) onSendMessage(updatedMessage);
 
             // Lấy gợi ý dựa trên response
-            await fetchSuggestions(generateData.response);
+            await fetchSuggestions(aiResponse);
         } catch (err) {
-            console.log('Error:', err);
-            setChatHistory((prev) => {
-                const updated = [...prev];
-                updated[updated.length - 1] = {user: transcript, ai: `Error: ${err.message}`};
-                return updated;
-            });
+            console.log('Error in handleSend:', err);
+            // Cập nhật với lỗi nếu cần
+            const errorMessage = {user: transcript, ai: 'Error processing response'};
+            if (onSendMessage) onSendMessage(errorMessage);
         }
     };
 
@@ -138,7 +144,6 @@ function InputArea() {
 
     return (
         <>
-            <ChatArea chatHistory={chatHistory} onWordClick={handleWordClick} />
             <footer className="input-area">
                 {/* Select cho STT */}
                 <select value={sttMethod} onChange={(e) => setSttMethod(e.target.value)}>
@@ -162,11 +167,15 @@ function InputArea() {
                     <h4>Suggestions:</h4>
                     {suggestions.map((suggestion, index) => (
                         <p key={index}>
-                            {suggestion.split(' ').map((word, i) => (
-                                <span key={i} onDoubleClick={(e) => handleWordClick(word, e)}>
-                                    {word}&nbsp;
-                                </span>
-                            ))}
+                            {suggestion && typeof suggestion === 'string' ? (
+                                suggestion.split(' ').map((word, i) => (
+                                    <span key={i} onDoubleClick={(e) => handleWordClick(word, e)}>
+                                        {word}&nbsp;
+                                    </span>
+                                ))
+                            ) : (
+                                <span>No suggestion available</span>
+                            )}
                         </p>
                     ))}
                 </div>

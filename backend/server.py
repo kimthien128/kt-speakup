@@ -23,6 +23,7 @@ from routes.tts import router as tts_router
 from routes.audio import router as audio_router
 from routes.word_info import router as word_info_router
 from routes.vocab import router as vocab_router
+from routes.chats import router as chats_router
 from utils import clean_cache, CACHE_DIR, HF_API_URL
 
 # Thư mục cache nếu chưa có
@@ -36,6 +37,7 @@ app.include_router(tts_router, prefix='/tts')
 app.include_router(audio_router, prefix='/audio')
 app.include_router(word_info_router, prefix='/word-info')
 app.include_router(vocab_router, prefix='/add-vocab')
+app.include_router(chats_router)
 
 # Sự kiện khởi động
 @app.on_event("startup")
