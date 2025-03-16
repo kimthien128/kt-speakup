@@ -11,12 +11,14 @@
     },
     "dependencies": {
         "@fortawesome/fontawesome-free": "^6.7.2",
+        "axios": "^1.8.3",
         "cors": "^2.8.5",
         "deepspeech": "^0.9.3",
         "express": "^4.21.2",
         "ffmpeg.js": "^4.2.9003",
         "react": "^19.0.0",
-        "react-dom": "^19.0.0"
+        "react-dom": "^19.0.0",
+        "react-router-dom": "^7.3.0"
     },
     "devDependencies": {
         "@eslint/js": "^9.21.0",

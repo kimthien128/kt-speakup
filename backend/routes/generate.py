@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Request
 import requests
-import torch
 import json
 import time
+import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from utils import HF_API_KEY, HF_API_URL
 

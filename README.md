@@ -1,3 +1,7 @@
+## Cài đặt từ file requirements.txt
+
+pip install -r requirements.txt
+
 ## Vosk
 
 -   Tải model vosk-model-en-us-0.22-lgraph (có thẻ chọn model khác): https://alphacephei.com/vosk/models
@@ -15,3 +19,5 @@
 ## distilgpt2
 
 -   huggingface-cli download distilgpt2
+
+## download mongodb compass

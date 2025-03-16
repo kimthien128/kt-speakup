@@ -24,13 +24,15 @@ from routes.audio import router as audio_router
 from routes.word_info import router as word_info_router
 from routes.vocab import router as vocab_router
 from routes.chats import router as chats_router
-from utils import clean_cache, CACHE_DIR, HF_API_URL
+from routes.auth import router as auth_router
+from utils import clean_cache, CACHE_DIR
 
 # Thư mục cache nếu chưa có
 if not os.path.exists(CACHE_DIR):
     os.makedirs(CACHE_DIR)
 
 # Đăng ký các route
+app.include_router(auth_router)
 app.include_router(stt_router, prefix='/stt')
 app.include_router(generate_router, prefix='/generate')
 app.include_router(tts_router, prefix='/tts')
@@ -47,4 +49,4 @@ async def startup_event():
 if __name__ == '__main__':
     # Test in ra giá trị
     import uvicorn
-    uvicorn.run(app, host='0.0.0.0', port=3000)
+    uvicorn.run(app, host='0.0.0.0', port=8000)
