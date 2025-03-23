@@ -12,7 +12,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=['X-Audio-Filename']
+    expose_headers=['X-Audio-Filename', 'X-New-Token'],
 )
 # Load biến môi trường
 load_dotenv()

@@ -4,6 +4,7 @@
     padding: 20px;
     overflow-y: auto; /* cuộn nếu nhiều tin nhắn */
     flex: 1;
+    height: 70vh;
 }
 
 .message-group {

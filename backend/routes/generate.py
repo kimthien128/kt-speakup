@@ -1,80 +1,149 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, HTTPException, Depends
+from llama_cpp import Llama
+from utils import OPENAI_API_KEY, GOOGLE_API_KEY
+from routes.auth import UserInDB, get_current_user
+from database import db
+from bson import ObjectId
 import requests
-import json
-import time
-import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM
-from utils import HF_API_KEY, HF_API_URL
+import google.generativeai as genai
 
 router = APIRouter()
 
-# tokenizer = AutoTokenizer.from_pretrained("distilgpt2")
-# model_distilgpt2 = AutoModelForCausalLM.from_pretrained("distilgpt2")
+# Khởi tạo mô hình Mistral-7B GGUF một lần khi khởi động
+MODEL_PATH = "backend/models/mistral-7b-instruct-v0.1.Q4_K_M.gguf"
+llm = Llama(
+    model_path=MODEL_PATH,
+    n_ctx=4096, # Độ dài ngữ cảnh tối đa
+    n_gpu_layers=0,  # Offload sang GPU nếu có CUDA, nếu không thì 0
+    chat_format="mistral-instruct", # Chỉ định định dạng chat của Mistral
+    verbose=True
+)
+
+#Cấu hình OpenAI
+OPENAI_API_URL = "https://api.openai.com/v1/chat/completions"
+
+#Cấu hình Gemini API
+genai.configure(api_key=GOOGLE_API_KEY)
+# Khởi tạo model một lần để dùng cho tất cả các request
+model = genai.GenerativeModel(
+    "gemini-1.5-flash",
+    generation_config=genai.types.GenerationConfig(
+        max_output_tokens=20, # Giới hạn khoảng 20 token (~1 câu ngắn)
+        temperature=0.7 # Điều chỉnh độ sáng tạo
+    )
+    )
 
 @router.post('')
-async def generate(request: Request):
+async def generate(request: Request, current_user: UserInDB = Depends(get_current_user)):
     try:
         data = await request.json()
         transcript = data.get('transcript', '')
-        print('Received transcript:', transcript)
+        chat_id = data.get('chat_id', '') # Lấy chat_id từ request để truy xuất history
+        print(f'Received request - transcript: "{transcript}", chat_id: "{chat_id}"')
+        
         if not transcript:
-            return {'error':'No transcript provided'}, 400
+            raise HTTPException(status_code=400, detail="No transcript provided")
+        if not chat_id:
+            raise HTTPException(status_code=400, detail="No chat_id provided")
+        
+        # Kiểm tra chat_id hợp lệ và lấy lịch sử từ MongoDB
+        if not ObjectId.is_valid(chat_id):
+            raise HTTPException(status_code=400, detail="Invalid chat ID")
+        chat = await db.chats.find_one({"_id": ObjectId(chat_id), "user_id": current_user.id})
+        if not chat:
+            raise HTTPException(status_code=404, detail="Chat not found or not owned by user")
         
         # Lấy method từ query parameter
-        method = request.query_params.get('method', 'blenderbot')
+        method = request.query_params.get('method', 'gemini')
         
         # Chọn URL API dựa trên method
-        if method == 'blenderbot':
-            if not HF_API_URL or not HF_API_KEY:
-                print("Error: HF_API_URL or HF_API_KEY is not set")
-                return {"error": "Server configuration error: Missing API credentials"}, 500
+        if method == 'chatgpt':
+            history = chat.get('history', [])
+            messages = [
+                {"role": "system", "content": "You are a chatbot assisting in learning English. Reply with one short sentence."}
+            ]
+            for msg in history:
+                messages.append({"role": "user", "content": msg["user"]})
+                if msg.get("ai"):
+                    messages.append({"role": "assistant", "content": msg["ai"]})
+            messages.append({"role":"user", "content":transcript})
+            print(f'ChatGPT messages: {messages}')
             
-            api_url = f'{HF_API_URL}/facebook/blenderbot-400M-distill'
-            prompt = f"Answer this question: {transcript}" # Thêm prompt để hướng dẫn AI trả lời liên quan đến transcript
-            headers = {"Authorization": f"Bearer {HF_API_KEY}"}
-            payload = {"inputs": prompt, "parameters": {"max_length": 50}}
-            
-            # Thử gọi API vài lần nếu lỗi 503 (lỗi tạm thời từ phía API)
-            for attempt in range(2):
-                response = requests.post(api_url, headers=headers, json=payload)
-                if response.status_code == 200:
-                    break
-                print(f'Attempt {attempt + 1} - Hugging Face API error: {response.text}')
-                if response.status_code != 503:
-                    break
-                time.sleep(1) # Chờ 1 giây trước khi thử lại
-            
+            # Gọi OpenAI API
+            headers = {
+                "Authorization": f"Bearer {OPENAI_API_KEY}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "model": "gpt-3.5-turbo",
+                "messages": messages,
+                "max_tokens": 20,
+                "temperature": 0.7
+            }
+            response = requests.post(OPENAI_API_URL, headers=headers, json=payload)
             if response.status_code != 200:
-                print(f'Hugging Face API error: {response.text}')
-                return {'error': 'Failed to generate response'}, 500
+                print(f"OpenAI API error: {response.status_code} - {response.text}")
+                raise HTTPException(status_code=503, detail="OpenAI API unavailable")
             
-            raw_response = response.json()
-            print(f'Raw API response: {json.dumps(raw_response)}')
+            result = response.json()
+            generated_text = result["choices"][0]["message"]["content"].strip()
             
-            generated_text = raw_response[0].get('generated_text','').strip()
-            if generated_text.startswith(prompt):
-                generated_text = generated_text[len(prompt):].strip()
+        elif method == 'mistral':
+            history = chat.get('history', [])
+            messages = [
+                {"role": "system", "content": "You are a chatbot assisting in learning English. Reply with one short sentence."}
+            ]
+            for msg in history:
+                messages.append({"role": "user", "content": msg["user"]})
+                if msg.get("ai"):
+                    messages.append({"role": "assistant", "content": msg["ai"]})
+            messages.append({"role": "user", "content": transcript})
+            print(f'Mistral messages: {messages}')
+            
+            # Gọi Mistral-7B GGUF
+            response = llm.create_chat_completion(
+                messages=messages,
+                max_tokens=20,
+                temperature=0.7
+            )
+            generated_text = response["choices"][0]["message"]["content"].strip()
                 
-        # elif method == 'gemini':
-        #     prompt = f"Respond briefly to: {transcript}\nResponse: "
-        #     inputs = tokenizer(prompt, return_tensors="pt")
-        #     with torch.no_grad():
-        #         outputs = model_distilgpt2.generate(
-        #             **inputs, 
-        #             max_new_tokens=20, 
-        #             no_repeat_ngram_size=2)
-        #     generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
-        #     if generated_text.startswith(prompt):
-        #         generated_text = generated_text[len(prompt):].strip()
+        elif method == 'gemini':
+            # Lấy lịch sử chat từ MongoDB và chuyển thành định dạng glm.Content
+            history = chat.get('history', [])
+            chat_history = [
+                # Thêm tin nhắn "system" giả lập vào đầu lịch sử
+                {"role": "user", "parts": [{"text": "You are a chatbot assisting me in learning English. Please respond with one short sentence."}]},
+                {"role": "model", "parts": [{"text": "Understood, I'll keep my responses short!"}]}
+            ]
+            for msg in history:
+                chat_history.append({"role": "user", "parts": [{"text": msg["user"]}]})
+                if msg.get("ai"):
+                    chat_history.append({"role": "model", "parts": [{"text": msg["ai"]}]})
+            print(f'Chat history loaded: {chat_history}')
+            
+            # Khởi tạo ChatSession với lịch sử
+            chat_session = model.start_chat(
+                history=chat_history
+                )
+            
+            # Gửi tin nhắn mới và lấy phản hồi
+            response = chat_session.send_message(transcript)
+            generated_text = response.text.strip()
         else:
-            return {'error': f'Unsupported generate method: {method}'}, 400
+            raise HTTPException(status_code=400, detail=f"Unsupported generate method: {method}")
         
-        # Nếu không có nội dung sau khi cắt, dùng fallback
+        # Fallback nếu không có nội dung
         if not generated_text:
             generated_text = "I don't know what to say!"
             
         print(f'{method.capitalize()} response: {generated_text}')
         return {'response': generated_text}
+    except HTTPException as e:
+        raise e
+    except genai.types.generation_types.BrokenResponseError as e:
+        print(f'Model API error: {e}')
+        raise HTTPException(status_code=400, detail=f"Model API error: {str(e)}")
     except Exception as e:
         print(f'Error: {e}')
-        return {'error': str(e)}, 500
+        raise HTTPException(status_code=500, detail=f"Failed to generate response: {str(e)}")

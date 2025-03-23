@@ -1,14 +1,17 @@
 import React, {useState, useRef} from 'react';
+import axios from '../axiosInstance';
+import useAudioPlayer from '../hooks/useAudioPlayer';
 import './InputArea.css';
 
-function InputArea({chatId, onSendMessage}) {
+function InputArea({chatId, setChatId, onSendMessage, refreshChats}) {
     const [transcript, setTranscript] = useState('');
     const [suggestions, setSuggestions] = useState([]);
     const [isRecording, setIsRecording] = useState(false);
     const [sttMethod, setSttMethod] = useState('vosk');
     const [ttsMethod, setTtsMethod] = useState('gtts');
-    const [generateMethod, setGenerateMethod] = useState('blenderbot');
+    const [generateMethod, setGenerateMethod] = useState('mistral');
     const mediaRecorderRef = useRef(null);
+    const {playSound, audioRef} = useAudioPlayer();
 
     const startRecording = async () => {
         try {
@@ -22,19 +25,14 @@ function InputArea({chatId, onSendMessage}) {
                 const audioBlob = e.data; // Lấy trực tiếp từ event
                 // Gửi audioBlob tới /stt
                 try {
-                    const sttResponse = await fetch(`${import.meta.env.VITE_API_URL}/stt?method=${sttMethod}`, {
-                        method: 'POST',
-                        headers: {'Content-Type': 'audio/webm'},
-                        body: audioBlob,
-                        credentials: 'include',
+                    const sttResponse = await axios.post(`/stt?method=${sttMethod}`, audioBlob, {
+                        headers: {
+                            'Content-Type': 'audio/webm',
+                        },
                     });
-                    if (!sttResponse.ok) {
-                        throw new Error(`STT failed with status: ${sttResponse.status}`);
-                    }
-                    const sttData = await sttResponse.json();
-                    setTranscript(sttData.transcript || '');
+                    setTranscript(sttResponse.data.transcript || '');
                 } catch (err) {
-                    console.log('Fetch error:', err);
+                    console.log('Fetch error:', err.response?.data || err.message);
                     setTranscript('Failed to process audio');
                 }
             };
@@ -58,14 +56,20 @@ function InputArea({chatId, onSendMessage}) {
         const suggestionPrompts = [`Short follow-up to: "${baseText}"`, `Short next question after: "${baseText}"`];
         const newSuggestions = [];
         for (const prompt of suggestionPrompts) {
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/generate?method=${generateMethod}`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({transcript: prompt}),
-                credentials: 'include',
-            });
-            const data = await res.json();
-            if (!data.error) newSuggestions.push(data.response);
+            try {
+                const res = await axios.post(
+                    `/generate?method=${generateMethod}`,
+                    {transcript: prompt, chat_id: chatId},
+                    {
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    }
+                );
+                if (!res.data.error) newSuggestions.push(res.data.response);
+            } catch (err) {
+                console.error('Suggestion error:', err);
+            }
         }
         setSuggestions(newSuggestions.slice(0, 2)); // Lấy 2 gợi ý
     };
@@ -74,67 +78,77 @@ function InputArea({chatId, onSendMessage}) {
         if (!transcript.trim()) return; // Ngăn gửi nếu transcript rỗng
         console.log('Sending transcript:', transcript);
 
+        let currentChatId = chatId;
+        // Nếu chatId không hợp lệ, tạo chat mới trước
+        if (
+            !currentChatId ||
+            currentChatId === 'null' ||
+            currentChatId === 'undefined' ||
+            typeof currentChatId !== 'string'
+        ) {
+            try {
+                const res = await axios.post(`/chats`);
+                currentChatId = res.data.chat_id;
+                setChatId(currentChatId); // Cập nhật chatId và URL
+                if (refreshChats) await refreshChats(); // Cập nhật danh sách sau khi tạo chat
+            } catch (err) {
+                console.error('Error creating chat:', err.response?.data || err.message);
+                setTranscript('Error creating chat');
+                return;
+            }
+        }
+
         // Hiển thị tin nhắn người dùng ngay lập tức
         const userMessage = {user: transcript, ai: '...'};
-        if (onSendMessage) onSendMessage(userMessage); // Hiển thị ngay trong ChatArea
+        if (onSendMessage) {
+            onSendMessage(userMessage); // Gửi tin nhắn tạm ngay lập tức
+        }
+        const userInput = transcript;
         setTranscript(''); // Xóa textarea
 
         try {
             // Gửi transcript đến /generate để lấy phản hồi từ AI
-            const generateResponse = await fetch(`${import.meta.env.VITE_API_URL}/generate?method=${generateMethod}`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({transcript}),
-                credentials: 'include',
-            });
-            if (!generateResponse.ok) throw new Error('Generate failed');
-            const generateData = await generateResponse.json();
-            if (generateData.error) throw new Error(generateData.error);
-            const aiResponse = generateData.response;
+            const generateResponse = await axios.post(
+                `/generate?method=${generateMethod}`,
+                {transcript: userInput, chat_id: currentChatId},
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
+            if (generateResponse.data.error) throw new Error(generateResponse.data.error);
+            const aiResponse = generateResponse.data.response;
 
-            // Gửi đến /tts để phát âm thanh
-            const ttsResponse = await fetch(`${import.meta.env.VITE_API_URL}/tts?method=${ttsMethod}`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({text: aiResponse}),
-                credentials: 'include',
-            });
-            if (!ttsResponse.ok) {
-                throw new Error('TTS request failed');
-            }
-            const audioBlob = await ttsResponse.blob();
-            const audioUrl = URL.createObjectURL(audioBlob);
-            const audio = new Audio(audioUrl);
-            audio.play();
-
-            // Lưu lịch sử với tên file
-            const filename = ttsResponse.headers.get('X-Audio-Filename');
+            // Bên trong có logic gửi đến /tts để phát âm thanh
+            const filename = await playSound({word: aiResponse, ttsMethod}); // Phát âm thanh AI
 
             // Lưu vào backend /chats/{chat_id}/history
-            const historyResponse = await fetch(`${import.meta.env.VITE_API_URL}/chats/${chatId}/history`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({user: transcript, ai: aiResponse, audioPath: filename}),
-                credentials: 'include',
-            });
-            if (!historyResponse.ok) {
-                const errorData = await historyResponse.json();
-                console.log('History response error:', errorData);
-                throw new Error('Failed to save history');
-            }
-            console.log('History response:', await historyResponse.json());
+            await axios.post(
+                `/chats/${currentChatId}/history`,
+                {user: userInput, ai: aiResponse, audioPath: filename},
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
 
             // Cập nhật ChatArea với phản hồi AI
-            const updatedMessage = {user: transcript, ai: aiResponse, audioPath: filename};
+            const updatedMessage = {user: userInput, ai: aiResponse, audioPath: filename};
             if (onSendMessage) onSendMessage(updatedMessage);
+
+            // Cập nhật danh sách sau khi gửi tin nhắn
+            if (refreshChats) await refreshChats();
 
             // Lấy gợi ý dựa trên response
             await fetchSuggestions(aiResponse);
         } catch (err) {
-            console.log('Error in handleSend:', err);
-            // Cập nhật với lỗi nếu cần
-            const errorMessage = {user: transcript, ai: 'Error processing response'};
-            if (onSendMessage) onSendMessage(errorMessage);
+            console.log('Error in handleSend:', err.response?.data || err.message);
+            const errorMessage = {user: userInput, ai: 'Error processing response'};
+            if (onSendMessage) {
+                onSendMessage(errorMessage);
+            }
         }
     };
 
@@ -143,58 +157,57 @@ function InputArea({chatId, onSendMessage}) {
     };
 
     return (
-        <>
-            <footer className="input-area">
-                {/* Select cho STT */}
-                <select value={sttMethod} onChange={(e) => setSttMethod(e.target.value)}>
-                    <option value="assemblyai">AssemblyAI (API)</option>
-                    <option value="vosk">Vosk (Local)</option>
-                </select>
+        <footer className="input-area">
+            {/* Select cho STT */}
+            <select value={sttMethod} onChange={(e) => setSttMethod(e.target.value)}>
+                <option value="assemblyai">AssemblyAI (API)</option>
+                <option value="vosk">Vosk (Local)</option>
+            </select>
 
-                {/* Select cho generate models */}
-                <select value={generateMethod} onChange={(e) => setGenerateMethod(e.target.value)}>
-                    <option value="blenderbot">BlenderBot (API)</option>
-                    <option value="gemini">Gemini (Google)</option>
-                </select>
+            {/* Select cho generate models */}
+            <select value={generateMethod} onChange={(e) => setGenerateMethod(e.target.value)}>
+                <option value="mistral">Mistral</option>
+                <option value="gemini">Gemini</option>
+            </select>
 
-                {/* Select cho TTS */}
-                <select value={ttsMethod} onChange={(e) => setTtsMethod(e.target.value)}>
-                    <option value="gtts">gTTS (Google)</option>
-                    <option value="piper">Piper (Local)</option>
-                </select>
+            {/* Select cho TTS */}
+            <select value={ttsMethod} onChange={(e) => setTtsMethod(e.target.value)}>
+                <option value="gtts">gTTS (Google)</option>
+                <option value="piper">Piper (Local)</option>
+            </select>
 
-                <div className="suggestions">
-                    <h4>Suggestions:</h4>
-                    {suggestions.map((suggestion, index) => (
-                        <p key={index}>
-                            {suggestion && typeof suggestion === 'string' ? (
-                                suggestion.split(' ').map((word, i) => (
-                                    <span key={i} onDoubleClick={(e) => handleWordClick(word, e)}>
-                                        {word}&nbsp;
-                                    </span>
-                                ))
-                            ) : (
-                                <span>No suggestion available</span>
-                            )}
-                        </p>
-                    ))}
-                </div>
+            <div className="suggestions">
+                <h4>Suggestions:</h4>
+                {suggestions.map((suggestion, index) => (
+                    <p key={index}>
+                        {suggestion && typeof suggestion === 'string' ? (
+                            suggestion.split(' ').map((word, i) => (
+                                <span key={i} onDoubleClick={(e) => handleWordClick(word, e)}>
+                                    {word}&nbsp;
+                                </span>
+                            ))
+                        ) : (
+                            <span>No suggestion available</span>
+                        )}
+                    </p>
+                ))}
+            </div>
 
-                <button className="record-btn" onClick={isRecording ? stopRecording : startRecording}>
-                    <i className={`fas ${isRecording ? 'fa-stop' : 'fa-microphone'}`}></i>
-                </button>
+            <button className="record-btn" onClick={isRecording ? stopRecording : startRecording}>
+                <i className={`fas ${isRecording ? 'fa-stop' : 'fa-microphone'}`}></i>
+            </button>
 
-                <textarea
-                    value={transcript}
-                    onChange={(e) => setTranscript(e.target.value)}
-                    placeholder="Your speech here..."
-                />
+            <textarea
+                value={transcript}
+                onChange={(e) => setTranscript(e.target.value)}
+                placeholder="Your speech here..."
+                required
+            />
 
-                <button className="send-btn" onClick={handleSend}>
-                    Send
-                </button>
-            </footer>
-        </>
+            <button className="send-btn" onClick={handleSend}>
+                Send
+            </button>
+        </footer>
     );
 }
 

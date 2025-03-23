@@ -1,35 +1,42 @@
 import React, {useState, useRef, useEffect} from 'react';
+import axios from '../axiosInstance';
 import './ChatArea.css';
+import useAudioPlayer from '../hooks/useAudioPlayer';
 
 function ChatArea({chatId, onWordClick, onSendMessage}) {
     const [tooltip, setTooltip] = useState(null);
     const [chatHistory, setChatHistory] = useState([]);
-    const audioRef = useRef(null); // Ref để quản lý audio element
     const tooltipRef = useRef(null); // Ref để tham chiếu vùng tooltip
+    const {playSound, audioRef} = useAudioPlayer(); // Ref để quản lý audio element
 
     // Lấy lịch sử chat từ backend khi chatId thay đổi
     useEffect(() => {
-        if (chatId) {
-            fetch(`${import.meta.env.VITE_API_URL}/chats/${chatId}/history`, {credentials: 'include'})
-                .then((res) => res.json())
-                .then((data) => setChatHistory(data.history || []))
-                .catch((err) => console.error('Error fetching history:', err));
-        } else {
-            setChatHistory([]); // Xóa lịch sử khi không có chatId
-        }
+        const fetchHistory = async () => {
+            if (!chatId) {
+                setChatHistory([]);
+                return;
+            }
+            try {
+                const res = await axios.get(`/chats/${chatId}/history`);
+                setChatHistory(res.data.history || []);
+            } catch (err) {
+                console.error('Error fetching history:', err);
+                setChatHistory([]); // Xóa lịch sử khi không có chatId
+            }
+        };
+        fetchHistory();
     }, [chatId]);
 
-    // Gán onSendMessage để cập nhật chatHistory ngay lập tức
+    // Cập nhật chatHistory khi có tin nhắn mới từ InputArea
     useEffect(() => {
         if (onSendMessage) {
             onSendMessage.current = (message) => {
+                console.log('Received new message:', message);
                 setChatHistory((prev) => {
-                    const index = prev.findIndex((msg) => msg.user === message.user && msg.ai === '...');
-                    if (index !== -1) {
-                        // Nếu tìm thấy tin nhắn tạm (ai: '...'), thay thế nó
-                        const updatedHistory = [...prev];
-                        updatedHistory[index] = message;
-                        return updatedHistory;
+                    // Thay thế tin nhắn tạm cuối cùng (ai: '...')
+                    const lastIndex = prev.length - 1;
+                    if (lastIndex >= 0 && prev[lastIndex].ai === '...') {
+                        return [...prev.slice(0, lastIndex), message];
                     }
                     // Nếu không, thêm mới (trường hợp tin nhắn đầu tiên)
                     return [...prev, message];
@@ -44,7 +51,7 @@ function ChatArea({chatId, onWordClick, onSendMessage}) {
     };
 
     // Xử lý double-click từ
-    const handleWordClick = (word, event) => {
+    const handleWordClick = async (word, event) => {
         const cleanedWord = cleanWord(word);
         if (!cleanedWord) return;
 
@@ -57,104 +64,54 @@ function ChatArea({chatId, onWordClick, onSendMessage}) {
             x: event.pageX,
             y: event.pageY,
         });
-
-        // Fetch dữ liệu bất đồng bộ và cập nhật tooltip sau
-        fetch(`${import.meta.env.VITE_API_URL}/word-info`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({word: cleanedWord}),
-            credentials: 'include',
-        })
-            .then((res) => {
-                if (!res.ok) throw new Error(`Word info failed: ${res.status}`);
-                return res.json();
-            })
-            .then((data) => {
-                setTooltip({
-                    word: cleanedWord,
-                    definition: data.definition || 'No definition found',
-                    phonetic: data.phonetic || 'N/A',
-                    audio: data.audio || '',
-                    x: event.pageX,
-                    y: event.pageY,
-                }); //tooltip hiển thị ngay tại vị trí con trỏ chuột
-                onWordClick(cleanedWord, event); // Callback để InputArea xử lý thêm nếu cần
-            })
-            .catch((err) => {
-                console.error('Error fetching word info:', err);
-                setTooltip({
-                    word: cleanedWord,
-                    definition: 'Failed to fetch info',
-                    phonetic: 'N/A',
-                    audio: '',
-                    x: event.pageX,
-                    y: event.pageY,
-                });
-            });
-    };
-
-    const playAudio = (audioPath) => {
-        fetch(`${import.meta.env.VITE_API_URL}/audio/${audioPath}`, {credentials: 'include'})
-            .then((res) => {
-                if (!res.ok) {
-                    throw new Error(`Audio not found: ${res.status}`);
+        try {
+            const res = await axios.post(
+                `/word-info`,
+                {word: cleanedWord},
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
                 }
-                return res.blob();
-            })
-            .then((blob) => {
-                const audioUrl = URL.createObjectURL(blob);
-                new Audio(audioUrl).play();
-            })
-            .catch((err) => console.log('Error playing audio:', err));
-    };
-
-    // Dùng trực tiếp phát âm từ api
-    const playWord = (audioUrl) => {
-        // console.log(tooltip);
-        if (audioUrl && typeof audioUrl === 'string') {
-            console.log('Playing audio from URL:', audioUrl);
-            if (audioRef.current) {
-                audioRef.current.src = audioUrl;
-                audioRef.current.play().catch((err) => {
-                    console.error('Error playing audio:', err);
-                });
-            }
-        } else {
-            console.log('No valid audio URL available for this word:', audioUrl);
+            );
+            setTooltip({
+                word: cleanedWord,
+                definition: res.data.definition || 'No definition found',
+                phonetic: res.data.phonetic || 'N/A',
+                audio: res.data.audio || '',
+                x: event.pageX,
+                y: event.pageY,
+            });
+            onWordClick(cleanedWord, event); // Callback để InputArea xử lý thêm nếu cần
+        } catch (err) {
+            console.error('Error fetching word info:', err.response?.data || err.message);
+            setTooltip({
+                word: cleanedWord,
+                definition: 'Failed to fetch info',
+                phonetic: 'N/A',
+                audio: '',
+                x: event.pageX,
+                y: event.pageY,
+            });
         }
     };
-    // Hoặc dùng lại TTS
-    // const playWord = async (word) => {
-    //     try {
-    //         const res = await fetch(`${import.meta.env.VITE_API_URL}/tts?method=gtts`, {
-    //             method: 'POST',
-    //             headers: {'Content-Type': 'application/json'},
-    //             body: JSON.stringify({text: word}),
-    //             credentials: 'include',
-    //         });
-    //         if (!res.ok) throw new Error('TTS failed');
-    //         const audioBlob = await res.blob();
-    //         const audioUrl = URL.createObjectURL(audioBlob);
-    //         new Audio(audioUrl).play();
-    //     } catch (err) {
-    //         console.error('Error playing word:', err);
-    //     }
-    // };
 
     const addToVocab = async () => {
         if (!tooltip || !chatId) return;
         try {
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/add-vocab`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({...tooltip, chat_id: chatId}), // Backend tự lấy topic
-                credentials: 'include',
-            });
-            if (!res.ok) throw new Error('Failed to add vocab');
+            await axios.post(
+                `/add-vocab`,
+                {...tooltip, chat_id: chatId},
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
             console.log(`Added ${tooltip.word} to vocab`);
             // setTooltip(null); // Tắt tooltip
         } catch (err) {
-            console.error('Error adding to vocab:', err);
+            console.error('Error adding to vocab:', err.response?.data || err.message);
         }
     };
 
@@ -194,7 +151,7 @@ function ChatArea({chatId, onWordClick, onSendMessage}) {
                                     {word}&nbsp;
                                 </span>
                             ))}
-                            {msg.audioPath && <button onClick={() => playAudio(msg.audioPath)}>Play</button>}
+                            {msg.audioPath && <button onClick={() => playSound(msg.audioPath)}>Play</button>}
                         </div>
                     </div>
                 ))
@@ -212,7 +169,7 @@ function ChatArea({chatId, onWordClick, onSendMessage}) {
                     </p>
                     <p>{tooltip.definition}</p>
                     <p>{tooltip.phonetic}</p>
-                    <button onClick={() => playWord(tooltip.audio)} disabled={!tooltip.audio}>
+                    <button onClick={() => playSound({audioUrl: tooltip.audio, word: tooltip.word, ttsMethod: 'gtts'})}>
                         Play
                     </button>
                     <button onClick={addToVocab} disabled={tooltip.phonetic == 'N/A'}>

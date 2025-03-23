@@ -8,6 +8,8 @@ CACHE_DIR = os.path.join(BASE_DIR, "cache")
 # Load biến môi trường
 HF_API_KEY = os.getenv("HF_API_KEY")
 HF_API_URL = os.getenv("HF_API_URL")
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 ASSEMBLYAI_API_KEY = os.getenv("ASSEMBLYAI_API_KEY")
 VOSK_MODEL_DIR = os.getenv("VOSK_MODEL_DIR", "vosk-model-en-us-0.22-lgraph")
 

@@ -22,7 +22,7 @@ nav {
 
 /* History sidebar */
 .history-sidebar {
-    width: 200px;
+    width: 20%;
     background-color: #f0f0f0;
     padding: 10px;
 }
@@ -34,7 +34,7 @@ nav {
 
 /* Vocab sidebar */
 .vocab-sidebar {
-    width: 200px;
+    width: 10%;
     background-color: #f0f0f0;
     padding: 10px;
 }

@@ -13,6 +13,6 @@ requests #Dùng để gọi API Hugging Face (blenderbot)
 python-dotenv
 assemblyai
 gtts
-transformers
-torch
 huggingface_hub
+google-generativeai
+llama-cpp-python 

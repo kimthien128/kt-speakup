@@ -1,6 +1,6 @@
 import React, {useState, useRef, useEffect} from 'react';
-import {BrowserRouter as Router, Routes, Route} from 'react-router-dom';
-import axios from 'axios';
+import {BrowserRouter as Router, Routes, Route, useParams, useNavigate} from 'react-router-dom';
+import axios from './axiosInstance';
 import Navbar from './components/Navbar';
 import ChatArea from './components/ChatArea';
 import InputArea from './components/InputArea';
@@ -10,10 +10,63 @@ import Login from './components/Login';
 import Register from './components/Register';
 import './App.css';
 
+function ChatPage({token, userEmail, onLogout, onSendMessageRef}) {
+    const {chatId} = useParams(); // Lấy chatId từ URL
+    const navigate = useNavigate();
+    const [selectedChatId, setSelectedChatId] = useState(chatId);
+    const refreshChatsRef = useRef(null);
+
+    useEffect(() => {
+        if (chatId && chatId !== 'undefined' && chatId !== 'null') {
+            setSelectedChatId(chatId);
+        } else {
+            setSelectedChatId(null); // Đặt null nếu chatId không hợp lệ
+        }
+    }, [chatId]);
+
+    const handleSelectChat = (newChatId) => {
+        setSelectedChatId(newChatId);
+        navigate(`/chat/${newChatId}`); // Cập nhật URL
+    };
+
+    const handleLogout = () => {
+        onLogout();
+        navigate('/');
+    };
+
+    const handleWordClick = (word, event) => {
+        console.log('Clicked word:', word, 'at:', event.pageX, event.pageY);
+    };
+
+    return (
+        <div className="App">
+            <Navbar onLogout={handleLogout} userEmail={userEmail} />
+            <div className="main-container">
+                <HistorySidebar
+                    onSelectChat={handleSelectChat}
+                    refreshChatsCallback={(fn) => (refreshChatsRef.current = fn)}
+                />
+                <div className="content">
+                    <ChatArea chatId={selectedChatId} onWordClick={handleWordClick} onSendMessage={onSendMessageRef} />
+                    <InputArea
+                        chatId={selectedChatId}
+                        setChatId={(newChatId) => {
+                            setSelectedChatId(newChatId);
+                            navigate(`/chat/${newChatId}`);
+                        }}
+                        onSendMessage={onSendMessageRef.current}
+                        refreshChats={refreshChatsRef.current} // Truyền refreshChats vào InputArea
+                    />
+                </div>
+                <VocabSidebar />
+            </div>
+        </div>
+    );
+}
+
 function App() {
     const [token, setToken] = useState(localStorage.getItem('token'));
     const [userEmail, setUserEmail] = useState(''); // Lưu email để hiển thị user đăng nhập
-    const [selectedChatId, setSelectedChatId] = useState(null);
     const onSendMessageRef = useRef(null);
 
     // Lấy email từ backend khi có token
@@ -21,13 +74,10 @@ function App() {
         const fetchUserEmail = async () => {
             if (token) {
                 try {
-                    const res = await axios.get(`${import.meta.env.VITE_API_URL}/auth/me`, {
-                        headers: {Authorization: `Bearer ${token}`},
-                    });
+                    const res = await axios.get('/auth/me');
                     setUserEmail(res.data.email);
                 } catch (err) {
                     console.error('Error fetching user email:', err.response?.data || err.message);
-                    handleLogout(); // Logout nếu token không hợp lệ
                 }
             }
         };
@@ -38,15 +88,6 @@ function App() {
         localStorage.removeItem('token');
         setToken(null);
         setUserEmail(''); // Xóa email khi logout
-    };
-
-    const handleSelectChat = (chatId) => {
-        setSelectedChatId(chatId); // Lưu chat_id được chọn
-        console.log('Selected chat:', chatId);
-    };
-
-    const handleWordClick = (word, event) => {
-        console.log('Clicked word:', word, 'at', event.pageX, event.pageY);
     };
 
     // Nếu không có token, hiển thị Router với Login/Register
@@ -64,21 +105,30 @@ function App() {
     // Nếu có token, hiển thị giao diện chính
     return (
         <Router>
-            <div className="App">
-                <Navbar onLogout={handleLogout} userEmail={userEmail} />
-                <div className="main-container">
-                    <HistorySidebar onSelectChat={handleSelectChat} />
-                    <div className="content">
-                        <ChatArea
-                            chatId={selectedChatId}
-                            onWordClick={handleWordClick}
-                            onSendMessage={onSendMessageRef}
+            <Routes>
+                <Route
+                    path="/chat/:chatId"
+                    element={
+                        <ChatPage
+                            token={token}
+                            userEmail={userEmail}
+                            onLogout={handleLogout}
+                            onSendMessageRef={onSendMessageRef}
                         />
-                        <InputArea chatId={selectedChatId} onSendMessage={onSendMessageRef.current} />
-                    </div>
-                    <VocabSidebar />
-                </div>
-            </div>
+                    }
+                />
+                <Route
+                    path="*"
+                    element={
+                        <ChatPage
+                            token={token}
+                            userEmail={userEmail}
+                            onLogout={handleLogout}
+                            onSendMessageRef={onSendMessageRef}
+                        />
+                    }
+                />
+            </Routes>
         </Router>
     );
 }

@@ -1,15 +1,14 @@
 from fastapi import APIRouter, Request, HTTPException, Depends
 from database import db
 from bson import ObjectId
-from routes.auth import get_current_user
+from routes.auth import UserInDB, get_current_user
 
 router = APIRouter(prefix="/chats", tags=["chats"])
 @router.post("")
-async def create_chat(request: Request, current_user: dict = Depends(get_current_user)):
+async def create_chat( current_user: UserInDB = Depends(get_current_user)):
     try:
-        data = await request.json()
         chat_data = {
-            "title": data.get("title", "Untitled Chat"),
+            "title": "",
             "history" : [],
             "vocab_ids": [],
             "user_id": current_user.id
@@ -25,8 +24,12 @@ async def create_chat(request: Request, current_user: dict = Depends(get_current
 
 # Lấy danh sách lịch sử chat (topic)
 @router.get("")
-async def get_all_chats(current_user: dict = Depends(get_current_user)):
+async def get_all_chats(current_user: UserInDB = Depends(get_current_user)):
     try:
+        # Kiểm tra user_id hợp lệ
+        if not current_user.id:
+            raise HTTPException(status_code=400, detail="Invalid user ID")
+        
         chats = []
         async for chat in db.chats.find({"user_id": current_user.id}):
             chat["_id"] = str(chat["_id"])
@@ -38,8 +41,12 @@ async def get_all_chats(current_user: dict = Depends(get_current_user)):
 
 # Trả về toàn bộ thông tin của một chat (title, history, vocab_ids, user_id)
 @router.get("/{chat_id}")
-async def get_chat(chat_id: str, current_user: dict = Depends(get_current_user)):
+async def get_chat(chat_id: str, current_user: UserInDB = Depends(get_current_user)):
     try:
+        # Kiểm tra ObjectId hợp lệ trước khi query
+        if not ObjectId.is_valid(chat_id):
+            raise HTTPException(status_code=400, detail="Invalid chat ID")
+        
         chat = await db.chats.find_one({
             "_id": ObjectId(chat_id),
             "user_id": current_user.id
@@ -53,8 +60,12 @@ async def get_chat(chat_id: str, current_user: dict = Depends(get_current_user))
         raise HTTPException(status_code=500, detail="Failed to fetch chat")
     
 @router.delete("/{chat_id}")
-async def delete_chat(chat_id: str, current_user: dict = Depends(get_current_user)):
+async def delete_chat(chat_id: str, current_user: UserInDB = Depends(get_current_user)):
     try:
+        # Kiểm tra ObjectId hợp lệ
+        if not ObjectId.is_valid(chat_id):
+            raise HTTPException(status_code=400, detail="Invalid chat ID")
+        
         # Xóa chat dựa trên _id và user id
         result = await db.chats.delete_one({
             "_id": ObjectId(chat_id),
@@ -72,8 +83,12 @@ async def delete_chat(chat_id: str, current_user: dict = Depends(get_current_use
         raise HTTPException(status_code=500, detail="Failed to delete chat")
     
 @router.put("/{chat_id}")
-async def update_chat_title(chat_id: str, request: Request, current_user: dict = Depends(get_current_user)):
+async def update_chat_title(chat_id: str, request: Request, current_user: UserInDB = Depends(get_current_user)):
     try:
+        # Kiểm tra ObjectId hợp lệ
+        if not ObjectId.is_valid(chat_id):
+            raise HTTPException(status_code=400, detail="Invalid chat ID")
+        
         data = await request.json()
         new_title = data.get("title")
         if not new_title or not isinstance(new_title, str):
@@ -90,9 +105,13 @@ async def update_chat_title(chat_id: str, request: Request, current_user: dict =
         raise HTTPException(status_code=500, detail="Failed to updated chat title")
 
 # Chỉ trả về phần lịch sử tin nhắn (history) của chat dựa trên chat_id
-@router.get("/{chat_id}")
-async def get_chat_history(chat_id: str, current_user: dict = Depends(get_current_user)):
+@router.get("/{chat_id}/history")
+async def get_chat_history(chat_id: str, current_user: UserInDB = Depends(get_current_user)):
     try:
+        # Kiểm tra ObjectId hợp lệ
+        if not ObjectId.is_valid(chat_id):
+            raise HTTPException(status_code=400, detail="Invalid chat ID")
+        
         chat = await db.chats.find_one({
             "_id": ObjectId(chat_id),
             "user_id": current_user.id
@@ -105,13 +124,28 @@ async def get_chat_history(chat_id: str, current_user: dict = Depends(get_curren
         raise HTTPException(status_code=500, detail="Failed to fetch history")
 
 @router.post("/{chat_id}/history")
-async def add_chat_history(chat_id: str, request: Request, current_user: dict = Depends(get_current_user)):
+async def add_chat_history(chat_id: str, request: Request, current_user: UserInDB = Depends(get_current_user)):
     try:
+        # Kiểm tra ObjectId hợp lệ
+        if not ObjectId.is_valid(chat_id):
+            raise HTTPException(status_code=400, detail="Invalid chat ID")
+        
         data = await request.json()
         message = {"user": data.get("user",""), "ai":data.get("ai",""), "audioPath": data.get("audioPath", "")}
+        
+        # Kiểm tra chat hiện tại
+        chat = await db.chats.find_one({"_id": ObjectId(chat_id), "user_id": current_user.id})
+        if not chat:
+            raise HTTPException(status_code=404, detail="Chat not found or not owned by user")
+        
+        # Nếu là tin nhắn đầu tiên và title rỗng, đặt title bằng nội dung user gửi
+        update_data = {"$push": {"history": message}}
+        if not chat["history"] and not chat["title"]:
+            update_data["$set"] = {"title": message["user"]}
+        
         result = await db.chats.update_one(
             {"_id": ObjectId(chat_id), "user_id": current_user.id},
-            {"$push": {"history": message}}
+            update_data
         )
         if result.modified_count == 0:
             raise HTTPException(status_code=404, detail="Chat not found, not owned by user, or no update")
@@ -121,8 +155,12 @@ async def add_chat_history(chat_id: str, request: Request, current_user: dict = 
         raise HTTPException(status_code=500, detail="Failed to add history")
 
 @router.get("/{chat_id}/vocab")
-async def get_chat_vocab(chat_id: str, current_user: dict = Depends(get_current_user)):
+async def get_chat_vocab(chat_id: str, current_user: UserInDB = Depends(get_current_user)):
     try:
+        # Kiểm tra ObjectId hợp lệ
+        if not ObjectId.is_valid(chat_id):
+            raise HTTPException(status_code=400, detail="Invalid chat ID")
+        
         # Kiểm tra chat có tồn tại không
         chat = await db.chats.find_one({
             "_id": ObjectId(chat_id),

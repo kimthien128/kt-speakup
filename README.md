@@ -8,6 +8,34 @@ pip install -r requirements.txt
 -   Giải nén & đặt trong folder "models"
 -   Đặt lại biến môi trường VOSK_MODEL_DIR nếu khác model
 
+## Tải model
+
+huggingface-cli download TheBloke/Mistral-7B-Instruct-v0.1-GGUF mistral-7b-instruct-v0.1.Q4_K_M.gguf --local-dir D:\Code\kt-speakup\backend\models
+
+Tải Visual Studio Build Tools:
+
+Vào visualstudio.microsoft.com/visual-cpp-build-tools/.
+
+Tải file cài đặt Build Tools for Visual Studio 2022.
+
+Cài đặt thành phần C++:
+
+Chạy file cài đặt.
+
+Trong giao diện Visual Studio Installer, chọn workload:
+
+Desktop development with C++.
+
+Đảm bảo các thành phần sau được chọn:
+
+MSVC v143 - VS 2022 C++ x64/x86 build tools (hoặc phiên bản mới nhất).
+
+Windows 10/11 SDK (cho compatiblity).
+
+Nhấn Install (khoảng 2-5GB).
+
+python -m pip install llama-cpp-python
+
 ## Piper
 
 -   https://github.com/rhasspy/piper

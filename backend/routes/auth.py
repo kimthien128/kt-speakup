@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Response
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from jose import JWTError, jwt
@@ -50,19 +50,41 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-# Hàm lấy user hiện tại từ token
-async def get_current_user(token: str = Depends(oauth2_scheme)):
+# Hàm lấy user hiện tại từ token và gia hạn nếu cần
+async def get_current_user(token: str = Depends(oauth2_scheme), response: Response = None):
+    credentials_exception = HTTPException(
+        status_code=401,
+        detail="Invalid token",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
         if email is None:
-            raise HTTPException(status_code=401, detail="Invalid token")
+            raise credentials_exception
         user = await db.users.find_one({"email": email})
         if user is None:
             raise HTTPException(status_code=401, detail="User not found")
-        return UserInDB(email=user["email"], hashed_password=user["hashed_password"], id=str(user["_id"]))
+        
+        # Tạo instance UserInDB
+        user_in_db = UserInDB(email=user["email"], hashed_password=user["hashed_password"], id=str(user["_id"]))
+        
+        # Kiểm tra thời gian hết hạn và gia hạn nếu cần
+        exp = payload.get('exp')
+        if exp:
+            expire_time = datetime.utcfromtimestamp(exp)
+            remaining_time = (expire_time - datetime.utcnow()).total_seconds()
+            if remaining_time < 300: # Còn dưới 5 phút = 300s
+                new_token = create_access_token(
+                    data={"sub": email},
+                    expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+                )
+                print(f"Renewed token for {email}: {new_token}")
+                if response: # Thêm new_token vào header nếu response có sẵn
+                    response.headers["X-New-Token"] = new_token
+        return user_in_db
     except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise credentials_exception
     
 # Đăng ký
 @router.post("/register")
@@ -88,6 +110,8 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
+# Lấy thông tin user hiện tại
 @router.get("/me")
 async def get_me(current_user: UserInDB = Depends(get_current_user)):
-    return {"email" : current_user.email}
+    # Trả về dict với email từ UserInDB
+    return {"email": current_user.email}

@@ -8,7 +8,7 @@ function Navbar({onLogout, userEmail}) {
     };
     return (
         <nav>
-            <span>KT SpeakUp</span>
+            <b>KT SpeakUp</b>
             {userEmail && <span>Welcome {userEmail}</span>}
             <button onClick={handleLogoutClick}>Logout</button>
         </nav>
