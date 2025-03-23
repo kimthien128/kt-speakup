@@ -15,4 +15,5 @@ assemblyai
 gtts
 huggingface_hub
 google-generativeai
-llama-cpp-python 
+llama-cpp-python
+minio # Lưu file âm thanh

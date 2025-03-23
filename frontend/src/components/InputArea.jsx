@@ -20,7 +20,6 @@ function InputArea({chatId, setChatId, onSendMessage, refreshChats}) {
             mediaRecorderRef.current.start();
             setIsRecording(true);
 
-            // Ghi âm theo từng đoạn 100ms để đảm bảo có dữ liệu
             mediaRecorderRef.current.ondataavailable = async (e) => {
                 const audioBlob = e.data; // Lấy trực tiếp từ event
                 // Gửi audioBlob tới /stt
@@ -52,14 +51,14 @@ function InputArea({chatId, setChatId, onSendMessage, refreshChats}) {
         }
     };
 
-    const fetchSuggestions = async (baseText) => {
+    const fetchSuggestions = async (baseText, currentChatId) => {
         const suggestionPrompts = [`Short follow-up to: "${baseText}"`, `Short next question after: "${baseText}"`];
         const newSuggestions = [];
         for (const prompt of suggestionPrompts) {
             try {
                 const res = await axios.post(
                     `/generate?method=${generateMethod}`,
-                    {transcript: prompt, chat_id: chatId},
+                    {transcript: prompt, chat_id: currentChatId},
                     {
                         headers: {
                             'Content-Type': 'application/json',
@@ -120,13 +119,23 @@ function InputArea({chatId, setChatId, onSendMessage, refreshChats}) {
             if (generateResponse.data.error) throw new Error(generateResponse.data.error);
             const aiResponse = generateResponse.data.response;
 
-            // Bên trong có logic gửi đến /tts để phát âm thanh
-            const filename = await playSound({word: aiResponse, ttsMethod}); // Phát âm thanh AI
+            // Lấy audioUrl từ /tts và truyền vào playSound
+            const ttsResponse = await axios.post(
+                `/tts?method=${ttsMethod}`,
+                {text: aiResponse},
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
+            const audioUrl = ttsResponse.headers['x-audio-url'];
+            await playSound({audioUrl}); // Phát âm thanh với audioUrl
 
             // Lưu vào backend /chats/{chat_id}/history
             await axios.post(
                 `/chats/${currentChatId}/history`,
-                {user: userInput, ai: aiResponse, audioPath: filename},
+                {user: userInput, ai: aiResponse, audioUrl: audioUrl},
                 {
                     headers: {
                         'Content-Type': 'application/json',
@@ -135,14 +144,14 @@ function InputArea({chatId, setChatId, onSendMessage, refreshChats}) {
             );
 
             // Cập nhật ChatArea với phản hồi AI
-            const updatedMessage = {user: userInput, ai: aiResponse, audioPath: filename};
+            const updatedMessage = {user: userInput, ai: aiResponse};
             if (onSendMessage) onSendMessage(updatedMessage);
 
             // Cập nhật danh sách sau khi gửi tin nhắn
             if (refreshChats) await refreshChats();
 
             // Lấy gợi ý dựa trên response
-            await fetchSuggestions(aiResponse);
+            await fetchSuggestions(aiResponse, currentChatId);
         } catch (err) {
             console.log('Error in handleSend:', err.response?.data || err.message);
             const errorMessage = {user: userInput, ai: 'Error processing response'};

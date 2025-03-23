@@ -97,15 +97,19 @@ function ChatArea({chatId, onWordClick, onSendMessage}) {
         }
     };
 
-    const handlePlay = async (audioPath, text) => {
+    const handlePlay = async (audioUrl, text, index) => {
         if (isPlaying) return;
         setIsPlaying(true);
         try {
-            if (!audioPath) {
-                console.log('No audioPath provided, generating from text:', text);
-                await playSound({word: text});
-            } else {
-                await playSound({audioPath});
+            if (audioUrl) {
+                await playSound({audioUrl});
+            } else if (text) {
+                console.log('No audio URL/path, generating from text:', text);
+                console.log('chatId before playSound:', chatId);
+                if (!chatId) {
+                    console.warn('chatId is undefined, skipping database update');
+                }
+                await playSound({word: text, chatId: chatId || '', index});
             }
         } catch (err) {
             console.error('Error playing audio:', err);
@@ -169,11 +173,7 @@ function ChatArea({chatId, onWordClick, onSendMessage}) {
                                     {word}&nbsp;
                                 </span>
                             ))}
-                            {msg.ai && (
-                                <button onClick={() => handlePlay(msg.audioPath, msg.ai)} disabled={isPlaying}>
-                                    Play
-                                </button>
-                            )}
+                            {msg.ai && <button onClick={() => handlePlay(msg.audioUrl, msg.ai, index)}>Play</button>}
                         </div>
                     </div>
                 ))

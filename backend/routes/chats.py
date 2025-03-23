@@ -131,7 +131,11 @@ async def add_chat_history(chat_id: str, request: Request, current_user: UserInD
             raise HTTPException(status_code=400, detail="Invalid chat ID")
         
         data = await request.json()
-        message = {"user": data.get("user",""), "ai":data.get("ai",""), "audioPath": data.get("audioPath", "")}
+        message = {
+            "user": data.get("user",""),
+            "ai":data.get("ai",""),
+            "audioUrl": data.get("audioUrl", "")
+            }
         
         # Kiểm tra chat hiện tại
         chat = await db.chats.find_one({"_id": ObjectId(chat_id), "user_id": current_user.id})
@@ -153,6 +157,43 @@ async def add_chat_history(chat_id: str, request: Request, current_user: UserInD
     except Exception as e:
         print(f"Error adding chat history: {e}")
         raise HTTPException(status_code=500, detail="Failed to add history")
+
+# Endpoint PATCH để cập nhật audioUrl trong history
+@router.patch("/{chat_id}/history")
+async def update_chat_history_audio(chat_id: str, request: Request, current_user: UserInDB = Depends(get_current_user)):
+    try:
+        # Kiểm tra ObjectId hợp lệ
+        if not ObjectId.is_valid(chat_id):
+            raise HTTPException(status_code=400, detail="Invalid chat ID")
+        
+        data = await request.json()
+        index = data.get("index")
+        audio_url = data.get("audioUrl")
+        
+        if index is None or not isinstance(index, int) or index < 0:
+            raise HTTPException(status_code=400, detail="Invalid index: must be a non-negative integer")
+        if not audio_url or not isinstance(audio_url, str):
+            raise HTTPException(status_code=400, detail="Invalid audioUrl: must be a non-empty string")
+        
+        # Kiểm tra chat hiện tại
+        chat = await db.chats.find_one({"_id": ObjectId(chat_id), "user_id": current_user.id})
+        if not chat:
+            raise HTTPException(status_code=404, detail="Chat not found or not owned by user")
+        
+        if index >= len(chat["history"]):
+            raise HTTPException(status_code=400, detail="Index out of range")
+        
+        # Cập nhật audioUrl cho message tại index trong history
+        result = await db.chats.update_one(
+            {"_id": ObjectId(chat_id), "user_id": current_user.id},
+            {"$set": {f"history.{index}.audioUrl": audio_url}}
+        )
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Chat not found, not owned by user, or no update")
+        return {"message": "History audio URL updated"}
+    except Exception as e:
+        print(f"Error updating chat history audio URL: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update history audio URL")
 
 @router.get("/{chat_id}/vocab")
 async def get_chat_vocab(chat_id: str, current_user: UserInDB = Depends(get_current_user)):

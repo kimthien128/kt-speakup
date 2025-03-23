@@ -44,8 +44,11 @@ python -m pip install llama-cpp-python
 -   Tải 2 file cấu hình cho voice (chọn giọng đọc bất kỳ) "en_US-amy-medium.onnx", và "en_US-amy-medium.onnx.json" vào folder piper vừa giải nén
 -   Đặt lại biến môi trường cho PIPER_VOICE nếu khác giọng đọc
 
-## distilgpt2
+## MinIO
 
--   huggingface-cli download distilgpt2
+-   tải file cài: https://dl.min.io/server/minio/release/windows-amd64/minio.exe
+-   Tạo thư mục lưu trữ: vd: D:\Code\minio\data
+-   Chạy cmd 2 lệnh: `cd D:\Code\minio` `minio.exe server D:\Code\minio\data --console-address ":9001"`
+-   Giữ cho server của minio luôn chạy
 
 ## download mongodb compass
