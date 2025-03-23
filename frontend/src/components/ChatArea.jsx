@@ -6,6 +6,7 @@ import useAudioPlayer from '../hooks/useAudioPlayer';
 function ChatArea({chatId, onWordClick, onSendMessage}) {
     const [tooltip, setTooltip] = useState(null);
     const [chatHistory, setChatHistory] = useState([]);
+    const [isPlaying, setIsPlaying] = useState(false);
     const tooltipRef = useRef(null); // Ref để tham chiếu vùng tooltip
     const {playSound, audioRef} = useAudioPlayer(); // Ref để quản lý audio element
 
@@ -96,6 +97,23 @@ function ChatArea({chatId, onWordClick, onSendMessage}) {
         }
     };
 
+    const handlePlay = async (audioPath, text) => {
+        if (isPlaying) return;
+        setIsPlaying(true);
+        try {
+            if (!audioPath) {
+                console.log('No audioPath provided, generating from text:', text);
+                await playSound({word: text});
+            } else {
+                await playSound({audioPath});
+            }
+        } catch (err) {
+            console.error('Error playing audio:', err);
+        } finally {
+            setIsPlaying(false);
+        }
+    };
+
     const addToVocab = async () => {
         if (!tooltip || !chatId) return;
         try {
@@ -151,7 +169,11 @@ function ChatArea({chatId, onWordClick, onSendMessage}) {
                                     {word}&nbsp;
                                 </span>
                             ))}
-                            {msg.audioPath && <button onClick={() => playSound(msg.audioPath)}>Play</button>}
+                            {msg.ai && (
+                                <button onClick={() => handlePlay(msg.audioPath, msg.ai)} disabled={isPlaying}>
+                                    Play
+                                </button>
+                            )}
                         </div>
                     </div>
                 ))
