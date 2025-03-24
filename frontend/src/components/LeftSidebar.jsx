@@ -124,7 +124,17 @@ function LeftSidebar({onSelectChat, refreshChatsCallback}) {
                 flexDirection: 'column',
             }}
         >
-            <Typography variant="h6" sx={{mb: 2, fontWeight: 500}}>
+            {/* Logo */}
+            <Box sx={{mb: 2, textAlign: 'center'}}>
+                <img
+                    src="https://marketplace.canva.com/EAGD_ug6bbY/1/0/1600w/canva-PXPfiI0IpT4.jpg"
+                    alt="KT SpeakUp Logo"
+                    style={{maxWidth: '150px', height: 'auto'}}
+                />
+            </Box>
+            <Divider sx={{mb: 2}} />
+
+            <Typography variant="h6" sx={{mb: 2, fontWeight: 500, textAlign: 'center'}}>
                 Chat history
             </Typography>
             <Button

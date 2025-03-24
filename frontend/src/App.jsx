@@ -1,10 +1,9 @@
 import React, {useState, useRef, useEffect} from 'react';
 import {ThemeProvider} from '@mui/material/styles';
-import {Box, AppBar, Toolbar, Typography, Drawer, CssBaseline} from '@mui/material';
+import {Box, Drawer, CssBaseline} from '@mui/material';
 import theme from './theme';
 import {BrowserRouter as Router, Routes, Route, useParams, useNavigate} from 'react-router-dom';
 import axios from './axiosInstance';
-import Navbar from './components/Navbar';
 import ChatArea from './components/ChatArea';
 import InputArea from './components/InputArea';
 import LeftSidebar from './components/LeftSidebar';
@@ -46,16 +45,6 @@ function ChatPage({token, userEmail, onLogout, onSendMessageRef}) {
 
     return (
         <Box sx={{display: 'flex', height: '100vh', bgcolor: 'background.default'}}>
-            {/* Navbar (AppBar) */}
-            <AppBar position="fixed" sx={{zIndex: (theme) => theme.zIndex.drawer + 1, bgcolor: 'primary.main'}}>
-                <Toolbar>
-                    <Typography variant="h6" noWrap sx={{flexGrow: 1}}>
-                        KT SpeakUp
-                    </Typography>
-                    <Navbar onLogout={handleLogout} userEmail={userEmail} />
-                </Toolbar>
-            </AppBar>
-
             {/* LeftSidebar (Drawer cố định) */}
             <Drawer
                 variant="permanent"
@@ -70,7 +59,6 @@ function ChatPage({token, userEmail, onLogout, onSendMessageRef}) {
                     },
                 }}
             >
-                <Toolbar /> {/* Khoảng trống dưới AppBar */}
                 <LeftSidebar
                     onSelectChat={handleSelectChat}
                     refreshChatsCallback={(fn) => (refreshChatsRef.current = fn)}
@@ -89,7 +77,6 @@ function ChatPage({token, userEmail, onLogout, onSendMessageRef}) {
                     overflow: 'hidden', // Không cuộn toàn bộ
                 }}
             >
-                <Toolbar /> {/* Khoảng trống dưới AppBar */}
                 <Box
                     sx={{
                         flexGrow: 1,
@@ -130,8 +117,7 @@ function ChatPage({token, userEmail, onLogout, onSendMessageRef}) {
                     },
                 }}
             >
-                <Toolbar /> {/* Khoảng trống dưới AppBar */}
-                <RightSidebar />
+                <RightSidebar onLogout={handleLogout} userEmail={userEmail} />
             </Drawer>
         </Box>
     );
@@ -145,18 +131,24 @@ function App() {
 
     // Lấy email từ backend khi có token
     useEffect(() => {
-        const fetchUserEmail = async () => {
-            if (token) {
-                try {
-                    const res = await axios.get('/auth/me');
-                    setUserEmail(res.data.email);
-                } catch (err) {
-                    console.error('Error fetching user email:', err.response?.data || err.message);
-                }
+        const verifyToken = async () => {
+            const storedToken = localStorage.getItem('token');
+            if (!storedToken) {
+                setIdLoading(false);
+                return; // Không có token, chuyển thẳng đến login
+            }
+            try {
+                // Gọi API để kiểm tra token hợp lệ
+                const res = await axios.get('/auth/me');
+                setUserEmail(res.data.email);
+            } catch (err) {
+                console.error('Error fetching user email:', err.response?.data || err.message);
+            } finally {
+                setIdLoading(false);
             }
         };
-        fetchUserEmail();
-    }, [token]);
+        verifyToken();
+    }, []);
 
     const handleLogout = () => {
         localStorage.removeItem('token');
