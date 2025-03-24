@@ -7,6 +7,7 @@ function ChatArea({chatId, onWordClick, onSendMessage}) {
     const [tooltip, setTooltip] = useState(null);
     const [chatHistory, setChatHistory] = useState([]);
     const [isPlaying, setIsPlaying] = useState(false);
+    const [translateTooltip, setTranslateTooltip] = useState(null); // Tooltip cho bản dịch
     const tooltipRef = useRef(null); // Ref để tham chiếu vùng tooltip
     const {playSound, audioRef} = useAudioPlayer(); // Ref để quản lý audio element
 
@@ -118,6 +119,25 @@ function ChatArea({chatId, onWordClick, onSendMessage}) {
         }
     };
 
+    const handleTranslate = async (text, event) => {
+        try {
+            const res = await axios.post(
+                `/translate`,
+                {text: text, target_lang: 'vi'},
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
+            console.log('Translate response:', res.data);
+            setTranslateTooltip({text: res.data.translatedText, x: event.pageX, y: event.pageY});
+        } catch (err) {
+            console.error('Error translating:', err);
+            setTranslateTooltip({text: 'Failed to translate', x: event.pageX, y: event.pageY});
+        }
+    };
+
     const addToVocab = async () => {
         if (!tooltip || !chatId) return;
         try {
@@ -142,10 +162,11 @@ function ChatArea({chatId, onWordClick, onSendMessage}) {
         const handleClickOutside = (event) => {
             if (tooltipRef.current && !tooltipRef.current.contains(event.target)) {
                 setTooltip(null);
+                setTranslateTooltip(null);
             }
         };
 
-        if (tooltip) {
+        if (tooltip || translateTooltip) {
             document.addEventListener('mousedown', handleClickOutside);
         }
 
@@ -153,7 +174,7 @@ function ChatArea({chatId, onWordClick, onSendMessage}) {
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [tooltip]); // Chạy lại khi tooltip thay đổi
+    }, [tooltip, translateTooltip]); // Chạy lại khi tooltip thay đổi
 
     return (
         <main className="chat-area">
@@ -173,7 +194,12 @@ function ChatArea({chatId, onWordClick, onSendMessage}) {
                                     {word}&nbsp;
                                 </span>
                             ))}
-                            {msg.ai && <button onClick={() => handlePlay(msg.audioUrl, msg.ai, index)}>Play</button>}
+                            {msg.ai && (
+                                <>
+                                    <button onClick={() => handlePlay(msg.audioUrl, msg.ai, index)}>Play</button>
+                                    <button onClick={(e) => handleTranslate(msg.ai, e)}>Translate</button>
+                                </>
+                            )}
                         </div>
                     </div>
                 ))
@@ -197,7 +223,15 @@ function ChatArea({chatId, onWordClick, onSendMessage}) {
                     <button onClick={addToVocab} disabled={tooltip.phonetic == 'N/A'}>
                         Add to vocab
                     </button>
-                    <button onClick={() => setTooltip(null)}>Close</button>
+                </div>
+            )}
+            {translateTooltip && (
+                <div
+                    ref={tooltipRef} // Gán ref cho vùng translateTooltip
+                    className="tooltip"
+                    style={{top: translateTooltip.y + 30, left: translateTooltip.x, position: 'absolute'}}
+                >
+                    <p>{translateTooltip.text}</p>
                 </div>
             )}
             <audio ref={audioRef} style={{display: 'none'}}></audio>

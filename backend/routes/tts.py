@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request, Response
 from fastapi.responses import FileResponse
 from gtts import gTTS
-from utils import BASE_DIR, CACHE_DIR
+from utils import MINIO_ENDPOINT, MINIO_ACCESS_KEY, MINIO_SECRET_KEY, CACHE_DIR, BASE_DIR
 from minio import Minio
 import os
 import time
@@ -12,10 +12,10 @@ router = APIRouter()
 
 # Kết nối MinIO
 minio_client = Minio(
-    "localhost:9000",
-    access_key="minioadmin",
-    secret_key="minioadmin",
-    secure=False
+    MINIO_ENDPOINT,
+    access_key=MINIO_ACCESS_KEY,
+    secret_key=MINIO_SECRET_KEY,
+    secure=False  # Đặt True nếu dùng HTTPS
 )
 
 @router.post("")

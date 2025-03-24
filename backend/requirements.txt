@@ -17,3 +17,5 @@ huggingface_hub
 google-generativeai
 llama-cpp-python
 minio # Lưu file âm thanh
+deep-translator
+apscheduler # Lập lịch

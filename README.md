@@ -1,3 +1,5 @@
+## Cài python v3.12
+
 ## Cài đặt từ file requirements.txt
 
 pip install -r requirements.txt
@@ -48,7 +50,7 @@ python -m pip install llama-cpp-python
 
 -   tải file cài: https://dl.min.io/server/minio/release/windows-amd64/minio.exe
 -   Tạo thư mục lưu trữ: vd: D:\Code\minio\data
--   Chạy cmd 2 lệnh: `cd D:\Code\minio` `minio.exe server D:\Code\minio\data --console-address ":9001"`
+-   Chạy cmd truy cập vào thư mục minio, chạy lệnh: `minio.exe server D:\Code\minio\data --console-address ":9001"`
 -   Giữ cho server của minio luôn chạy
 
 ## download mongodb compass

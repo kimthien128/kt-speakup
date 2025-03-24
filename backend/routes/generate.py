@@ -28,7 +28,7 @@ genai.configure(api_key=GOOGLE_API_KEY)
 model = genai.GenerativeModel(
     "gemini-1.5-flash",
     generation_config=genai.types.GenerationConfig(
-        max_output_tokens=20, # Giới hạn khoảng 20 token (~1 câu ngắn)
+        max_output_tokens=20, # Giới hạn token (~1 câu ngắn)
         temperature=0.7 # Điều chỉnh độ sáng tạo
     )
     )
@@ -91,7 +91,7 @@ async def generate(request: Request, current_user: UserInDB = Depends(get_curren
         elif method == 'mistral':
             history = chat.get('history', [])
             messages = [
-                {"role": "system", "content": "You are a chatbot assisting in learning English. Reply with one short sentence."}
+                {"role": "system", "content": "You are a chatbot assisting in learning English. Reply with one short, complete sentence."}
             ]
             for msg in history:
                 messages.append({"role": "user", "content": msg["user"]})
@@ -113,7 +113,7 @@ async def generate(request: Request, current_user: UserInDB = Depends(get_curren
             history = chat.get('history', [])
             chat_history = [
                 # Thêm tin nhắn "system" giả lập vào đầu lịch sử
-                {"role": "user", "parts": [{"text": "You are a chatbot assisting me in learning English. Please respond with one short sentence."}]},
+                {"role": "user", "parts": [{"text": "You are a chatbot assisting me in learning English. Reply with one short, complete sentence."}]},
                 {"role": "model", "parts": [{"text": "Understood, I'll keep my responses short!"}]}
             ]
             for msg in history:
