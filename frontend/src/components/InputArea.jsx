@@ -1,7 +1,7 @@
 import React, {useState, useRef} from 'react';
 import axios from '../axiosInstance';
 import useAudioPlayer from '../hooks/useAudioPlayer';
-import './InputArea.css';
+// import './InputArea.css';
 
 function InputArea({chatId, setChatId, onSendMessage, refreshChats}) {
     const [transcript, setTranscript] = useState('');

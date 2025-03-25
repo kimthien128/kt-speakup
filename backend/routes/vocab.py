@@ -39,10 +39,11 @@ async def add_vocab(request: Request, current_user: dict = Depends(get_current_u
         )
         print(f"Inserted vocab: {word_data}, ID: {result.inserted_id}")
         return {"message" : f'Added {word_data['word']} to vocab'}
-        
+    except HTTPException as e:
+        raise e
     except Exception as e:
         print(f"Error adding vocab: {e}")
-        raise HTTPException(status_code=500, detail= 'Failed to add vocab')
+        raise HTTPException(status_code=500, detail="Failed to add vocab")
 
 # Lấy từ vựng theo chat_id
 @router.get("/{chat_id}")

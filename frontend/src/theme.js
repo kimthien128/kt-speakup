@@ -2,7 +2,7 @@ import {createTheme} from '@mui/material/styles';
 
 const theme = createTheme({
     palette: {
-        primary: {main: '#1976d2'},
+        // primary: {main: '#1976d2'},
         secondary: {main: '#dc004e'},
         background: {default: '#f0f2f5', paper: '#fff'},
     },
@@ -12,9 +12,6 @@ const theme = createTheme({
     components: {
         MuiPaper: {
             styleOverrides: {root: {boxShadow: '0 4px 12px rgba(0,0,0,0.1)'}},
-        },
-        MuiAppBar: {
-            styleOverrides: {root: {boxShadow: '0 2px 8px rgba(0,0,0,0.1)'}},
         },
     },
 });

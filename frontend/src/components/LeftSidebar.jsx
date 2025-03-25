@@ -7,7 +7,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
 
-function LeftSidebar({onSelectChat, refreshChatsCallback}) {
+function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
     const [chats, setChats] = useState([]);
     const [editingChatId, setEditingChatId] = useState(null); // Theo dõi chat đang sửa
     const [editTitle, setEditTitle] = useState(''); // Lưu title đang chỉnh sửa
@@ -134,9 +134,7 @@ function LeftSidebar({onSelectChat, refreshChatsCallback}) {
             </Box>
             <Divider sx={{mb: 2}} />
 
-            <Typography variant="h6" sx={{mb: 2, fontWeight: 500, textAlign: 'center'}}>
-                Chat history
-            </Typography>
+            {/* Chat History */}
             <Button
                 variant="contained"
                 startIcon={<AddIcon />}
@@ -145,7 +143,6 @@ function LeftSidebar({onSelectChat, refreshChatsCallback}) {
             >
                 New Chat
             </Button>
-            <Divider sx={{mb: 2}} />
             <Box sx={{flexGrow: 1, overflowY: 'auto'}}>
                 <List>
                     {chats.map((chat) => (
@@ -158,7 +155,10 @@ function LeftSidebar({onSelectChat, refreshChatsCallback}) {
                                 '&:hover': {
                                     bgcolor: 'grey.100',
                                     transition: 'background-color 0.2s',
+                                    color: 'inherit',
                                 },
+                                bgcolor: chat._id === selectedChatId ? 'secondary.main' : 'transparent',
+                                color: chat._id === selectedChatId ? 'white' : 'inherit',
                             }}
                         >
                             {editingChatId === chat._id ? (
@@ -190,25 +190,37 @@ function LeftSidebar({onSelectChat, refreshChatsCallback}) {
                             ) : (
                                 <>
                                     <ListItemText primary={chat.title || 'Untitled Chat'} />
-                                    <IconButton
-                                        edge="end"
-                                        onClick={(e) => {
-                                            e.stopPropagation(); // Ngăn chọn chat khi nhấn Edit
-                                            handleEditChat(chat._id, chat.title);
-                                        }}
-                                        sx={{mr: 1}}
-                                    >
-                                        <EditIcon fontSize="small" />
-                                    </IconButton>
-                                    <IconButton
-                                        edge="end"
-                                        onClick={(e) => {
-                                            e.stopPropagation(); // Ngăn chọn chat khi nhấn X
-                                            handleDeleteChat(chat._id);
+                                    {/* Sửa: Chỉ hiển thị nút Edit/Delete khi hover */}
+                                    <Box
+                                        sx={{
+                                            display: 'flex',
+                                            visibility: 'hidden',
+                                            '&:hover': {
+                                                visibility: 'visible',
+                                            },
+                                            '.MuiListItem-root:hover &': {visibility: 'visible'}, // Kích hoạt từ ListItem cha
                                         }}
                                     >
-                                        <DeleteIcon fontSize="small" />
-                                    </IconButton>
+                                        <IconButton
+                                            edge="end"
+                                            onClick={(e) => {
+                                                e.stopPropagation(); // Ngăn chọn chat khi nhấn Edit
+                                                handleEditChat(chat._id, chat.title);
+                                            }}
+                                            sx={{mr: 1}}
+                                        >
+                                            <EditIcon fontSize="small" />
+                                        </IconButton>
+                                        <IconButton
+                                            edge="end"
+                                            onClick={(e) => {
+                                                e.stopPropagation(); // Ngăn chọn chat khi nhấn X
+                                                handleDeleteChat(chat._id);
+                                            }}
+                                        >
+                                            <DeleteIcon fontSize="small" />
+                                        </IconButton>
+                                    </Box>
                                 </>
                             )}
                         </ListItem>

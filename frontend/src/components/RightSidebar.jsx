@@ -1,10 +1,12 @@
 import React, {useState, useEffect, use} from 'react';
-import {Box, Typography, Button, Avatar, Chip, Divider} from '@mui/material';
+import {Box, Typography, Button, Avatar, Chip, Divider, TextField, InputAdornment} from '@mui/material';
 import LogoutIcon from '@mui/icons-material/Logout';
+import SearchIcon from '@mui/icons-material/Search';
 import axios from '../axiosInstance';
 
 function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
-    const [vocabList, setVocabList] = useState([]);
+    const [vocabList, setVocabList] = useState([]); //state cho danh sách từ vựng
+    const [searchTerm, setSearchTerm] = useState(''); //state cho từ khóa tìm kiếm vocab
 
     const handleLogoutClick = () => {
         if (window.confirm('Are you sure want to logout')) {
@@ -41,6 +43,9 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
         }
     }, [onVocabAdded, chatId]); // Chạy lại khi chatId thay đổi
 
+    // Hàm lọc từ vựng dựa trên từ khóa tìm kiếm
+    const filteredVocab = vocabList.filter((vocab) => vocab.word.toLowerCase().includes(searchTerm.toLowerCase()));
+
     return (
         <Box
             sx={{
@@ -49,7 +54,6 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                 p: 2,
                 display: 'flex',
                 flexDirection: 'column',
-                alignItems: 'center',
             }}
         >
             {/* Phần 1: Thông tin user + Logout */}
@@ -57,7 +61,7 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                 <Box sx={{display: 'flex', alignItems: 'center'}}>
                     <Avatar sx={{bgcolor: 'primary.main', mb: 1, mx: 'auto'}}>{userEmail[0].toUpperCase()}</Avatar>
                     <Typography variant="body1">Welcome {userEmail}</Typography>
-                    <Button variant="outlined" startIcon={<LogoutIcon />} onClick={handleLogoutClick} sx={{mt: 2}}>
+                    <Button variant="text" startIcon={<LogoutIcon />} onClick={handleLogoutClick} sx={{mt: 2}}>
                         Logout
                     </Button>
                 </Box>
@@ -73,12 +77,22 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                     mb: 2,
                 }}
             >
-                <Typography variant="subtitle1" sx={{mb: 1}}>
-                    Saved Vocabulary
-                </Typography>
-                {vocabList.length > 0 ? (
-                    <Box sx={{display: 'flex', flexWrap: 'wrap', gap: 1}}>
-                        {vocabList.map((vocab) => (
+                {vocabList.length > 0 && (
+                    <TextField
+                        label="Search vocabulary"
+                        variant="outlined"
+                        size="small"
+                        fullWidth
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        error={searchTerm && filteredVocab.length === 0}
+                        helperText={searchTerm && filteredVocab.length === 0 ? 'No matches found' : ''}
+                        sx={{my: 1}}
+                    />
+                )}
+                {filteredVocab.length > 0 ? (
+                    <Box sx={{display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1}}>
+                        {filteredVocab.map((vocab) => (
                             <Chip
                                 key={vocab._id}
                                 label={vocab.word}
@@ -87,15 +101,17 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                         ))}
                     </Box>
                 ) : (
-                    <Typography variant="body2" color="text.secondary">
-                        No vocabulary saved yet.
-                    </Typography>
+                    <Typography variant="h6">{vocabList.length === 0 ? 'Save your first word !!' : ''}</Typography>
                 )}
             </Box>
-            <Divider sx={{my: 2, width: '100%'}} />
+            <Divider sx={{my: 1, width: '100%'}} />
 
             {/* Phần 3: Chi tiết từ vựng */}
-            <Box sx={{flexGrow: 1}}>Details Vocab</Box>
+            <Box sx={{flexGrow: 1}}>
+                <Typography variant="h6" sx={{mb: 1}}>
+                    Details Vocab
+                </Typography>
+            </Box>
         </Box>
     );
 }

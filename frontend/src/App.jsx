@@ -1,9 +1,7 @@
 import React, {useState, useRef, useEffect} from 'react';
-import axios from './axiosInstance';
-import {ThemeProvider} from '@mui/material/styles';
-import {Box, Drawer, CssBaseline} from '@mui/material';
-import theme from './theme';
 import {BrowserRouter as Router, Routes, Route, useParams, useNavigate} from 'react-router-dom';
+import axios from './axiosInstance';
+import {Box, Drawer} from '@mui/material';
 
 import ChatArea from './components/ChatArea';
 import InputArea from './components/InputArea';
@@ -52,17 +50,19 @@ function ChatPage({token, userEmail, onLogout, onSendMessageRef}) {
                 sx={{
                     width: drawerWidth,
                     flexShrink: 0,
-                    [`& .MuiDrawer-paper`]: {
+                    '& .MuiDrawer-paper': {
                         width: drawerWidth,
                         boxSizing: 'border-box',
                         bgcolor: 'background.paper',
-                        boxShadow: '2px 0 8px rgba(0,0,0,0.1)',
+                        borderRight: '1px solid',
+                        borderColor: 'divider',
                     },
                 }}
             >
                 <LeftSidebar
                     onSelectChat={handleSelectChat}
                     refreshChatsCallback={(fn) => (refreshChatsRef.current = fn)}
+                    selectedChatId={selectedChatId}
                 />
             </Drawer>
 
@@ -71,11 +71,11 @@ function ChatPage({token, userEmail, onLogout, onSendMessageRef}) {
                 component="main"
                 sx={{
                     flexGrow: 1,
-                    p: 3,
-                    height: '100vh',
                     display: 'flex',
                     flexDirection: 'column',
-                    overflow: 'hidden', // Không cuộn toàn bộ
+                    height: '100vh',
+                    p: 2,
+                    // overflow: 'hidden', // Không cuộn toàn bộ
                 }}
             >
                 <Box
@@ -83,8 +83,9 @@ function ChatPage({token, userEmail, onLogout, onSendMessageRef}) {
                         flexGrow: 1,
                         overflowY: 'auto', // Cuộn nội dung bên trong ChatArea
                         bgcolor: 'background.paper',
-                        borderRadius: 2,
-                        boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
+                        borderRadius: 1,
+                        border: '1px solid',
+                        borderColor: 'divider',
                         p: 2,
                     }}
                 >
@@ -95,7 +96,18 @@ function ChatPage({token, userEmail, onLogout, onSendMessageRef}) {
                         onVocabAdded={refreshVocabRef}
                     />
                 </Box>
-                <Box sx={{mt: 2}}>
+
+                {/* InputArea */}
+                <Box
+                    sx={{
+                        mt: 2,
+                        bgcolor: 'background.paper',
+                        borderRadius: 1,
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        p: 1,
+                    }}
+                >
                     <InputArea
                         chatId={selectedChatId}
                         setChatId={(newChatId) => {
@@ -115,11 +127,12 @@ function ChatPage({token, userEmail, onLogout, onSendMessageRef}) {
                 sx={{
                     width: rightDrawerWidth,
                     flexShrink: 0,
-                    [`& .MuiDrawer-paper`]: {
+                    '& .MuiDrawer-paper': {
                         width: rightDrawerWidth,
                         boxSizing: 'border-box',
                         bgcolor: 'background.paper',
-                        boxShadow: '-2px 0 8px rgba(0,0,0,0.1)',
+                        borderLeft: '1px solid',
+                        borderColor: 'divider',
                     },
                 }}
             >
@@ -181,35 +194,32 @@ function App() {
 
     // Nếu có token, hiển thị giao diện chính
     return (
-        <ThemeProvider theme={theme}>
-            <CssBaseline />
-            <Router>
-                <Routes>
-                    <Route
-                        path="/chat/:chatId"
-                        element={
-                            <ChatPage
-                                token={token}
-                                userEmail={userEmail}
-                                onLogout={handleLogout}
-                                onSendMessageRef={onSendMessageRef}
-                            />
-                        }
-                    />
-                    <Route
-                        path="*"
-                        element={
-                            <ChatPage
-                                token={token}
-                                userEmail={userEmail}
-                                onLogout={handleLogout}
-                                onSendMessageRef={onSendMessageRef}
-                            />
-                        }
-                    />
-                </Routes>
-            </Router>
-        </ThemeProvider>
+        <Router>
+            <Routes>
+                <Route
+                    path="/chat/:chatId"
+                    element={
+                        <ChatPage
+                            token={token}
+                            userEmail={userEmail}
+                            onLogout={handleLogout}
+                            onSendMessageRef={onSendMessageRef}
+                        />
+                    }
+                />
+                <Route
+                    path="*"
+                    element={
+                        <ChatPage
+                            token={token}
+                            userEmail={userEmail}
+                            onLogout={handleLogout}
+                            onSendMessageRef={onSendMessageRef}
+                        />
+                    }
+                />
+            </Routes>
+        </Router>
     );
 }
 

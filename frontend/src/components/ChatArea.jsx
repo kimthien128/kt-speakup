@@ -1,7 +1,10 @@
 import React, {useState, useRef, useEffect} from 'react';
 import axios from '../axiosInstance';
-import './ChatArea.css';
+import {toast, ToastContainer} from 'react-toastify';
 import useAudioPlayer from '../hooks/useAudioPlayer';
+import 'react-toastify/dist/ReactToastify.css'; // Import CSS của thư viện toastify
+import {Box, Typography, Button, Tooltip as MuiTooltip} from '@mui/material';
+// import './ChatArea.css';
 
 function ChatArea({chatId, onWordClick, onSendMessage, onVocabAdded}) {
     const [tooltip, setTooltip] = useState(null);
@@ -155,7 +158,12 @@ function ChatArea({chatId, onWordClick, onSendMessage, onVocabAdded}) {
                 onVocabAdded.current(); // Gọi hàm refresh từ RightSidebar
             }
         } catch (err) {
-            console.error('Error adding to vocab:', err.response?.data || err.message);
+            if (err.response && err.response.status === 400) {
+                toast.warn(err.response.data.detail);
+            } else {
+                console.error('Error adding to vocab:', err.response?.data || err.message);
+                toast.error('Failed to add to vocab');
+            }
         }
     };
 
@@ -179,35 +187,52 @@ function ChatArea({chatId, onWordClick, onSendMessage, onVocabAdded}) {
     }, [tooltip, translateTooltip]); // Chạy lại khi tooltip thay đổi
 
     return (
-        <main className="chat-area">
-            {chatHistory.length > 0 ? (
-                chatHistory.map((msg, index) => (
-                    <div key={index} className="message-group">
-                        <div className="message user">
-                            {(msg.user || '').split(' ').map((word, i) => (
-                                <span key={i} onDoubleClick={(e) => handleWordClick(word, e)}>
-                                    {word}&nbsp;
-                                </span>
-                            ))}
-                        </div>
-                        <div className="message system">
-                            {(msg.ai || '').split(' ').map((word, i) => (
-                                <span key={i} onDoubleClick={(e) => handleWordClick(word, e)}>
-                                    {word}&nbsp;
-                                </span>
-                            ))}
-                            {msg.ai && (
-                                <>
-                                    <button onClick={() => handlePlay(msg.audioUrl, msg.ai, index)}>Play</button>
-                                    <button onClick={(e) => handleTranslate(msg.ai, e)}>Translate</button>
-                                </>
-                            )}
-                        </div>
-                    </div>
-                ))
-            ) : (
-                <p>No chat history available</p>
-            )}
+        <Box
+            sx={{
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                position: 'relative',
+                width: '100%',
+            }}
+        >
+            {/* Nội dung chat */}
+            <Box
+                sx={{
+                    flexGrow: 1,
+                    overflowY: 'auto',
+                }}
+            >
+                {chatHistory.length > 0 ? (
+                    chatHistory.map((msg, index) => (
+                        <Box key={index} sx={{mb: 2}}>
+                            {/* Tin nhắn người dùng */}
+                            <div className="message user">
+                                {(msg.user || '').split(' ').map((word, i) => (
+                                    <span key={i} onDoubleClick={(e) => handleWordClick(word, e)}>
+                                        {word}&nbsp;
+                                    </span>
+                                ))}
+                            </div>
+                            <div className="message system">
+                                {(msg.ai || '').split(' ').map((word, i) => (
+                                    <span key={i} onDoubleClick={(e) => handleWordClick(word, e)}>
+                                        {word}&nbsp;
+                                    </span>
+                                ))}
+                                {msg.ai && msg.ai != '...' && (
+                                    <>
+                                        <button onClick={() => handlePlay(msg.audioUrl, msg.ai, index)}>Play</button>
+                                        <button onClick={(e) => handleTranslate(msg.ai, e)}>Translate</button>
+                                    </>
+                                )}
+                            </div>
+                        </Box>
+                    ))
+                ) : (
+                    <p>No chat history available</p>
+                )}
+            </Box>
             {tooltip && (
                 <div
                     ref={tooltipRef} // Gán ref cho vùng tooltip
@@ -237,7 +262,8 @@ function ChatArea({chatId, onWordClick, onSendMessage, onVocabAdded}) {
                 </div>
             )}
             <audio ref={audioRef} style={{display: 'none'}}></audio>
-        </main>
+            <ToastContainer position="bottom-left" autoClose={3000} />
+        </Box>
     );
 }
 
