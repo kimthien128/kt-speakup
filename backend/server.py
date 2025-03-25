@@ -70,7 +70,7 @@ app.include_router(generate_router, prefix='/generate')
 app.include_router(tts_router, prefix='/tts')
 app.include_router(audio_router, prefix='/audio')
 app.include_router(word_info_router, prefix='/word-info')
-app.include_router(vocab_router, prefix='/add-vocab')
+app.include_router(vocab_router, prefix='/vocab')
 app.include_router(translate_router, prefix='/translate')
 app.include_router(chats_router)
 

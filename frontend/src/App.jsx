@@ -1,16 +1,16 @@
 import React, {useState, useRef, useEffect} from 'react';
+import axios from './axiosInstance';
 import {ThemeProvider} from '@mui/material/styles';
 import {Box, Drawer, CssBaseline} from '@mui/material';
 import theme from './theme';
 import {BrowserRouter as Router, Routes, Route, useParams, useNavigate} from 'react-router-dom';
-import axios from './axiosInstance';
+
 import ChatArea from './components/ChatArea';
 import InputArea from './components/InputArea';
 import LeftSidebar from './components/LeftSidebar';
 import RightSidebar from './components/RightSidebar';
 import Login from './components/Login';
 import Register from './components/Register';
-import './App.css';
 
 const drawerWidth = 300;
 const rightDrawerWidth = 300;
@@ -20,6 +20,7 @@ function ChatPage({token, userEmail, onLogout, onSendMessageRef}) {
     const navigate = useNavigate();
     const [selectedChatId, setSelectedChatId] = useState(chatId);
     const refreshChatsRef = useRef(null);
+    const refreshVocabRef = useRef(null);
 
     useEffect(() => {
         if (chatId && chatId !== 'undefined' && chatId !== 'null') {
@@ -87,7 +88,12 @@ function ChatPage({token, userEmail, onLogout, onSendMessageRef}) {
                         p: 2,
                     }}
                 >
-                    <ChatArea chatId={selectedChatId} onWordClick={handleWordClick} onSendMessage={onSendMessageRef} />
+                    <ChatArea
+                        chatId={selectedChatId}
+                        onWordClick={handleWordClick}
+                        onSendMessage={onSendMessageRef}
+                        onVocabAdded={refreshVocabRef}
+                    />
                 </Box>
                 <Box sx={{mt: 2}}>
                     <InputArea
@@ -117,7 +123,12 @@ function ChatPage({token, userEmail, onLogout, onSendMessageRef}) {
                     },
                 }}
             >
-                <RightSidebar onLogout={handleLogout} userEmail={userEmail} />
+                <RightSidebar
+                    onLogout={handleLogout}
+                    userEmail={userEmail}
+                    chatId={selectedChatId}
+                    onVocabAdded={refreshVocabRef}
+                />
             </Drawer>
         </Box>
     );

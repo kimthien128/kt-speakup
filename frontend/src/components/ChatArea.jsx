@@ -3,7 +3,7 @@ import axios from '../axiosInstance';
 import './ChatArea.css';
 import useAudioPlayer from '../hooks/useAudioPlayer';
 
-function ChatArea({chatId, onWordClick, onSendMessage}) {
+function ChatArea({chatId, onWordClick, onSendMessage, onVocabAdded}) {
     const [tooltip, setTooltip] = useState(null);
     const [chatHistory, setChatHistory] = useState([]);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -142,7 +142,7 @@ function ChatArea({chatId, onWordClick, onSendMessage}) {
         if (!tooltip || !chatId) return;
         try {
             await axios.post(
-                `/add-vocab`,
+                `/vocab`,
                 {...tooltip, chat_id: chatId},
                 {
                     headers: {
@@ -151,7 +151,9 @@ function ChatArea({chatId, onWordClick, onSendMessage}) {
                 }
             );
             console.log(`Added ${tooltip.word} to vocab`);
-            // setTooltip(null); // Tắt tooltip
+            if (onVocabAdded && onVocabAdded.current) {
+                onVocabAdded.current(); // Gọi hàm refresh từ RightSidebar
+            }
         } catch (err) {
             console.error('Error adding to vocab:', err.response?.data || err.message);
         }

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request, HTTPException, Depends
 from database import db
 from bson import ObjectId
-from routes.auth import get_current_user
+from routes.auth import UserInDB, get_current_user
 
 router = APIRouter()
 
@@ -19,7 +19,7 @@ async def add_vocab(request: Request, current_user: dict = Depends(get_current_u
             raise HTTPException(status_code=404, detail="Chat not found or not owned by user")
         
         word_data = {
-            "word" : data.get("word", ""),
+            "word" : data.get("word", "").capitalize(), #viết hoa chữ cái đầu tiên
             "definition": data.get("definition", "No definition found"),
             "phonetic": data.get("phonetic", "N/A"),
             "audio": data.get("audio", ""),
@@ -43,3 +43,24 @@ async def add_vocab(request: Request, current_user: dict = Depends(get_current_u
     except Exception as e:
         print(f"Error adding vocab: {e}")
         raise HTTPException(status_code=500, detail= 'Failed to add vocab')
+
+# Lấy từ vựng theo chat_id
+@router.get("/{chat_id}")
+async def get_vocab(chat_id: str, current_user: UserInDB = Depends(get_current_user)):
+    try:
+        print(f"Fetching vocab for chat_id: {chat_id}, user_id: {current_user.id}")
+        chat = await db.chats.find_one({"_id": ObjectId(chat_id), "user_id": current_user.id})
+        if not chat:
+            print(f"Chat not found or not owned: {chat_id}")
+            raise HTTPException(status_code=404, detail="Chat not found or not owned by user")
+        
+        vocab_list = await db.vocab.find({"chat_id": ObjectId(chat_id)}).to_list(length=None)
+        print(f"Found {len(vocab_list)} vocab items for chat_id: {chat_id}")
+        for vocab in vocab_list:
+            vocab["_id"] = str(vocab["_id"])
+            vocab["chat_id"] = str(vocab["chat_id"])
+        return {"vocab": vocab_list}
+    
+    except Exception as e:
+        print(f"Error getting vocab: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get vocab")
