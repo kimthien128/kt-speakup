@@ -1,16 +1,32 @@
 import React, {useState, useEffect, useRef} from 'react';
 import axios from '../axiosInstance';
 import {useNavigate} from 'react-router-dom';
-import {Box, Typography, Button, List, ListItem, ListItemText, TextField, IconButton, Divider} from '@mui/material';
+
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import Box from '@mui/material/Box';
+import FormControl from '@mui/material/FormControl';
+import IconButton from '@mui/material/IconButton';
+import TextField from '@mui/material/TextField';
+import InputLabel from '@mui/material/InputLabel';
+import OutlinedInput from '@mui/material/OutlinedInput';
+import InputAdornment from '@mui/material/InputAdornment';
+import Divider from '@mui/material/Divider';
+
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
+import AddBoxIcon from '@mui/icons-material/AddBox';
 import SaveIcon from '@mui/icons-material/Save';
+import SearchIcon from '@mui/icons-material/Search';
+import {Tooltip} from '@mui/material';
 
 function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
     const [chats, setChats] = useState([]);
     const [editingChatId, setEditingChatId] = useState(null); // Theo dõi chat đang sửa
     const [editTitle, setEditTitle] = useState(''); // Lưu title đang chỉnh sửa
+    const [searchChatTitle, setSearchChatTitle] = useState(''); // State cho ô tìm kiếm
     const navigate = useNavigate();
     const editRef = useRef(null); // Ref để kiểm tra click ngoài
 
@@ -114,6 +130,11 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
         }
     }, [refreshChatsCallback]);
 
+    // Lọc danh sách chat dựa trên ô tìm kiếm
+    const filteredChats = chats.filter((chat) =>
+        (chat.title || 'Untitled Chat').toLowerCase().includes(searchChatTitle.toLowerCase())
+    );
+
     return (
         <Box
             sx={{
@@ -135,17 +156,42 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
             <Divider sx={{mb: 2}} />
 
             {/* Chat History */}
-            <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={handleNewChat}
-                sx={{mb: 2, bgcolor: 'primary.main', '&:hover': {bgcolor: 'primary.dark'}}}
+            <Box
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    mb: 2,
+                }}
             >
-                New Chat
-            </Button>
+                {/* Search title chat */}
+                <FormControl sx={{flexGrow: 1, mr: 1}} variant="outlined">
+                    {/* <InputLabel>Search chats</InputLabel> */}
+                    <OutlinedInput
+                        type="text"
+                        value={searchChatTitle}
+                        onChange={(e) => setSearchChatTitle(e.target.value)}
+                        placeholder="Search chat"
+                        size="small"
+                        startAdornment={
+                            <InputAdornment position="start">
+                                <SearchIcon />
+                            </InputAdornment>
+                        }
+                    />
+                </FormControl>
+                {/* Create new chat */}
+                <Tooltip title="Create new chat">
+                    <IconButton color="primary" fontSize="large" onClick={handleNewChat}>
+                        <AddIcon sx={{color: 'primary.main'}} />
+                    </IconButton>
+                </Tooltip>
+            </Box>
+
+            {/* Danh sách chat */}
             <Box sx={{flexGrow: 1, overflowY: 'auto'}}>
                 <List>
-                    {chats.map((chat) => (
+                    {filteredChats.map((chat) => (
                         <ListItem
                             key={chat._id}
                             onClick={() => onSelectChat(chat._id)}
@@ -153,9 +199,9 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                                 borderRadius: 1,
                                 mb: 1,
                                 '&:hover': {
-                                    bgcolor: 'grey.100',
+                                    bgcolor: 'secondary.main',
                                     transition: 'background-color 0.2s',
-                                    color: 'inherit',
+                                    color: 'white',
                                 },
                                 bgcolor: chat._id === selectedChatId ? 'secondary.main' : 'transparent',
                                 color: chat._id === selectedChatId ? 'white' : 'inherit',
@@ -170,7 +216,7 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                                         width: '100%',
                                     }}
                                 >
-                                    <TextField
+                                    <OutlinedInput
                                         value={editTitle}
                                         onChange={(e) => setEditTitle(e.target.value)}
                                         onClick={(e) => e.stopPropagation()}
@@ -189,16 +235,21 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                                 </Box>
                             ) : (
                                 <>
-                                    <ListItemText primary={chat.title || 'Untitled Chat'} />
+                                    <ListItemText
+                                        primary={chat.title || 'Untitled Chat'}
+                                        primaryTypographyProps={{
+                                            sx: {
+                                                overflow: 'hidden', //Giới hạn title
+                                                textOverflow: 'ellipsis', //Thêm dấu ...
+                                                whiteSpace: 'nowrap', //Không ngắt dòng
+                                            }, //primaryTypographyProps cho phép tùy chỉnh trực tiếp Typography được render cho primary trong ListItemText
+                                        }}
+                                    />
                                     {/* Sửa: Chỉ hiển thị nút Edit/Delete khi hover */}
                                     <Box
                                         sx={{
-                                            display: 'flex',
-                                            visibility: 'hidden',
-                                            '&:hover': {
-                                                visibility: 'visible',
-                                            },
-                                            '.MuiListItem-root:hover &': {visibility: 'visible'}, // Kích hoạt từ ListItem cha
+                                            display: 'none',
+                                            '.MuiListItem-root:hover &': {display: 'flex'}, // Kích hoạt từ ListItem cha
                                         }}
                                     >
                                         <IconButton

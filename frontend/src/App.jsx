@@ -81,11 +81,11 @@ function ChatPage({token, userEmail, onLogout, onSendMessageRef}) {
                 <Box
                     sx={{
                         flexGrow: 1,
+                        display: 'flex',
+                        margin: '0 auto',
+                        maxWidth: '900px',
                         overflowY: 'auto', // Cuộn nội dung bên trong ChatArea
                         bgcolor: 'background.paper',
-                        borderRadius: 1,
-                        border: '1px solid',
-                        borderColor: 'divider',
                         p: 2,
                     }}
                 >

@@ -4,7 +4,8 @@ import {toast, ToastContainer} from 'react-toastify';
 import useAudioPlayer from '../hooks/useAudioPlayer';
 import 'react-toastify/dist/ReactToastify.css'; // Import CSS của thư viện toastify
 import {Box, Typography, Button, Tooltip as MuiTooltip} from '@mui/material';
-// import './ChatArea.css';
+import TranslateIcon from '@mui/icons-material/Translate';
+import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 
 function ChatArea({chatId, onWordClick, onSendMessage, onVocabAdded}) {
     const [tooltip, setTooltip] = useState(null);
@@ -153,7 +154,7 @@ function ChatArea({chatId, onWordClick, onSendMessage, onVocabAdded}) {
                     },
                 }
             );
-            console.log(`Added ${tooltip.word} to vocab`);
+            toast.success(`Added ${tooltip.word} to vocab`);
             if (onVocabAdded && onVocabAdded.current) {
                 onVocabAdded.current(); // Gọi hàm refresh từ RightSidebar
             }
@@ -193,7 +194,7 @@ function ChatArea({chatId, onWordClick, onSendMessage, onVocabAdded}) {
                 display: 'flex',
                 flexDirection: 'column',
                 position: 'relative',
-                width: '100%',
+                overflow: 'hidden',
             }}
         >
             {/* Nội dung chat */}
@@ -201,66 +202,188 @@ function ChatArea({chatId, onWordClick, onSendMessage, onVocabAdded}) {
                 sx={{
                     flexGrow: 1,
                     overflowY: 'auto',
+                    overflowX: 'hidden',
+                    p: 2,
                 }}
             >
                 {chatHistory.length > 0 ? (
                     chatHistory.map((msg, index) => (
-                        <Box key={index} sx={{mb: 2}}>
+                        <Box
+                            key={index}
+                            sx={{
+                                mb: 2,
+                                display: 'flex',
+                                flexDirection: 'column',
+                            }}
+                        >
                             {/* Tin nhắn người dùng */}
-                            <div className="message user">
-                                {(msg.user || '').split(' ').map((word, i) => (
-                                    <span key={i} onDoubleClick={(e) => handleWordClick(word, e)}>
-                                        {word}&nbsp;
-                                    </span>
-                                ))}
-                            </div>
-                            <div className="message system">
-                                {(msg.ai || '').split(' ').map((word, i) => (
-                                    <span key={i} onDoubleClick={(e) => handleWordClick(word, e)}>
-                                        {word}&nbsp;
-                                    </span>
-                                ))}
-                                {msg.ai && msg.ai != '...' && (
-                                    <>
-                                        <button onClick={() => handlePlay(msg.audioUrl, msg.ai, index)}>Play</button>
-                                        <button onClick={(e) => handleTranslate(msg.ai, e)}>Translate</button>
-                                    </>
-                                )}
-                            </div>
+                            {msg.user && (
+                                <Box
+                                    sx={{
+                                        p: 1,
+                                        bgcolor: 'grey.200',
+                                        borderRadius: 2,
+                                        maxWidth: '70%',
+                                        wordBreak: 'break-word',
+                                        textAlign: 'right',
+                                        marginLeft: 'auto',
+                                    }}
+                                >
+                                    {(msg.user || '').split(' ').map((word, i) => (
+                                        <Typography
+                                            key={i}
+                                            variant="body1"
+                                            component="span"
+                                            noWrap
+                                            onDoubleClick={(e) => handleWordClick(word, e)}
+                                        >
+                                            {word}&nbsp;
+                                        </Typography>
+                                    ))}
+                                </Box>
+                            )}
+
+                            {/* Tin nhắn AI */}
+                            {msg.ai && (
+                                <Box
+                                    sx={{
+                                        p: 1,
+                                        bgcolor: 'primary.light',
+                                        borderRadius: 2,
+                                        width: 'fit-content',
+                                        maxWidth: '70%',
+                                        wordBreak: 'break-word',
+                                        mt: msg.user ? 1 : 0,
+                                    }}
+                                >
+                                    {(msg.ai || '').split(' ').map((word, i) => (
+                                        <Typography
+                                            key={i}
+                                            variant="body1"
+                                            component="span"
+                                            noWrap
+                                            onDoubleClick={(e) => handleWordClick(word, e)}
+                                        >
+                                            {word}&nbsp;
+                                        </Typography>
+                                    ))}
+                                    {msg.ai && msg.ai != '...' && (
+                                        <Box sx={{mt: 1}}>
+                                            <Button
+                                                variant="contained"
+                                                size="small"
+                                                sx={{mr: 1}}
+                                                onClick={() => handlePlay(msg.audioUrl, msg.ai, index)}
+                                            >
+                                                Play
+                                            </Button>
+                                            <Button
+                                                variant="contained"
+                                                size="small"
+                                                onClick={(e) => handleTranslate(msg.ai, e)}
+                                            >
+                                                Translate
+                                            </Button>
+                                        </Box>
+                                    )}
+                                </Box>
+                            )}
                         </Box>
                     ))
                 ) : (
                     <p>No chat history available</p>
                 )}
             </Box>
+
+            {/* Tooltip cho từ vựng*/}
             {tooltip && (
-                <div
-                    ref={tooltipRef} // Gán ref cho vùng tooltip
-                    className="tooltip"
-                    style={{top: tooltip.y + 30, left: tooltip.x, position: 'absolute'}}
+                <MuiTooltip
+                    open
+                    title={
+                        <Box sx={{p: 1}}>
+                            <Typography variant="subtitle1">
+                                <strong>{tooltip.word}</strong>
+                            </Typography>
+                            <Typography variant="body2">{tooltip.definition}</Typography>
+                            <Typography variant="body2">{tooltip.phonetic}</Typography>
+                            <Button
+                                variant="contained"
+                                size="small"
+                                onClick={() =>
+                                    playSound({audioUrl: tooltip.audio, word: tooltip.word, ttsMethod: 'gtts'})
+                                }
+                                sx={{mt: 1, mr: 1}}
+                            >
+                                Play
+                            </Button>
+                            <Button
+                                variant="contained"
+                                size="small"
+                                onClick={addToVocab}
+                                disabled={tooltip.phonetic == 'N/A'}
+                                sx={{mt: 1}}
+                            >
+                                Add to vocab
+                            </Button>
+                        </Box>
+                    }
+                    placement="bottom-start"
+                    PopperProps={{
+                        anchorEl: {
+                            getBoundingClientRect: () => ({
+                                top: tooltip.y,
+                                left: tooltip.x,
+                                right: tooltip.x,
+                                bottom: tooltip.y,
+                                width: 0,
+                                height: 0,
+                            }),
+                        },
+                    }}
                 >
-                    <p>
-                        <strong>{tooltip.word}</strong>
-                    </p>
-                    <p>{tooltip.definition}</p>
-                    <p>{tooltip.phonetic}</p>
-                    <button onClick={() => playSound({audioUrl: tooltip.audio, word: tooltip.word, ttsMethod: 'gtts'})}>
-                        Play
-                    </button>
-                    <button onClick={addToVocab} disabled={tooltip.phonetic == 'N/A'}>
-                        Add to vocab
-                    </button>
-                </div>
+                    <Box
+                        ref={tooltipRef} // Gán ref cho vùng tooltip
+                        sx={{
+                            position: 'absolute',
+                            top: tooltip.y + 30,
+                            left: tooltip.x,
+                            zIndex: 999,
+                        }}
+                    ></Box>
+                </MuiTooltip>
             )}
+
+            {/* Tooltip cho dịch */}
             {translateTooltip && (
-                <div
-                    ref={tooltipRef} // Gán ref cho vùng translateTooltip
-                    className="tooltip"
-                    style={{top: translateTooltip.y + 30, left: translateTooltip.x, position: 'absolute'}}
+                <MuiTooltip
+                    open
+                    title={<Typography variant="body2">{translateTooltip.text}</Typography>}
+                    placement="bottom-start"
+                    PopperProps={{
+                        anchorEl: {
+                            getBoundingClientRect: () => ({
+                                top: translateTooltip.y,
+                                left: translateTooltip.x,
+                                right: translateTooltip.x,
+                                bottom: translateTooltip.y,
+                                width: 0,
+                                height: 0,
+                            }),
+                        },
+                    }}
                 >
-                    <p>{translateTooltip.text}</p>
-                </div>
+                    <Box
+                        ref={tooltipRef} // Gán ref cho vùng translateTooltip
+                        sx={{
+                            position: 'absolute',
+                            top: translateTooltip.y + 30,
+                            left: translateTooltip.x,
+                            zIndex: 999,
+                        }}
+                    ></Box>
+                </MuiTooltip>
             )}
+
             <audio ref={audioRef} style={{display: 'none'}}></audio>
             <ToastContainer position="bottom-left" autoClose={3000} />
         </Box>
