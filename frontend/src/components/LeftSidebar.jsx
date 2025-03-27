@@ -139,10 +139,11 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
         <Box
             sx={{
                 height: '100%',
-                bgcolor: 'background.paper',
                 p: 2,
                 display: 'flex',
                 flexDirection: 'column',
+                flexShrink: 0, // Sửa: Ngăn co giãn
+                width: 300,
             }}
         >
             {/* Logo */}
@@ -189,8 +190,8 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
             </Box>
 
             {/* Danh sách chat */}
-            <Box sx={{flexGrow: 1, overflowY: 'auto'}}>
-                <List>
+            <Box sx={{overflowY: 'auto', flexGrow: 1}}>
+                <List sx={{width: '100%'}}>
                     {filteredChats.map((chat) => (
                         <ListItem
                             key={chat._id}
@@ -198,13 +199,16 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                             sx={{
                                 borderRadius: 1,
                                 mb: 1,
+                                bgcolor: chat._id === selectedChatId ? 'rgba(255, 255, 255, 0.8)' : 'transparent',
                                 '&:hover': {
-                                    bgcolor: 'secondary.main',
+                                    bgcolor: 'rgba(255, 255, 255, 0.6)',
                                     transition: 'background-color 0.2s',
-                                    color: 'white',
                                 },
-                                bgcolor: chat._id === selectedChatId ? 'secondary.main' : 'transparent',
-                                color: chat._id === selectedChatId ? 'white' : 'inherit',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                width: '100%',
+                                minHeight: 60,
                             }}
                         >
                             {editingChatId === chat._id ? (
@@ -239,6 +243,8 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                                         primary={chat.title || 'Untitled Chat'}
                                         primaryTypographyProps={{
                                             sx: {
+                                                flexGrow: 1,
+                                                minWidth: 0, // Tránh tràn ra ngoài
                                                 overflow: 'hidden', //Giới hạn title
                                                 textOverflow: 'ellipsis', //Thêm dấu ...
                                                 whiteSpace: 'nowrap', //Không ngắt dòng
@@ -249,6 +255,7 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                                     <Box
                                         sx={{
                                             display: 'none',
+                                            flexShrink: 0, // Không co lại khi xuất hiện
                                             '.MuiListItem-root:hover &': {display: 'flex'}, // Kích hoạt từ ListItem cha
                                         }}
                                     >

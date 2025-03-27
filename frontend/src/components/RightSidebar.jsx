@@ -50,7 +50,6 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
         <Box
             sx={{
                 height: '100%',
-                bgcolor: 'background.paper',
                 p: 2,
                 display: 'flex',
                 flexDirection: 'column',

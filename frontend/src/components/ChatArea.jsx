@@ -221,7 +221,7 @@ function ChatArea({chatId, onWordClick, onSendMessage, onVocabAdded}) {
                                 <Box
                                     sx={{
                                         p: 1,
-                                        bgcolor: 'grey.200',
+                                        bgcolor: 'rgba(0, 0, 0, 0.1)',
                                         borderRadius: 2,
                                         maxWidth: '70%',
                                         wordBreak: 'break-word',

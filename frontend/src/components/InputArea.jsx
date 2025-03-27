@@ -1,6 +1,8 @@
 import React, {useState, useRef} from 'react';
 import axios from '../axiosInstance';
 import useAudioPlayer from '../hooks/useAudioPlayer';
+
+import Box from '@mui/material/Box';
 // import './InputArea.css';
 
 function InputArea({chatId, setChatId, onSendMessage, refreshChats}) {
@@ -166,7 +168,7 @@ function InputArea({chatId, setChatId, onSendMessage, refreshChats}) {
     };
 
     return (
-        <footer className="input-area">
+        <Box className="input-area">
             {/* Select cho STT */}
             <select value={sttMethod} onChange={(e) => setSttMethod(e.target.value)}>
                 <option value="assemblyai">AssemblyAI (API)</option>
@@ -216,7 +218,7 @@ function InputArea({chatId, setChatId, onSendMessage, refreshChats}) {
             <button className="send-btn" onClick={handleSend}>
                 Send
             </button>
-        </footer>
+        </Box>
     );
 }
 
