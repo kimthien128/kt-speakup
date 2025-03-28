@@ -4,6 +4,8 @@ import {toast, ToastContainer} from 'react-toastify';
 import useAudioPlayer from '../hooks/useAudioPlayer';
 import 'react-toastify/dist/ReactToastify.css'; // Import CSS của thư viện toastify
 import {Box, Typography, Button, Tooltip as MuiTooltip} from '@mui/material';
+import Avatar from '@mui/material/Avatar';
+
 import TranslateIcon from '@mui/icons-material/Translate';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 
@@ -14,6 +16,10 @@ function ChatArea({chatId, onWordClick, onSendMessage, onVocabAdded}) {
     const [translateTooltip, setTranslateTooltip] = useState(null); // Tooltip cho bản dịch
     const tooltipRef = useRef(null); // Ref để tham chiếu vùng tooltip
     const {playSound, audioRef} = useAudioPlayer(); // Ref để quản lý audio element
+
+    //text avatar
+    const userAvatar = 'https://marketplace.canva.com/EAGD_ug6bbY/1/0/1600w/canva-PXPfiI0IpT4.jpg';
+    const aiAvatar = 'https://img.freepik.com/free-vector/graident-ai-robot-vectorart_78370-4114.jpg';
 
     // Lấy lịch sử chat từ backend khi chatId thay đổi
     useEffect(() => {
@@ -188,22 +194,19 @@ function ChatArea({chatId, onWordClick, onSendMessage, onVocabAdded}) {
     }, [tooltip, translateTooltip]); // Chạy lại khi tooltip thay đổi
 
     return (
-        <Box
-            sx={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                position: 'relative',
-                overflow: 'hidden',
-            }}
-        >
+        <>
             {/* Nội dung chat */}
             <Box
                 sx={{
-                    flexGrow: 1,
-                    overflowY: 'auto',
-                    overflowX: 'hidden',
                     p: 2,
+                    maxWidth: '900px',
+                    display: 'flex',
+                    margin: '0 auto',
+                    flexDirection: 'column',
+                    width: '100%',
+                    height: '100%',
+                    position: 'relative',
+                    overflowY: 'auto', // Cuộn nội dung bên trong ChatArea
                 }}
             >
                 {chatHistory.length > 0 ? (
@@ -220,26 +223,42 @@ function ChatArea({chatId, onWordClick, onSendMessage, onVocabAdded}) {
                             {msg.user && (
                                 <Box
                                     sx={{
-                                        p: 1,
-                                        bgcolor: 'rgba(0, 0, 0, 0.1)',
-                                        borderRadius: 2,
-                                        maxWidth: '70%',
-                                        wordBreak: 'break-word',
-                                        textAlign: 'right',
-                                        marginLeft: 'auto',
+                                        display: 'flex',
+                                        justifyContent: 'flex-end',
+                                        alignItems: 'center',
+                                        gap: 1,
                                     }}
                                 >
-                                    {(msg.user || '').split(' ').map((word, i) => (
-                                        <Typography
-                                            key={i}
-                                            variant="body1"
-                                            component="span"
-                                            noWrap
-                                            onDoubleClick={(e) => handleWordClick(word, e)}
-                                        >
-                                            {word}&nbsp;
-                                        </Typography>
-                                    ))}
+                                    <Box
+                                        sx={{
+                                            p: 1,
+                                            bgcolor: 'rgba(0, 0, 0, 0.1)',
+                                            borderRadius: 2,
+                                            maxWidth: '70%',
+                                            wordBreak: 'break-word',
+                                            textAlign: 'right',
+                                        }}
+                                    >
+                                        {(msg.user || '').split(' ').map((word, i) => (
+                                            <Typography
+                                                key={i}
+                                                variant="body1"
+                                                component="span"
+                                                noWrap
+                                                onDoubleClick={(e) => handleWordClick(word, e)}
+                                            >
+                                                {word}&nbsp;
+                                            </Typography>
+                                        ))}
+                                    </Box>
+                                    <Avatar
+                                        src={userAvatar}
+                                        alt="User Avatar"
+                                        sx={{
+                                            width: 40,
+                                            height: 40,
+                                        }}
+                                    />
                                 </Box>
                             )}
 
@@ -247,51 +266,108 @@ function ChatArea({chatId, onWordClick, onSendMessage, onVocabAdded}) {
                             {msg.ai && (
                                 <Box
                                     sx={{
-                                        p: 1,
-                                        bgcolor: 'primary.light',
-                                        borderRadius: 2,
-                                        width: 'fit-content',
-                                        maxWidth: '70%',
-                                        wordBreak: 'break-word',
-                                        mt: msg.user ? 1 : 0,
+                                        display: 'flex',
+                                        justifyContent: 'flex-start',
+                                        alignItems: 'center',
+                                        gap: 1,
                                     }}
                                 >
-                                    {(msg.ai || '').split(' ').map((word, i) => (
-                                        <Typography
-                                            key={i}
-                                            variant="body1"
-                                            component="span"
-                                            noWrap
-                                            onDoubleClick={(e) => handleWordClick(word, e)}
-                                        >
-                                            {word}&nbsp;
-                                        </Typography>
-                                    ))}
-                                    {msg.ai && msg.ai != '...' && (
-                                        <Box sx={{mt: 1}}>
-                                            <Button
-                                                variant="contained"
-                                                size="small"
-                                                sx={{mr: 1}}
-                                                onClick={() => handlePlay(msg.audioUrl, msg.ai, index)}
+                                    <Avatar
+                                        src={aiAvatar}
+                                        alt="AI Avatar"
+                                        sx={{
+                                            width: 40,
+                                            height: 40,
+                                        }}
+                                    />
+
+                                    <Box
+                                        sx={{
+                                            p: 1,
+                                            bgcolor: 'rgba(66, 165, 245, .5)',
+                                            borderRadius: 2,
+                                            width: 'fit-content',
+                                            maxWidth: '70%',
+                                            wordBreak: 'break-word',
+                                            mt: msg.user ? 1 : 0,
+                                        }}
+                                    >
+                                        {(msg.ai || '').split(' ').map((word, i) => (
+                                            <Typography
+                                                key={i}
+                                                variant="body1"
+                                                component="span"
+                                                noWrap
+                                                onDoubleClick={(e) => handleWordClick(word, e)}
                                             >
-                                                Play
-                                            </Button>
-                                            <Button
-                                                variant="contained"
-                                                size="small"
-                                                onClick={(e) => handleTranslate(msg.ai, e)}
-                                            >
-                                                Translate
-                                            </Button>
-                                        </Box>
-                                    )}
+                                                {word}&nbsp;
+                                            </Typography>
+                                        ))}
+                                        {msg.ai && msg.ai != '...' && (
+                                            <Box sx={{mt: 1}}>
+                                                <Button
+                                                    variant="contained"
+                                                    size="small"
+                                                    sx={{mr: 1}}
+                                                    onClick={() => handlePlay(msg.audioUrl, msg.ai, index)}
+                                                >
+                                                    Play
+                                                </Button>
+                                                <Button
+                                                    variant="contained"
+                                                    size="small"
+                                                    onClick={(e) => handleTranslate(msg.ai, e)}
+                                                >
+                                                    Translate
+                                                </Button>
+                                            </Box>
+                                        )}
+                                    </Box>
                                 </Box>
                             )}
                         </Box>
                     ))
                 ) : (
-                    <p>No chat history available</p>
+                    <Box
+                        sx={{
+                            width: '100%',
+                            height: '100%',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                width: '100%',
+                                textAlign: 'center',
+                                alignItems: 'center',
+                            }}
+                        >
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    mb: 2,
+                                }}
+                            >
+                                <Box
+                                    sx={{
+                                        backgroundImage:
+                                            'url("https://marketplace.canva.com/EAGD_ug6bbY/1/0/1600w/canva-PXPfiI0IpT4.jpg")',
+                                        backgroundSize: 'cover',
+                                        width: '80px',
+                                        height: '80px',
+                                        mr: 2,
+                                    }}
+                                ></Box>
+                                <Typography variant="h4">Hi, I'm KT SpeakUp.</Typography>
+                            </Box>
+                            <Typography variant="h6">What are we talking about today?</Typography>
+                        </Box>
+                    </Box>
                 )}
             </Box>
 
@@ -386,7 +462,7 @@ function ChatArea({chatId, onWordClick, onSendMessage, onVocabAdded}) {
 
             <audio ref={audioRef} style={{display: 'none'}}></audio>
             <ToastContainer position="bottom-left" autoClose={3000} />
-        </Box>
+        </>
     );
 }
 

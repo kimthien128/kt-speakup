@@ -168,56 +168,73 @@ function InputArea({chatId, setChatId, onSendMessage, refreshChats}) {
     };
 
     return (
-        <Box className="input-area">
-            {/* Select cho STT */}
-            <select value={sttMethod} onChange={(e) => setSttMethod(e.target.value)}>
-                <option value="assemblyai">AssemblyAI (API)</option>
-                <option value="vosk">Vosk (Local)</option>
-            </select>
+        <Box
+            sx={{
+                borderTop: '1px solid',
+                borderColor: 'divider',
+                width: '100%',
+                p: 2,
+                pt: 2,
+                display: 'flex',
+                position: 'relative',
+            }}
+        >
+            <Box
+                sx={{
+                    maxWidth: '900px',
+                    margin: '0 auto',
+                }}
+            >
+                {/* Select cho STT */}
+                <select value={sttMethod} onChange={(e) => setSttMethod(e.target.value)}>
+                    <option value="assemblyai">AssemblyAI (API)</option>
+                    <option value="vosk">Vosk (Local)</option>
+                </select>
 
-            {/* Select cho generate models */}
-            <select value={generateMethod} onChange={(e) => setGenerateMethod(e.target.value)}>
-                <option value="mistral">Mistral</option>
-                <option value="gemini">Gemini</option>
-            </select>
+                {/* Select cho generate models */}
+                <select value={generateMethod} onChange={(e) => setGenerateMethod(e.target.value)}>
+                    <option value="mistral">Mistral</option>
+                    <option value="gemini">Gemini</option>
+                </select>
 
-            {/* Select cho TTS */}
-            <select value={ttsMethod} onChange={(e) => setTtsMethod(e.target.value)}>
-                <option value="gtts">gTTS (Google)</option>
-                <option value="piper">Piper (Local)</option>
-            </select>
+                {/* Select cho TTS */}
+                <select value={ttsMethod} onChange={(e) => setTtsMethod(e.target.value)}>
+                    <option value="gtts">gTTS (Google)</option>
+                    <option value="piper">Piper (Local)</option>
+                </select>
 
-            <div className="suggestions">
-                <h4>Suggestions:</h4>
-                {suggestions.map((suggestion, index) => (
-                    <p key={index}>
-                        {suggestion && typeof suggestion === 'string' ? (
-                            suggestion.split(' ').map((word, i) => (
-                                <span key={i} onDoubleClick={(e) => handleWordClick(word, e)}>
-                                    {word}&nbsp;
-                                </span>
-                            ))
-                        ) : (
-                            <span>No suggestion available</span>
-                        )}
-                    </p>
-                ))}
-            </div>
+                <div className="suggestions">
+                    <h4>Suggestions:</h4>
+                    {suggestions.map((suggestion, index) => (
+                        <p key={index}>
+                            {suggestion && typeof suggestion === 'string' ? (
+                                suggestion.split(' ').map((word, i) => (
+                                    <span key={i} onDoubleClick={(e) => handleWordClick(word, e)}>
+                                        {word}&nbsp;
+                                    </span>
+                                ))
+                            ) : (
+                                <span>No suggestion available</span>
+                            )}
+                        </p>
+                    ))}
+                </div>
 
-            <button className="record-btn" onClick={isRecording ? stopRecording : startRecording}>
-                <i className={`fas ${isRecording ? 'fa-stop' : 'fa-microphone'}`}></i>
-            </button>
+                <button className="record-btn" onClick={isRecording ? stopRecording : startRecording}>
+                    <i className={`fas ${isRecording ? 'fa-stop' : 'fa-microphone'}`}></i>
+                </button>
 
-            <textarea
-                value={transcript}
-                onChange={(e) => setTranscript(e.target.value)}
-                placeholder="Your speech here..."
-                required
-            />
+                <textarea
+                    value={transcript}
+                    onChange={(e) => setTranscript(e.target.value)}
+                    placeholder="Your speech here..."
+                    required
+                />
 
-            <button className="send-btn" onClick={handleSend}>
-                Send
-            </button>
+                <button className="send-btn" onClick={handleSend}>
+                    Send
+                </button>
+            </Box>
         </Box>
     );
 }

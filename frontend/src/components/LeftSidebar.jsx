@@ -144,6 +144,8 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                 flexDirection: 'column',
                 flexShrink: 0, // Sửa: Ngăn co giãn
                 width: 300,
+                borderTopLeftRadius: 40,
+                borderBottomLeftRadius: 40,
             }}
         >
             {/* Logo */}
@@ -201,7 +203,7 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                                 mb: 1,
                                 bgcolor: chat._id === selectedChatId ? 'rgba(255, 255, 255, 0.8)' : 'transparent',
                                 '&:hover': {
-                                    bgcolor: 'rgba(255, 255, 255, 0.6)',
+                                    bgcolor: 'rgba(255, 255, 255, 1)',
                                     transition: 'background-color 0.2s',
                                 },
                                 display: 'flex',

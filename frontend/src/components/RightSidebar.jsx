@@ -49,10 +49,12 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
     return (
         <Box
             sx={{
+                width: 300,
                 height: '100%',
                 p: 2,
                 display: 'flex',
                 flexDirection: 'column',
+                flexShrink: 0,
             }}
         >
             {/* Phần 1: Thông tin user + Logout */}

@@ -50,40 +50,46 @@ function ChatPage({token, userEmail, onLogout, onSendMessageRef}) {
                 height: '100vh',
                 background: 'linear-gradient(135deg, #ef88bb 0%, #291850 100%)',
                 backgroundImage: 'url("https://marketplace.canva.com/EAGD_ug6bbY/1/0/1600w/canva-PXPfiI0IpT4.jpg")',
-
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
                 boxSizing: 'border-box',
                 overflow: 'hidden',
+                position: 'relative',
             }}
         >
+            {/* Lớp phủ làm tối nền */}
+            {/* <Box
+                sx={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                }}
+            ></Box> */}
+
             {/* Box bao bọc có radius */}
             <Box
                 sx={{
                     display: 'flex',
                     width: '100%',
                     height: '100%',
-                    bgcolor: 'rgba(255, 255, 255, 0.4)',
                     borderRadius: 10,
                     border: '1px solid',
-                    borderColor: 'rgba(255, 255, 255, 0.8)',
-                    boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)',
+                    borderColor: 'rgba(255, 255, 255, 0.9)',
+                    boxShadow: '0 0 25px rgba(0, 0, 0, 0.15)',
                     boxSizing: 'border-box',
                     backdropFilter: 'blur(20px)',
+                    bgcolor: 'rgba(255, 255, 255, 0.5)',
                 }}
             >
                 {/* LeftSidebar */}
-                <Box
-                    sx={{
-                        bgcolor: 'rgba(0, 0, 0, 0.2)',
-                        borderTopLeftRadius: 40,
-                        borderBottomLeftRadius: 40,
-                    }}
-                >
-                    <LeftSidebar
-                        onSelectChat={handleSelectChat}
-                        refreshChatsCallback={(fn) => (refreshChatsRef.current = fn)}
-                        selectedChatId={selectedChatId}
-                    />
-                </Box>
+                <LeftSidebar
+                    onSelectChat={handleSelectChat}
+                    refreshChatsCallback={(fn) => (refreshChatsRef.current = fn)}
+                    selectedChatId={selectedChatId}
+                />
 
                 {/* Main Content (ChatArea + InputArea) */}
                 <Box
@@ -95,16 +101,13 @@ function ChatPage({token, userEmail, onLogout, onSendMessageRef}) {
                         borderLeft: '1px solid',
                         borderRight: '1px solid',
                         borderColor: 'divider',
-                        borderColor: 'rgba(255, 255, 255, 0.8)',
                     }}
                 >
                     <Box
                         sx={{
-                            pt: 2,
                             flexGrow: 1,
-                            display: 'flex',
-                            maxWidth: '900px',
-                            overflowY: 'auto', // Cuộn nội dung bên trong ChatArea
+                            pt: 2,
+                            overflow: 'hidden',
                         }}
                     >
                         <ChatArea
@@ -116,43 +119,24 @@ function ChatPage({token, userEmail, onLogout, onSendMessageRef}) {
                     </Box>
 
                     {/* InputArea */}
-                    <Box
-                        sx={{
-                            borderTop: '1px solid',
-                            borderColor: 'divider',
-                            borderColor: 'rgba(255, 255, 255, 0.8)',
-                            p: 2,
+                    <InputArea
+                        chatId={selectedChatId}
+                        setChatId={(newChatId) => {
+                            setSelectedChatId(newChatId);
+                            navigate(`/chat/${newChatId}`);
                         }}
-                    >
-                        <InputArea
-                            chatId={selectedChatId}
-                            setChatId={(newChatId) => {
-                                setSelectedChatId(newChatId);
-                                navigate(`/chat/${newChatId}`);
-                            }}
-                            onSendMessage={onSendMessageRef.current}
-                            refreshChats={refreshChatsRef.current} // Truyền refreshChats vào InputArea
-                        />
-                    </Box>
+                        onSendMessage={onSendMessageRef.current}
+                        refreshChats={refreshChatsRef.current} // Truyền refreshChats vào InputArea
+                    />
                 </Box>
 
                 {/* RightSidebar */}
-                <Box
-                    sx={{
-                        width: rightDrawerWidth,
-                        flexShrink: 0,
-                        '& .MuiDrawer-paper': {
-                            width: rightDrawerWidth,
-                        },
-                    }}
-                >
-                    <RightSidebar
-                        onLogout={handleLogout}
-                        userEmail={userEmail}
-                        chatId={selectedChatId}
-                        onVocabAdded={refreshVocabRef}
-                    />
-                </Box>
+                <RightSidebar
+                    onLogout={handleLogout}
+                    userEmail={userEmail}
+                    chatId={selectedChatId}
+                    onVocabAdded={refreshVocabRef}
+                />
             </Box>
         </Box>
     );
