@@ -9,11 +9,9 @@ import LeftSidebar from './components/LeftSidebar';
 import RightSidebar from './components/RightSidebar';
 import Login from './components/Login';
 import Register from './components/Register';
+import Profile from './components/Profile';
 
-const drawerWidth = 300;
-const rightDrawerWidth = 300;
-
-function ChatPage({token, userEmail, onLogout, onSendMessageRef}) {
+function ChatPage({userEmail, onLogout, onSendMessageRef}) {
     const {chatId} = useParams(); // Lấy chatId từ URL
     const navigate = useNavigate();
     const [selectedChatId, setSelectedChatId] = useState(chatId);
@@ -150,6 +148,7 @@ function App() {
     return (
         <Router>
             <Routes>
+                <Route path="/profile" element={<Profile onLogout={handleLogout} />} />
                 <Route
                     path="/chat/:chatId"
                     element={

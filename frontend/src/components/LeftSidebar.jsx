@@ -185,8 +185,23 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                 </FormControl>
                 {/* Create new chat */}
                 <Tooltip title="Create new chat">
-                    <IconButton color="primary" fontSize="large" onClick={handleNewChat}>
-                        <AddIcon sx={{color: 'primary.main'}} />
+                    <IconButton
+                        color="primary"
+                        onClick={handleNewChat}
+                        sx={{
+                            p: 1, // Sửa: Tăng padding để vùng click lớn hơn
+                            fontSize: '1.8rem', // Sửa: Tăng kích thước tổng thể của IconButton
+                            '&:hover': {
+                                bgcolor: 'primary.light',
+                                color: 'primary.contrastText',
+                            },
+                        }}
+                    >
+                        <AddIcon
+                            sx={{
+                                fontSize: '1.8rem', // Sửa: Tăng kích thước icon
+                            }}
+                        />
                     </IconButton>
                 </Tooltip>
             </Box>

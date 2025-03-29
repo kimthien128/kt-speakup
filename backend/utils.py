@@ -17,7 +17,10 @@ VOSK_MODEL_DIR = os.getenv("VOSK_MODEL_DIR", "vosk-model-en-us-0.22-lgraph")
 MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT")
 MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY")
 MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY")
-CACHE_BUCKET = os.getenv("CACHE_BUCKET")
+AUDIO_BUCKET = os.getenv("AUDIO_BUCKET")
+AVATARS_BUCKET = os.getenv("AVATARS_BUCKET")
+IMAGE_BUCKET = os.getenv("IMAGE_BUCKET")
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 
 # Khởi tạo MinIO client
 minio_client = Minio(
@@ -32,15 +35,15 @@ def clean_cache():
     try:
         now = time.time()
         # Liệt kê tất cả object trong bucket
-        objects = minio_client.list_objects(CACHE_BUCKET, recursive=True)
+        objects = minio_client.list_objects(AUDIO_BUCKET, recursive=True)
         
         for obj in objects:
             # Lấy metadata hoặc stat của object
-            stat = minio_client.stat_object(CACHE_BUCKET, obj.object_name)
+            stat = minio_client.stat_object(AUDIO_BUCKET, obj.object_name)
             last_modified = stat.last_modified.timestamp()
             
             if now - last_modified > 604800:  # 7 ngày = 604,800 giây
-                minio_client.remove_object(CACHE_BUCKET, obj.object_name)
+                minio_client.remove_object(AUDIO_BUCKET, obj.object_name)
                 print(f'Deleted expired cache: {obj.object_name} (last modified: {stat.last_modified})')
     except S3Error as e:
         print(f"MinIO error: {e}")

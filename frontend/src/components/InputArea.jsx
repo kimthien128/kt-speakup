@@ -3,7 +3,6 @@ import axios from '../axiosInstance';
 import useAudioPlayer from '../hooks/useAudioPlayer';
 
 import Box from '@mui/material/Box';
-// import './InputArea.css';
 
 function InputArea({chatId, setChatId, onSendMessage, refreshChats}) {
     const [transcript, setTranscript] = useState('');
