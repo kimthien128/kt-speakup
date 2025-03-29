@@ -50,7 +50,7 @@ python -m pip install llama-cpp-python
 
 -   tải file cài: https://dl.min.io/server/minio/release/windows-amd64/minio.exe
 -   Tạo thư mục lưu trữ: vd: D:\Code\minio\data
--   Chạy cmd truy cập vào thư mục minio, chạy lệnh: `minio.exe server D:\Code\kt-speakup\minio\data --console-address ":9001"`
+-   Chạy cmd truy cập vào thư mục minio, chạy lệnh: minio.exe server D:\Code\kt-speakup\minio\data --console-address ":9001"
 -   Giữ cho server của minio luôn chạy
 
 ## download mongodb compass

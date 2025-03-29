@@ -11,7 +11,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 # Cấu hình JWT
 SECRET_KEY = "kimthien-secret-key" # Sẽ thay key mạnh hơn trong production và lưu vào env
 ALGORITHM = "HS256" # thuật toán mã hóa HMAC với SHA-256
-ACCESS_TOKEN_EXPIRE_MINUTES = 30 # Token sẽ hết hạn sau 30 phút
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 # Token sẽ hết hạn sau 30 phút
 
 # Hash mật khẩu
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
