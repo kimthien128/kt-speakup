@@ -103,10 +103,13 @@ function InputArea({chatId, setChatId, onSendMessage, refreshChats}) {
         if (onSendMessage) {
             onSendMessage(userMessage); // Gửi tin nhắn tạm ngay lập tức
         }
-        const userInput = transcript;
+        const temp = transcript;
         setTranscript(''); // Xóa textarea
 
         try {
+            // Xử lý viết hoa chữ cái đầu
+            const userInput = temp.charAt(0).toUpperCase() + temp.slice(1);
+
             // Gửi transcript đến /generate để lấy phản hồi từ AI
             const generateResponse = await axios.post(
                 `/generate?method=${generateMethod}`,
