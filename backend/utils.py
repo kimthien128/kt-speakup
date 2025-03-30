@@ -14,13 +14,14 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 ASSEMBLYAI_API_KEY = os.getenv("ASSEMBLYAI_API_KEY")
 VOSK_MODEL_DIR = os.getenv("VOSK_MODEL_DIR", "vosk-model-en-us-0.22-lgraph")
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+
 MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT")
 MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY")
 MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY")
 AUDIO_BUCKET = os.getenv("AUDIO_BUCKET")
 AVATARS_BUCKET = os.getenv("AVATARS_BUCKET")
 IMAGE_BUCKET = os.getenv("IMAGE_BUCKET")
-JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 
 # Khởi tạo MinIO client
 minio_client = Minio(

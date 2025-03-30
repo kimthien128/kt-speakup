@@ -96,6 +96,7 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                     },
                 }
             );
+            console.log('Word info:', res.data);
             setTooltip({
                 word: cleanedWord,
                 definition: res.data.definition || 'No definition found',
@@ -139,11 +140,11 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
         }
     };
 
-    const handleTranslate = async (text, event) => {
+    const handleTranslate = async (text, index, event) => {
         try {
             const res = await axios.post(
-                `/translate`,
-                {text: text, target_lang: 'vi'},
+                `/chats/${chatId}/translate-ai`,
+                {text: text, target_lang: 'vi', chat_id: chatId, index: index},
                 {
                     headers: {
                         'Content-Type': 'application/json',
@@ -151,7 +152,7 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                 }
             );
             console.log('Translate response:', res.data);
-            setTranslateTooltip({text: res.data.translatedText, x: event.pageX, y: event.pageY});
+            setTranslateTooltip({text: res.data.translatedTextAi, x: event.pageX, y: event.pageY});
         } catch (err) {
             console.error('Error translating:', err);
             setTranslateTooltip({text: 'Failed to translate', x: event.pageX, y: event.pageY});
@@ -322,7 +323,10 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                                             position: 'relative',
                                         }}
                                     >
-                                        {(msg.ai || '').split(' ').map((word, i) => (
+                                        {/* \s: Khoảng trắng (space, tab)
+                                            \n: Ký tự xuống dòng
+                                            +: Match 1 hoặc nhiều lần */}
+                                        {(msg.ai || '').split(/[\s\n]+/).map((word, i) => (
                                             <Typography
                                                 key={i}
                                                 variant="body1"
@@ -361,7 +365,7 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
 
                                                 <IconButton
                                                     size="small"
-                                                    onClick={(e) => handleTranslate(msg.ai, e)}
+                                                    onClick={(e) => handleTranslate(msg.ai, index, e)}
                                                     sx={{
                                                         bgcolor: 'rgba(66, 165, 245, .95)',
                                                         color: 'white',

@@ -38,7 +38,7 @@ const useAudioPlayer = () => {
                 // Dùng chatId và index từ tham số
                 if (chatId && index !== '') {
                     await axios.patch(
-                        `/chats/${chatId}/history`,
+                        `/chats/${chatId}/audioUrl`,
                         {index, audioUrl},
                         {headers: {'Content-Type': 'application/json'}}
                     );

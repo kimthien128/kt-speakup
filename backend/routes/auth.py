@@ -5,8 +5,7 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from database import db
-from utils import JWT_SECRET_KEY
-from .minio import minio_client, MINIO_ENDPOINT, AVATARS_BUCKET
+from utils import JWT_SECRET_KEY, minio_client, AVATARS_BUCKET, MINIO_ENDPOINT
 from minio.error import S3Error
 import uuid
 import os

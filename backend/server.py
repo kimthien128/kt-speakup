@@ -74,7 +74,7 @@ app.include_router(word_info_router, prefix='/word-info')
 app.include_router(vocab_router, prefix='/vocab')
 app.include_router(translate_router, prefix='/translate')
 app.include_router(config_router, prefix='/config')
-app.include_router(chats_router)
+app.include_router(chats_router, prefix='/chats')
 
 # Chạy scheduler để dọn cache mỗi ngày
 scheduler = BackgroundScheduler()

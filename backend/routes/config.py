@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from datetime import datetime, timedelta
 from minio.error import S3Error
 from routes.auth import get_current_user, UserInDB
-from .minio import minio_client, IMAGE_BUCKET
+from utils import minio_client, IMAGE_BUCKET
 from database import db
 import uuid
 import os
@@ -20,8 +20,7 @@ class SiteConfig(BaseModel):
     
 # Lấy config hiện tại
 @router.get("/", response_model=SiteConfig)
-async def get_config(current_user: UserInDB = Depends(get_current_user)):
-    
+async def get_config():
     config = await db.site_configs.find_one({"_id": "site_config_id"})
     if not config:
         # Nếu chưa có config, tạo mặc định

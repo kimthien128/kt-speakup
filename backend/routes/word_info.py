@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Request
+import requests
 import httpx
 
 router = APIRouter()
@@ -8,13 +9,17 @@ async def word_info(request: Request):
     try:
         data = await request.json()
         word = data.get('word', '').strip()
+        
         if not word:
             return {'error': 'No word provided'}, 400
         
         # Gọi Dictionary API
         api_url = f'https://api.dictionaryapi.dev/api/v2/entries/en/{word}'
+        
         async with httpx.AsyncClient() as client:
+            print("Making request to:", api_url)
             response = await client.get(api_url) # Dùng await với httpx
+            print(f"Dictionary API response: {response.status_code}, {response.text}")
         if response.status_code != 200:
             return {"definition": "No definition found", "phonetic": "N/A"}
         
@@ -45,5 +50,8 @@ async def word_info(request: Request):
         
         return {"definition": definition, "phonetic": phonetic, "audio": audio}
     except Exception as e:
-        print(f'Error fetching word info: {e}')
+        print(f'Error fetching word info: {str(e)}')  # Đảm bảo chuyển exception thành string
+        print(f'Exception type: {type(e)}')  # Log cả kiểu exception
+        import traceback
+        traceback.print_exc()  # In toàn bộ stack trace
         return {"definition": "No definition found", "phonetic": "N/A", "audio": ""}

@@ -2,8 +2,16 @@ from fastapi import APIRouter, Request, HTTPException, Depends
 from database import db
 from bson import ObjectId
 from routes.auth import UserInDB, get_current_user
+from pydantic import BaseModel
+from deep_translator import GoogleTranslator
 
-router = APIRouter(prefix="/chats", tags=["chats"])
+router = APIRouter()
+
+class TranslateRequest(BaseModel):
+    text: str
+    target_lang: str = "vi"
+    index: int
+
 @router.post("")
 async def create_chat( current_user: UserInDB = Depends(get_current_user)):
     try:
@@ -158,8 +166,8 @@ async def add_chat_history(chat_id: str, request: Request, current_user: UserInD
         print(f"Error adding chat history: {e}")
         raise HTTPException(status_code=500, detail="Failed to add history")
 
-# Endpoint PATCH để cập nhật audioUrl trong history
-@router.patch("/{chat_id}/history")
+# Cập nhật audioUrl trong history
+@router.patch("/{chat_id}/audioUrl")
 async def update_chat_history_audio(chat_id: str, request: Request, current_user: UserInDB = Depends(get_current_user)):
     try:
         # Kiểm tra ObjectId hợp lệ
@@ -194,6 +202,59 @@ async def update_chat_history_audio(chat_id: str, request: Request, current_user
     except Exception as e:
         print(f"Error updating chat history audio URL: {e}")
         raise HTTPException(status_code=500, detail="Failed to update history audio URL")
+
+# Dịch đoạn chat của AI & cập nhật vào history
+@router.post("/{chat_id}/translate-ai")
+async def translate_chat_ai(chat_id: str, request: TranslateRequest, current_user: UserInDB = Depends(get_current_user)):
+    try:
+        # Kiểm tra ObjectId hợp lệ
+        if not ObjectId.is_valid(chat_id):
+            raise HTTPException(status_code=400, detail="Invalid chat ID")
+        
+        # Kiểm tra chat hiện tại
+        chat = await db.chats.find_one(
+            {"_id": ObjectId(chat_id), "user_id": current_user.id},
+            {"history": 1} # Lấy toàn bộ danh sách history
+            )
+        if not chat or "history" not in chat:
+            raise HTTPException(status_code=404, detail="Chat not found or not owned by user")
+        
+        # Kiểm tra danh sách history
+        chat_history = chat["history"]
+        if not isinstance(chat_history, list) or request.index >= len(chat_history):
+            raise HTTPException(status_code=400, detail="Index out of range or history format invalid")
+        
+        chat_entry = chat_history[request.index]
+        if "ai" not in chat_entry:
+            raise HTTPException(status_code=400, detail="Chat entry missing 'ai' field")
+        
+        # Kiểm tra nếu đã có bản dịch
+        if "translateAi" in chat_entry and chat_entry["translateAi"]:
+            print("AI chat already translated. Get from DB")
+            return {"translatedTextAi": chat_entry["translateAi"], "message": "AI chat already translated"}
+        
+        # Nếu chưa có, tiến hành dịch
+        print("Translating AI chat...")
+        translator = GoogleTranslator(source="auto", target=request.target_lang)
+        translated_text  = translator.translate(chat_entry["ai"])
+        
+        # Cập nhật vào DB
+        result = await db.chats.update_one(
+            {
+                "_id": ObjectId(chat_id),
+                "user_id": current_user.id,
+                f"history.{request.index}.ai": chat_entry["ai"] # Kiểm tra xem đoạn chat AI cần dịch có khớp không
+             },
+            {"$set": {f"history.{request.index}.translateAi": translated_text}}
+        )
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Chat not found, not owned by user, or text mismatch")
+        return {"translatedTextAi": translated_text,
+                "message": "AI chat translated and updated"}
+    except Exception as e:
+        print(f"Error translating AI chat: {e}")
+        raise HTTPException(status_code=500, detail="Failed to translate AI chat")
+
 
 @router.get("/{chat_id}/vocab")
 async def get_chat_vocab(chat_id: str, current_user: UserInDB = Depends(get_current_user)):
