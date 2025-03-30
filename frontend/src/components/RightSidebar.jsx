@@ -1,4 +1,4 @@
-import React, {useState, useEffect, use} from 'react';
+import React, {useState, useEffect} from 'react';
 import {Link as RouterLink} from 'react-router-dom';
 
 import {Box, Typography, Button, Avatar, Chip, Divider, TextField, Menu, MenuItem, IconButton} from '@mui/material';
@@ -7,8 +7,10 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import SearchIcon from '@mui/icons-material/Search';
 
-import axios from '../axiosInstance';
+import ConfirmDialog from './ConfirmDialog';
+import {useConfirmDialog} from '../hooks/useConfirmDialog';
 import {getAvatarInitial} from '../utils/avatarUtils';
+import axios from '../axiosInstance';
 
 function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
     const [vocabList, setVocabList] = useState([]); //state cho danh sách từ vựng
@@ -20,10 +22,20 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
     const handleMenuOpen = (e) => setAnchorEl(e.currentTarget);
     const handleMenuClose = () => setAnchorEl(null);
 
+    // Hook sử dụng ConfirmDialog
+    const {dialog, showDialog, hideDialog} = useConfirmDialog();
+
     const handleLogoutClick = () => {
-        if (window.confirm('Are you sure want to logout')) {
-            onLogout();
-        }
+        showDialog({
+            title: 'Confirm Logout',
+            content: 'Are you sure want to logout?',
+            onConfirm: () => {
+                onLogout();
+                hideDialog();
+            },
+            confirmText: 'Logout',
+            confirmColor: 'primary',
+        });
     };
 
     // Fetch thông tin user từ API /auth/me
@@ -78,6 +90,21 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
 
     // Hàm lọc từ vựng dựa trên từ khóa tìm kiếm
     const filteredVocab = vocabList.filter((vocab) => vocab.word.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    // Xóa từ vựng
+    const handleDeleteVocab = (word) => {
+        showDialog({
+            title: 'Delete Vocabulary',
+            content: `Are you sure to delete "${word}"?`,
+            onConfirm: () => {
+                // Gọi API xóa
+                // deleteVocab(word);
+                hideDialog();
+            },
+            confirmText: 'Delete',
+            confirmColor: 'error',
+        });
+    };
 
     return (
         <Box
@@ -187,9 +214,7 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                     </Menu>
                 </Box>
             )}
-
             <Divider sx={{my: 2, width: '100%'}} />
-
             {/* Phần 2: Danh sách từ vựng (Chip) */}
             <Box
                 sx={{
@@ -226,13 +251,23 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                 )}
             </Box>
             <Divider sx={{my: 1, width: '100%'}} />
-
             {/* Phần 3: Chi tiết từ vựng */}
             <Box sx={{flexGrow: 1}}>
                 <Typography variant="h6" sx={{mb: 1}}>
                     Details Vocab
                 </Typography>
             </Box>
+
+            {/* Hiển thị ConfirmDialog */}
+            <ConfirmDialog
+                open={dialog.open}
+                title={dialog.title}
+                content={dialog.content}
+                onConfirm={dialog.onConfirm}
+                onCancel={hideDialog}
+                confirmText={dialog.confirmText}
+                confirmColor={dialog.confirmColor}
+            />
         </Box>
     );
 }

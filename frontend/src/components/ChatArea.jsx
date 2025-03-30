@@ -12,6 +12,7 @@ import IconButton from '@mui/material/IconButton';
 
 import TranslateIcon from '@mui/icons-material/Translate';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
+import BookmarkAddIcon from '@mui/icons-material/BookmarkAdd';
 
 function ChatArea({chatId, onWordClick, onSendMessage, onVocabAdded}) {
     const [tooltip, setTooltip] = useState(null);
@@ -181,15 +182,17 @@ function ChatArea({chatId, onWordClick, onSendMessage, onVocabAdded}) {
     // Đóng tooltip khi click bên ngoài
     useEffect(() => {
         const handleClickOutside = (event) => {
-            if (tooltipRef.current && !tooltipRef.current.contains(event.target)) {
+            if (
+                tooltipRef.current &&
+                !tooltipRef.current.contains(event.target) &&
+                !event.target.closest('.MuiTooltip-popper') // kiểm tra phần tử tooltip của MUI
+            ) {
                 setTooltip(null);
                 setTranslateTooltip(null);
             }
         };
 
-        if (tooltip || translateTooltip) {
-            document.addEventListener('mousedown', handleClickOutside);
-        }
+        document.addEventListener('mousedown', handleClickOutside);
 
         // Cleanup sự kiện khi tooltip bị tắt hoặc component unmount
         return () => {
@@ -240,6 +243,7 @@ function ChatArea({chatId, onWordClick, onSendMessage, onVocabAdded}) {
                                             py: 2.5,
                                             bgcolor: 'rgba(0, 0, 0, 0.08)',
                                             borderRadius: 2,
+                                            borderBottomRightRadius: 0,
                                             maxWidth: '70%',
                                             wordBreak: 'break-word',
                                         }}
@@ -292,6 +296,7 @@ function ChatArea({chatId, onWordClick, onSendMessage, onVocabAdded}) {
                                             py: 2.5,
                                             bgcolor: 'rgba(66, 165, 245, .5)',
                                             borderRadius: 2,
+                                            borderBottomLeftRadius: 0,
                                             width: 'fit-content',
                                             maxWidth: '70%',
                                             wordBreak: 'break-word',
@@ -404,34 +409,97 @@ function ChatArea({chatId, onWordClick, onSendMessage, onVocabAdded}) {
                 <MuiTooltip
                     open
                     title={
-                        <Box sx={{p: 1}}>
-                            <Typography variant="subtitle1">
-                                <strong>{tooltip.word}</strong>
-                            </Typography>
-                            <Typography variant="body2">{tooltip.definition}</Typography>
-                            <Typography variant="body2">{tooltip.phonetic}</Typography>
-                            <Button
-                                variant="contained"
-                                size="small"
-                                onClick={() =>
-                                    playSound({audioUrl: tooltip.audio, word: tooltip.word, ttsMethod: 'gtts'})
-                                }
-                                sx={{mt: 1, mr: 1}}
-                            >
-                                Play
-                            </Button>
-                            <Button
-                                variant="contained"
-                                size="small"
-                                onClick={addToVocab}
-                                disabled={tooltip.phonetic == 'N/A'}
-                                sx={{mt: 1}}
-                            >
-                                Add to vocab
-                            </Button>
-                        </Box>
+                        <div
+                            ref={tooltipRef} // Gán ref cho vùng tooltip
+                        >
+                            <Box sx={{p: 1}}>
+                                <Typography variant="subtitle1" sx={{fontSize: '1.2rem', textTransform: 'capitalize'}}>
+                                    <strong>{tooltip.word}</strong>
+                                </Typography>
+                                <Typography
+                                    variant="body2"
+                                    sx={{
+                                        fontSize: '.95rem',
+                                        mt: 1,
+                                    }}
+                                >
+                                    {tooltip.definition}
+                                </Typography>
+                                <Typography
+                                    variant="body2"
+                                    sx={{
+                                        fontSize: '.95rem',
+                                        my: 1,
+                                    }}
+                                >
+                                    {tooltip.phonetic}
+                                </Typography>
+
+                                {/* Button phất âm và Add to vocab */}
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        gap: 1,
+                                    }}
+                                >
+                                    <Button
+                                        variant="outlined"
+                                        size="small"
+                                        startIcon={<VolumeUpIcon fontSize="small" />}
+                                        onClick={() =>
+                                            playSound({audioUrl: tooltip.audio, word: tooltip.word, ttsMethod: 'gtts'})
+                                        }
+                                        sx={{
+                                            textTransform: 'none',
+                                            color: 'text.secondary',
+                                            borderColor: 'divider',
+                                            '&:hover': {
+                                                backgroundColor: 'action.hover',
+                                                borderColor: 'text.secondary',
+                                            },
+                                        }}
+                                    >
+                                        Pronounce
+                                    </Button>
+                                    <Button
+                                        variant="outlined"
+                                        size="small"
+                                        startIcon={<BookmarkAddIcon fontSize="small" />}
+                                        onClick={addToVocab}
+                                        disabled={tooltip.phonetic == 'N/A'}
+                                        sx={{
+                                            textTransform: 'none',
+                                            color: 'text.secondary',
+                                            borderColor: 'divider',
+                                            '&:hover': {
+                                                backgroundColor: 'action.hover',
+                                                borderColor: 'text.secondary',
+                                            },
+                                            '&.Mui-disabled': {
+                                                opacity: 0.5,
+                                            },
+                                        }}
+                                    >
+                                        Add to vocab
+                                    </Button>
+                                </Box>
+                            </Box>
+                        </div>
                     }
                     placement="bottom-start"
+                    componentsProps={{
+                        tooltip: {
+                            sx: {
+                                bgcolor: 'white',
+                                color: 'text.primary',
+                                p: 2,
+                                fontSize: '1.4rem', //kích thước arrow
+                                maxWidth: 400,
+                                boxShadow: '0px 2px 10px rgba(0,0,0,0.3)',
+                                borderRadius: 2,
+                            },
+                        },
+                    }}
                     PopperProps={{
                         anchorEl: {
                             getBoundingClientRect: () => ({
@@ -446,10 +514,9 @@ function ChatArea({chatId, onWordClick, onSendMessage, onVocabAdded}) {
                     }}
                 >
                     <Box
-                        ref={tooltipRef} // Gán ref cho vùng tooltip
                         sx={{
                             position: 'absolute',
-                            top: tooltip.y + 30,
+                            top: tooltip.y + 20,
                             left: tooltip.x,
                             zIndex: 999,
                         }}
@@ -461,8 +528,34 @@ function ChatArea({chatId, onWordClick, onSendMessage, onVocabAdded}) {
             {translateTooltip && (
                 <MuiTooltip
                     open
-                    title={<Typography variant="body2">{translateTooltip.text}</Typography>}
+                    title={
+                        <div
+                            ref={tooltipRef} // Gán ref cho vùng translateTooltip
+                        >
+                            <Typography
+                                variant="body2"
+                                sx={{
+                                    fontSize: '.95rem',
+                                }}
+                            >
+                                {translateTooltip.text}
+                            </Typography>
+                        </div>
+                    }
                     placement="bottom-start"
+                    componentsProps={{
+                        tooltip: {
+                            sx: {
+                                bgcolor: 'white',
+                                color: 'text.primary',
+                                p: 2,
+                                fontSize: '1.4rem', //kích thước arrow
+                                maxWidth: 300,
+                                boxShadow: '0px 2px 10px rgba(0,0,0,0.3)',
+                                borderRadius: 2,
+                            },
+                        },
+                    }}
                     PopperProps={{
                         anchorEl: {
                             getBoundingClientRect: () => ({
@@ -477,19 +570,18 @@ function ChatArea({chatId, onWordClick, onSendMessage, onVocabAdded}) {
                     }}
                 >
                     <Box
-                        ref={tooltipRef} // Gán ref cho vùng translateTooltip
                         sx={{
                             position: 'absolute',
-                            top: translateTooltip.y + 30,
+                            top: translateTooltip.y + 20,
                             left: translateTooltip.x,
-                            zIndex: 999,
+                            zIndex: 99,
                         }}
                     ></Box>
                 </MuiTooltip>
             )}
 
             <audio ref={audioRef} style={{display: 'none'}}></audio>
-            <ToastContainer position="bottom-left" autoClose={3000} />
+            <ToastContainer position="bottom-left" autoClose={2800} />
         </>
     );
 }

@@ -1,6 +1,7 @@
 import React, {useState, useEffect} from 'react';
-import {useNavigate, Link} from 'react-router-dom';
+import {useNavigate} from 'react-router-dom';
 import {getAvatarInitial} from '../utils/avatarUtils';
+import ConfirmDialog from './ConfirmDialog';
 
 import {
     Box,
@@ -8,7 +9,6 @@ import {
     Avatar,
     TextField,
     Button,
-    Paper,
     Chip,
     Alert,
     CircularProgress,
@@ -61,6 +61,12 @@ function Profile({onLogout}) {
     const [passwordError, setPasswordError] = useState(''); // Lỗi mật khẩu
     const [passwordSuccess, setPasswordSuccess] = useState(''); // Thành công mật khẩu
     const [passwordLoading, setPasswordLoading] = useState(false); // Đang tải mật khẩu
+    const [confirmDialog, setConfirmDialog] = useState({
+        open: false,
+        title: '',
+        content: '',
+        onConfirm: () => {},
+    }); // Hiển thị dialog xác nhận
     const navigate = useNavigate();
 
     // Fetch thông tin user khi component mount
@@ -121,59 +127,63 @@ function Profile({onLogout}) {
             return;
         }
 
-        if (!window.confirm('Are you sure you want to save changes?')) return;
+        setConfirmDialog({
+            open: true,
+            title: 'Confirm Save Changes',
+            content: 'Are you sure you want to save changes?',
+            onConfirm: async () => {
+                setLoading(true);
+                setError('');
+                setSuccess('');
 
-        setLoading(true);
-        setError('');
-        setSuccess('');
+                try {
+                    const token = localStorage.getItem('token');
+                    if (!token) {
+                        setError('Please login to update profile');
+                        navigate('/');
+                        return;
+                    }
 
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                setError('Please login to update profile');
-                navigate('/');
-                return;
-            }
+                    const formData = new FormData();
+                    formData.append('displayName', displayName);
+                    formData.append('phoneNumber', phoneNumber);
+                    formData.append('gender', gender);
+                    formData.append('location', location);
+                    if (avatarFile) {
+                        formData.append('avatar', avatarFile);
+                    }
 
-            const formData = new FormData();
-            formData.append('displayName', displayName);
-            formData.append('phoneNumber', phoneNumber);
-            formData.append('gender', gender);
-            formData.append('location', location);
-            if (avatarFile) {
-                formData.append('avatar', avatarFile);
-            }
+                    const res = await axios.patch('/auth/update', formData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                        },
+                    });
 
-            const res = await axios.patch('/auth/update', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            });
-
-            // Cập nhật userInfo và avatarPreview
-            setUserInfo({
-                ...userInfo,
-                displayName: res.data.displayName,
-                phoneNumber: res.data.phoneNumber,
-                gender: res.data.gender,
-                location: res.data.location,
-                avatarPath: res.data.avatarPath,
-            });
-            setAvatarPreview(res.data.avatarPath || '');
-            setAvatarFile(null); // Reset file sau khi upload
-            setSuccess('Profile updated successfully');
-        } catch (err) {
-            setError(err.response?.data?.detail || 'Failed to update profile');
-            console.error('Error updating profile:', err.response?.data || err.message);
-        } finally {
-            setLoading(false);
-        }
+                    // Cập nhật userInfo và avatarPreview
+                    setUserInfo({
+                        ...userInfo,
+                        displayName: res.data.displayName,
+                        phoneNumber: res.data.phoneNumber,
+                        gender: res.data.gender,
+                        location: res.data.location,
+                        avatarPath: res.data.avatarPath,
+                    });
+                    setAvatarPreview(res.data.avatarPath || '');
+                    setAvatarFile(null); // Reset file sau khi upload
+                    setSuccess('Profile updated successfully');
+                } catch (err) {
+                    setError(err.response?.data?.detail || 'Failed to update profile');
+                    console.error('Error updating profile:', err.response?.data || err.message);
+                } finally {
+                    setLoading(false);
+                    setConfirmDialog((prev) => ({...prev, open: false}));
+                }
+            },
+        });
     };
 
     // Xử lý đổi mật khẩu (Change Password)
     const handleChangePassword = async () => {
-        if (!window.confirm('Are you sure you want to change password?')) return;
-
         if (!oldPassword || !newPassword || !confirmPassword) {
             setPasswordError('All fields are required');
             return;
@@ -189,25 +199,33 @@ function Profile({onLogout}) {
             return;
         }
 
-        setPasswordLoading(true);
-        setPasswordError('');
-        setPasswordSuccess('');
+        setConfirmDialog({
+            open: true,
+            title: 'Confirm Change Password',
+            content: 'Are you sure you want to change password?',
+            onConfirm: async () => {
+                setPasswordLoading(true);
+                setPasswordError('');
+                setPasswordSuccess('');
 
-        try {
-            await axios.post('/auth/change-password', {
-                oldPassword,
-                newPassword,
-            });
-            setPasswordSuccess('Password changed successfully');
-            setOldPassword('');
-            setNewPassword('');
-            setConfirmPassword('');
-        } catch (err) {
-            setPasswordError(err.response?.data?.detail || 'Failed to change password');
-            console.error('Error changing password:', err.response?.data || err.message);
-        } finally {
-            setPasswordLoading(false);
-        }
+                try {
+                    await axios.post('/auth/change-password', {
+                        oldPassword,
+                        newPassword,
+                    });
+                    setPasswordSuccess('Password changed successfully');
+                    setOldPassword('');
+                    setNewPassword('');
+                    setConfirmPassword('');
+                } catch (err) {
+                    setPasswordError(err.response?.data?.detail || 'Failed to change password');
+                    console.error('Error changing password:', err.response?.data || err.message);
+                } finally {
+                    setPasswordLoading(false);
+                    setConfirmDialog((prev) => ({...prev, open: false}));
+                }
+            },
+        });
     };
 
     // Xử lý chuyển tab
@@ -216,10 +234,16 @@ function Profile({onLogout}) {
     };
 
     const handleLogoutClick = () => {
-        if (window.confirm('Are you sure want to logout')) {
-            onLogout();
-            navigate('/');
-        }
+        setConfirmDialog({
+            open: true,
+            title: 'Confirm Logout',
+            content: 'Are you sure you want to logout?',
+            onConfirm: () => {
+                onLogout();
+                navigate('/');
+                setConfirmDialog((prev) => ({...prev, open: false}));
+            },
+        });
     };
 
     return (
@@ -602,6 +626,16 @@ function Profile({onLogout}) {
                     </Box>
                 </Box>
             )}
+
+            <ConfirmDialog
+                open={confirmDialog.open}
+                title={confirmDialog.title}
+                content={confirmDialog.content}
+                onConfirm={confirmDialog.onConfirm}
+                onCancel={() => setConfirmDialog((prev) => ({...prev, open: false}))}
+                confirmText="Confirm"
+                cancelText="Cancel"
+            />
         </>
     );
 }
