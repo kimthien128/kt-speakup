@@ -57,6 +57,7 @@ from routes.vocab import router as vocab_router
 from routes.chats import router as chats_router
 from routes.auth import router as auth_router
 from routes.translate import router as translate_router
+from routes.config import router as config_router
 from utils import clean_cache, CACHE_DIR
 
 # Thư mục cache nếu chưa có
@@ -72,6 +73,7 @@ app.include_router(audio_router, prefix='/audio')
 app.include_router(word_info_router, prefix='/word-info')
 app.include_router(vocab_router, prefix='/vocab')
 app.include_router(translate_router, prefix='/translate')
+app.include_router(config_router, prefix='/config')
 app.include_router(chats_router)
 
 # Chạy scheduler để dọn cache mỗi ngày

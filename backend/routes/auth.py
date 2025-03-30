@@ -5,8 +5,8 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from database import db
-from utils import JWT_SECRET_KEY, MINIO_ENDPOINT, MINIO_ACCESS_KEY, MINIO_SECRET_KEY, AVATARS_BUCKET
-from minio import Minio
+from utils import JWT_SECRET_KEY
+from .minio import minio_client, MINIO_ENDPOINT, AVATARS_BUCKET
 from minio.error import S3Error
 import uuid
 import os
@@ -18,14 +18,6 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 SECRET_KEY = JWT_SECRET_KEY
 ALGORITHM = "HS256" # thuật toán mã hóa HMAC với SHA-256
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 # Token sẽ hết hạn sau 30 phút
-
-# Kết nối MinIO
-minio_client = Minio(
-    MINIO_ENDPOINT,
-    access_key=MINIO_ACCESS_KEY,
-    secret_key=MINIO_SECRET_KEY,
-    secure=False  # Đặt True nếu dùng HTTPS
-)
 
 # Kiểm tra bucket tồn tại, nếu không thì tạo
 try:

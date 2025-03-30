@@ -10,6 +10,7 @@ import RightSidebar from './components/RightSidebar';
 import Login from './components/Login';
 import Register from './components/Register';
 import Profile from './components/Profile';
+import AdminPanel from './components/AdminPanel';
 
 function ChatPage({userEmail, onLogout, onSendMessageRef}) {
     const {chatId} = useParams(); // Lấy chatId từ URL
@@ -69,6 +70,7 @@ function ChatPage({userEmail, onLogout, onSendMessageRef}) {
                     }}
                 >
                     <ChatArea
+                        userEmail={userEmail}
                         chatId={selectedChatId}
                         onWordClick={handleWordClick}
                         onSendMessage={onSendMessageRef}
@@ -149,6 +151,7 @@ function App() {
         <Router>
             <Routes>
                 <Route path="/profile" element={<Profile onLogout={handleLogout} />} />
+                <Route path="/admin" element={<AdminPanel />} />
                 <Route
                     path="/chat/:chatId"
                     element={

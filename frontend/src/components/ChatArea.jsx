@@ -1,30 +1,35 @@
 import React, {useState, useRef, useEffect} from 'react';
 import axios from '../axiosInstance';
-import {toast, ToastContainer} from 'react-toastify';
 import useAudioPlayer from '../hooks/useAudioPlayer';
+import useSiteConfig from '../hooks/useSiteConfig';
+import useUserInfo from '../hooks/useUserInfo';
+import {getAvatarInitial} from '../utils/avatarUtils';
+
+import {toast, ToastContainer} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; // Import CSS của thư viện toastify
+
 import {Tooltip as MuiTooltip} from '@mui/material';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import Avatar from '@mui/material/Avatar';
 import IconButton from '@mui/material/IconButton';
+import CircularProgress from '@mui/material/CircularProgress';
+import Alert from '@mui/material/Alert';
 
 import TranslateIcon from '@mui/icons-material/Translate';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import BookmarkAddIcon from '@mui/icons-material/BookmarkAdd';
 
-function ChatArea({chatId, onWordClick, onSendMessage, onVocabAdded}) {
+function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded}) {
+    const {config, loading: configLoading, error: configError} = useSiteConfig(); // Lấy config từ backend
+    const {userInfo, loading: userLoading, error: userError} = useUserInfo(userEmail); // Hook lấy thông tin user
     const [tooltip, setTooltip] = useState(null);
     const [chatHistory, setChatHistory] = useState([]);
     const [isPlaying, setIsPlaying] = useState(false);
     const [translateTooltip, setTranslateTooltip] = useState(null); // Tooltip cho bản dịch
     const tooltipRef = useRef(null); // Ref để tham chiếu vùng tooltip
     const {playSound, audioRef} = useAudioPlayer(); // Ref để quản lý audio element
-
-    //text avatar
-    const userAvatar = 'https://marketplace.canva.com/EAGD_ug6bbY/1/0/1600w/canva-PXPfiI0IpT4.jpg';
-    const aiAvatar = 'https://img.freepik.com/free-vector/graident-ai-robot-vectorart_78370-4114.jpg';
 
     // Lấy lịch sử chat từ backend khi chatId thay đổi
     useEffect(() => {
@@ -200,6 +205,19 @@ function ChatArea({chatId, onWordClick, onSendMessage, onVocabAdded}) {
         };
     }, [tooltip, translateTooltip]); // Chạy lại khi tooltip thay đổi
 
+    // Xử lý config
+    if (configLoading || userLoading) {
+        return <CircularProgress />;
+    }
+    if (configError || userError) {
+        return (
+            <Alert severity="error">
+                {configError}
+                {userError}
+            </Alert>
+        );
+    }
+
     return (
         <>
             {/* Nội dung chat */}
@@ -260,14 +278,15 @@ function ChatArea({chatId, onWordClick, onSendMessage, onVocabAdded}) {
                                             </Typography>
                                         ))}
                                     </Box>
+
                                     <Avatar
-                                        src={userAvatar}
                                         alt="User Avatar"
-                                        sx={{
-                                            width: 40,
-                                            height: 40,
-                                        }}
-                                    />
+                                        src={userInfo.avatarPath}
+                                        sx={{bgcolor: 'primary.main', width: 40, height: 40}}
+                                    >
+                                        {/* Hiển thị chữ cái đầu nếu không có avatarPath */}
+                                        {!userInfo.avatarPath && getAvatarInitial(userInfo)}
+                                    </Avatar>
                                 </Box>
                             )}
 
@@ -282,8 +301,8 @@ function ChatArea({chatId, onWordClick, onSendMessage, onVocabAdded}) {
                                     }}
                                 >
                                     <Avatar
-                                        src={aiAvatar}
-                                        alt="AI Avatar"
+                                        src={config?.aiChatIcon || null}
+                                        alt="AI Icon"
                                         sx={{
                                             width: 40,
                                             height: 40,
@@ -386,10 +405,10 @@ function ChatArea({chatId, onWordClick, onSendMessage, onVocabAdded}) {
                                     mb: 2,
                                 }}
                             >
+                                {/* Logo */}
                                 <Box
                                     sx={{
-                                        backgroundImage:
-                                            'url("https://marketplace.canva.com/EAGD_ug6bbY/1/0/1600w/canva-PXPfiI0IpT4.jpg")',
+                                        backgroundImage: config?.logoImage ? `url("${config.logoImage}")` : null,
                                         backgroundSize: 'cover',
                                         width: '80px',
                                         height: '80px',

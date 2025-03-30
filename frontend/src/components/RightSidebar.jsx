@@ -2,21 +2,24 @@ import React, {useState, useEffect} from 'react';
 import {Link as RouterLink} from 'react-router-dom';
 
 import {Box, Typography, Button, Avatar, Chip, Divider, TextField, Menu, MenuItem, IconButton} from '@mui/material';
+import Alert from '@mui/material/Alert';
+import CircularProgress from '@mui/material/CircularProgress';
 import LogoutIcon from '@mui/icons-material/Logout';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import SearchIcon from '@mui/icons-material/Search';
 
 import ConfirmDialog from './ConfirmDialog';
-import {useConfirmDialog} from '../hooks/useConfirmDialog';
+import useConfirmDialog from '../hooks/useConfirmDialog';
+import useUserInfo from '../hooks/useUserInfo';
 import {getAvatarInitial} from '../utils/avatarUtils';
 import axios from '../axiosInstance';
 
 function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
     const [vocabList, setVocabList] = useState([]); //state cho danh sách từ vựng
     const [searchTerm, setSearchTerm] = useState(''); //state cho từ khóa tìm kiếm vocab
-    const [userInfo, setUserInfo] = useState(null); //state cho thông tin user
     const [anchorEl, setAnchorEl] = useState(null); //state cho menu user
+    const {userInfo, loading: userLoading, error: userError} = useUserInfo(userEmail); // Hook lấy thông tin user
 
     // Hàm mở và đóng Menu
     const handleMenuOpen = (e) => setAnchorEl(e.currentTarget);
@@ -37,27 +40,6 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
             confirmColor: 'primary',
         });
     };
-
-    // Fetch thông tin user từ API /auth/me
-    useEffect(() => {
-        const fetchUserInfo = async () => {
-            try {
-                const token = localStorage.getItem('token');
-                if (!token) {
-                    return;
-                }
-
-                const res = await axios.get('/auth/me');
-                setUserInfo(res.data);
-            } catch (err) {
-                console.error('Error fetching user info:', err.response?.data || err.message);
-                setUserInfo(null);
-            }
-        };
-        if (userEmail) {
-            fetchUserInfo();
-        }
-    }, [userEmail]);
 
     // Hàm fetch từ vựng
     const fetchVocab = async () => {
@@ -105,6 +87,10 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
             confirmColor: 'error',
         });
     };
+
+    // Xử lý userInfo
+    if (userLoading) return <CircularProgress />;
+    if (userError) return <Alert severity="error">{userError}</Alert>;
 
     return (
         <Box

@@ -1,5 +1,6 @@
 import React, {useState, useEffect, useRef} from 'react';
 import axios from '../axiosInstance';
+import useSiteConfig from '../hooks/useSiteConfig';
 import {useNavigate} from 'react-router-dom';
 
 import List from '@mui/material/List';
@@ -8,21 +9,21 @@ import ListItemText from '@mui/material/ListItemText';
 import Box from '@mui/material/Box';
 import FormControl from '@mui/material/FormControl';
 import IconButton from '@mui/material/IconButton';
-import TextField from '@mui/material/TextField';
-import InputLabel from '@mui/material/InputLabel';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import InputAdornment from '@mui/material/InputAdornment';
 import Divider from '@mui/material/Divider';
+import CircularProgress from '@mui/material/CircularProgress';
+import Alert from '@mui/material/Alert';
 
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
-import AddBoxIcon from '@mui/icons-material/AddBox';
 import SaveIcon from '@mui/icons-material/Save';
 import SearchIcon from '@mui/icons-material/Search';
-import {Tooltip} from '@mui/material';
+import Tooltip from '@mui/material/Tooltip';
 
 function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
+    const {config, loading, error} = useSiteConfig();
     const [chats, setChats] = useState([]);
     const [editingChatId, setEditingChatId] = useState(null); // Theo dõi chat đang sửa
     const [editTitle, setEditTitle] = useState(''); // Lưu title đang chỉnh sửa
@@ -135,6 +136,14 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
         (chat.title || 'Untitled Chat').toLowerCase().includes(searchChatTitle.toLowerCase())
     );
 
+    // Xử lý config
+    if (loading) {
+        return <CircularProgress />;
+    }
+    if (error) {
+        return <Alert severity="error">{error}</Alert>;
+    }
+
     return (
         <Box
             sx={{
@@ -151,9 +160,9 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
             {/* Logo */}
             <Box sx={{mb: 2, textAlign: 'center'}}>
                 <img
-                    src="https://marketplace.canva.com/EAGD_ug6bbY/1/0/1600w/canva-PXPfiI0IpT4.jpg"
+                    src={config?.logoImage || null}
                     alt="KT SpeakUp Logo"
-                    style={{maxWidth: '150px', height: 'auto'}}
+                    style={{maxWidth: '100px', height: 'auto'}}
                 />
             </Box>
             <Divider sx={{mb: 2}} />

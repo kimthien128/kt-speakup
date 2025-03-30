@@ -1,23 +1,13 @@
 import React, {useState, useEffect} from 'react';
 import {useNavigate} from 'react-router-dom';
-import {getAvatarInitial} from '../utils/avatarUtils';
 import ConfirmDialog from './ConfirmDialog';
+import {getAvatarInitial} from '../utils/avatarUtils';
+import useSiteConfig from '../hooks/useSiteConfig';
 
-import {
-    Box,
-    Typography,
-    Avatar,
-    TextField,
-    Button,
-    Chip,
-    Alert,
-    CircularProgress,
-    IconButton,
-    Grid,
-    MenuItem,
-    Tabs,
-    Tab,
-} from '@mui/material';
+import {Box, Typography, Avatar, TextField, Button, Chip, IconButton, Grid, MenuItem, Tabs, Tab} from '@mui/material';
+import CircularProgress from '@mui/material/CircularProgress';
+import Alert from '@mui/material/Alert';
+
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import SettingsIcon from '@mui/icons-material/Settings';
 import LockIcon from '@mui/icons-material/Lock';
@@ -44,6 +34,7 @@ function TabPanel(props) {
 }
 
 function Profile({onLogout}) {
+    const {config, loading: configLoading, error: configError} = useSiteConfig();
     const [userInfo, setUserInfo] = useState(null); // Thông tin user từ API
     const [displayName, setDisplayName] = useState(''); // Tên hiển thị
     const [phoneNumber, setPhoneNumber] = useState(''); // Số điện thoại
@@ -246,6 +237,14 @@ function Profile({onLogout}) {
         });
     };
 
+    // Xử lý config
+    if (loading) {
+        return <CircularProgress />;
+    }
+    if (error) {
+        return <Alert severity="error">{error}</Alert>;
+    }
+
     return (
         <>
             {userInfo && (
@@ -279,7 +278,7 @@ function Profile({onLogout}) {
                             {/* Logo */}
                             <Box>
                                 <img
-                                    src="https://marketplace.canva.com/EAGD_ug6bbY/1/0/1600w/canva-PXPfiI0IpT4.jpg"
+                                    src={config?.logoImage || null}
                                     alt="KT SpeakUp Logo"
                                     style={{maxWidth: '100px', height: 'auto'}}
                                 />

@@ -1,6 +1,6 @@
 import {useState} from 'react';
 
-export const useConfirmDialog = () => {
+export default function useConfirmDialog() {
     const [dialog, setDialog] = useState({
         open: false,
         title: '',
@@ -33,4 +33,4 @@ export const useConfirmDialog = () => {
         showDialog,
         hideDialog,
     };
-};
+}
