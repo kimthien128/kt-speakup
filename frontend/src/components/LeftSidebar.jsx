@@ -158,12 +158,20 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
             }}
         >
             {/* Logo */}
-            <Box sx={{mb: 2, textAlign: 'center'}}>
-                <img
-                    src={config?.logoImage || null}
-                    alt="KT SpeakUp Logo"
-                    style={{maxWidth: '100px', height: 'auto'}}
-                />
+            <Box
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    mb: 2,
+                }}
+            >
+                <Box sx={{width: '100px', height: '100px'}}>
+                    <img
+                        src={config?.logoImage || null}
+                        alt="KT SpeakUp Logo"
+                        style={{width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center'}}
+                    />
+                </Box>
             </Box>
             <Divider sx={{mb: 2}} />
 

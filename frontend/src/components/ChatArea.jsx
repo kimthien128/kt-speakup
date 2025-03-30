@@ -414,6 +414,7 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                                     sx={{
                                         backgroundImage: config?.logoImage ? `url("${config.logoImage}")` : null,
                                         backgroundSize: 'cover',
+                                        backgroundPosition: 'center',
                                         width: '80px',
                                         height: '80px',
                                         mr: 2,

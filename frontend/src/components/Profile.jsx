@@ -276,11 +276,21 @@ function Profile({onLogout}) {
                             }}
                         >
                             {/* Logo */}
-                            <Box>
+                            <Box
+                                sx={{
+                                    width: 100,
+                                    height: 100,
+                                }}
+                            >
                                 <img
                                     src={config?.logoImage || null}
                                     alt="KT SpeakUp Logo"
-                                    style={{maxWidth: '100px', height: 'auto'}}
+                                    style={{
+                                        width: '100%',
+                                        height: '100%',
+                                        objectFit: 'cover',
+                                        objectPosition: 'center',
+                                    }}
                                 />
                             </Box>
 
