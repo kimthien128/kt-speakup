@@ -183,6 +183,7 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                         }
                     />
                 </FormControl>
+
                 {/* Create new chat */}
                 <Tooltip title="Create new chat">
                     <IconButton
@@ -214,11 +215,11 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                             key={chat._id}
                             onClick={() => onSelectChat(chat._id)}
                             sx={{
-                                borderRadius: 1,
+                                borderRadius: 2,
                                 mb: 1,
-                                bgcolor: chat._id === selectedChatId ? 'rgba(255, 255, 255, 0.8)' : 'transparent',
+                                bgcolor: chat._id === selectedChatId ? 'rgba(0, 0, 0, .15)' : 'transparent',
                                 '&:hover': {
-                                    bgcolor: 'rgba(255, 255, 255, 1)',
+                                    bgcolor: 'rgba(0, 0, 0, .15)',
                                     transition: 'background-color 0.2s',
                                 },
                                 display: 'flex',

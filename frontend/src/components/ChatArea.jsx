@@ -3,8 +3,12 @@ import axios from '../axiosInstance';
 import {toast, ToastContainer} from 'react-toastify';
 import useAudioPlayer from '../hooks/useAudioPlayer';
 import 'react-toastify/dist/ReactToastify.css'; // Import CSS của thư viện toastify
-import {Box, Typography, Button, Tooltip as MuiTooltip} from '@mui/material';
+import {Tooltip as MuiTooltip} from '@mui/material';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
 import Avatar from '@mui/material/Avatar';
+import IconButton from '@mui/material/IconButton';
 
 import TranslateIcon from '@mui/icons-material/Translate';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
@@ -214,9 +218,10 @@ function ChatArea({chatId, onWordClick, onSendMessage, onVocabAdded}) {
                         <Box
                             key={index}
                             sx={{
-                                mb: 2,
+                                mt: 3,
                                 display: 'flex',
                                 flexDirection: 'column',
+                                gap: 2,
                             }}
                         >
                             {/* Tin nhắn người dùng */}
@@ -231,12 +236,12 @@ function ChatArea({chatId, onWordClick, onSendMessage, onVocabAdded}) {
                                 >
                                     <Box
                                         sx={{
-                                            p: 1,
-                                            bgcolor: 'rgba(0, 0, 0, 0.1)',
+                                            px: 1.5,
+                                            py: 2.5,
+                                            bgcolor: 'rgba(0, 0, 0, 0.08)',
                                             borderRadius: 2,
                                             maxWidth: '70%',
                                             wordBreak: 'break-word',
-                                            textAlign: 'right',
                                         }}
                                     >
                                         {(msg.user || '').split(' ').map((word, i) => (
@@ -283,13 +288,14 @@ function ChatArea({chatId, onWordClick, onSendMessage, onVocabAdded}) {
 
                                     <Box
                                         sx={{
-                                            p: 1,
+                                            px: 1.5,
+                                            py: 2.5,
                                             bgcolor: 'rgba(66, 165, 245, .5)',
                                             borderRadius: 2,
                                             width: 'fit-content',
                                             maxWidth: '70%',
                                             wordBreak: 'break-word',
-                                            mt: msg.user ? 1 : 0,
+                                            position: 'relative',
                                         }}
                                     >
                                         {(msg.ai || '').split(' ').map((word, i) => (
@@ -304,22 +310,44 @@ function ChatArea({chatId, onWordClick, onSendMessage, onVocabAdded}) {
                                             </Typography>
                                         ))}
                                         {msg.ai && msg.ai != '...' && (
-                                            <Box sx={{mt: 1}}>
-                                                <Button
-                                                    variant="contained"
+                                            <Box
+                                                sx={{
+                                                    position: 'absolute',
+                                                    bottom: 0,
+                                                    left: 4,
+                                                    transform: 'translateY(50%)',
+                                                    display: 'flex',
+                                                    gap: 1,
+                                                    p: 1,
+                                                }}
+                                            >
+                                                <IconButton
                                                     size="small"
-                                                    sx={{mr: 1}}
                                                     onClick={() => handlePlay(msg.audioUrl, msg.ai, index)}
+                                                    sx={{
+                                                        bgcolor: 'rgba(66, 165, 245, .95)',
+                                                        color: 'white',
+                                                        '&: hover': {
+                                                            bgcolor: 'primary.dark',
+                                                        },
+                                                    }}
                                                 >
-                                                    Play
-                                                </Button>
-                                                <Button
-                                                    variant="contained"
+                                                    <VolumeUpIcon fontSize="small" />
+                                                </IconButton>
+
+                                                <IconButton
                                                     size="small"
                                                     onClick={(e) => handleTranslate(msg.ai, e)}
+                                                    sx={{
+                                                        bgcolor: 'rgba(66, 165, 245, .95)',
+                                                        color: 'white',
+                                                        '&: hover': {
+                                                            bgcolor: 'primary.dark',
+                                                        },
+                                                    }}
                                                 >
-                                                    Translate
-                                                </Button>
+                                                    <TranslateIcon fontSize="small" />
+                                                </IconButton>
                                             </Box>
                                         )}
                                     </Box>

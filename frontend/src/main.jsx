@@ -26,6 +26,17 @@ createRoot(document.getElementById('root')).render(
                     boxSizing: 'border-box',
                     overflow: 'hidden',
                     position: 'relative',
+                    '&:before': {
+                        content: '""',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(0, 0, 0, 0.1)', // Overlay để làm nổi bật text
+                        zIndex: 1,
+                        backdropFilter: 'blur(5px)',
+                    },
                 }}
             >
                 {/* Box bao bọc có radius */}
@@ -38,9 +49,10 @@ createRoot(document.getElementById('root')).render(
                         borderColor: 'rgba(255, 255, 255, 0.9)',
                         boxShadow: '0 0 25px rgba(0, 0, 0, 0.15)',
                         boxSizing: 'border-box',
-                        backdropFilter: 'blur(30px)',
-                        bgcolor: 'rgba(255, 255, 255, 0.2)',
+                        backdropFilter: 'blur(20px)',
+                        bgcolor: 'rgba(255, 255, 255, 0.8)',
                         width: '100%',
+                        zIndex: 2,
                     }}
                 >
                     <App />
