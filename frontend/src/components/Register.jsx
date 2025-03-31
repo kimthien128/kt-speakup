@@ -98,14 +98,15 @@ function Register() {
                         backgroundImage: config?.heroImage
                             ? `url(${config.heroImage})`
                             : 'linear-gradient(135deg, #3a7bd5 0%, #00d2ff 100%)',
-                        backgroundSize: 'contain',
+                        backgroundSize: 'cover',
                         backgroundPosition: 'center',
+                        backgroundRepeat: 'no-repeat',
                         borderTopLeftRadius: 40,
                         borderBottomLeftRadius: 40,
                         display: 'flex',
                         // alignItems: 'center',
                         justifyContent: 'center',
-                        color: 'text.secondary',
+                        color: 'white',
                         p: 4,
                     }}
                 >

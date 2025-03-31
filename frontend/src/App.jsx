@@ -1,5 +1,5 @@
 import React, {useState, useRef, useEffect} from 'react';
-import {BrowserRouter as Router, Routes, Route, useParams, useNavigate} from 'react-router-dom';
+import {BrowserRouter as Router, Routes, Route, useParams, useNavigate, Navigate} from 'react-router-dom';
 import axios from './axiosInstance';
 import {Box, Container} from '@mui/material';
 
@@ -141,6 +141,9 @@ function App() {
                 <Routes>
                     <Route path="/" element={<Login setToken={setToken} setUserEmail={setUserEmail} />} />
                     <Route path="/register" element={<Register />} />
+
+                    {/* Catch-all route - điều hướng mọi đường dẫn không khớp về "/" */}
+                    <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
             </Router>
         );

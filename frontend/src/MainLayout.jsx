@@ -35,7 +35,7 @@ function MainLayout({children}) {
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    background: 'rgba(0, 0, 0, 0.1)', // Overlay để làm nổi bật text
+                    background: 'rgba(0, 0, 0, 0.2)', // Overlay để làm nổi bật text
                     zIndex: 1,
                     backdropFilter: 'blur(5px)',
                 },
