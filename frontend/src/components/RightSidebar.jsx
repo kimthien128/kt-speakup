@@ -127,9 +127,13 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                                 overflow: 'hidden', //Giới hạn title
                                 textOverflow: 'ellipsis', //Thêm dấu ...
                                 whiteSpace: 'nowrap', //Không ngắt dòng
+                                '& > span': {
+                                    fontWeight: 'bold',
+                                    color: 'primary.main',
+                                },
                             }}
                         >
-                            Welcome {userInfo.displayName || userEmail}
+                            Welcome <span>{userInfo.displayName || userEmail}</span>
                         </Typography>
                     )}
 

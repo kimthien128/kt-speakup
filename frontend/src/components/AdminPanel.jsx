@@ -1,7 +1,8 @@
 import React, {useState, useEffect} from 'react';
 import {useNavigate} from 'react-router-dom';
 
-import {Box, Typography, Paper, Alert, CircularProgress, IconButton, Button} from '@mui/material';
+import Grid from '@mui/material/Grid2';
+import {Box, Typography, Paper, Alert, CircularProgress, IconButton, Button, Grow} from '@mui/material';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
@@ -16,6 +17,8 @@ function AdminPanel() {
     const [logoPreview, setLogoPreview] = useState('');
     const [aiIconFile, setAiIconFile] = useState(null);
     const [aiIconPreview, setAiIconPreview] = useState('');
+    const [heroFile, setHeroFile] = useState(null);
+    const [heroPreview, setHeroPreview] = useState('');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [loading, setLoading] = useState(false);
@@ -36,6 +39,7 @@ function AdminPanel() {
                 setBackgroundPreview(res.data.backgroundImage || '');
                 setLogoPreview(res.data.logoImage || '');
                 setAiIconPreview(res.data.aiChatIcon || '');
+                setHeroPreview(res.data.heroImage || '');
             } catch (err) {
                 setError('Failed to load config');
                 console.error('Error fetching config:', err.response?.data || err.message);
@@ -85,6 +89,7 @@ function AdminPanel() {
                     if (backgroundFile) formData.append('background', backgroundFile);
                     if (logoFile) formData.append('logo', logoFile);
                     if (aiIconFile) formData.append('aiIcon', aiIconFile);
+                    if (heroFile) formData.append('hero', heroFile);
 
                     const res = await axios.patch('/config', formData, {
                         headers: {
@@ -96,9 +101,11 @@ function AdminPanel() {
                     setBackgroundPreview(res.data.backgroundImage || '');
                     setLogoPreview(res.data.logoImage || '');
                     setAiIconPreview(res.data.aiChatIcon || '');
+                    setHeroPreview(res.data.heroImage || '');
                     setBackgroundFile(null);
                     setLogoFile(null);
                     setAiIconFile(null);
+                    setHeroFile(null);
                     setSuccess('Config updated successfully');
                 } catch (err) {
                     setError(err.response?.data?.detail || 'Failed to update config');
@@ -169,9 +176,9 @@ function AdminPanel() {
                         bgcolor: 'white',
                     }}
                 >
-                    <Box sx={{display: 'flex', justifyContent: 'space-around'}}>
+                    <Grid container>
                         {/* Background Image */}
-                        <Box sx={{textAlign: 'center'}}>
+                        <Grid size="grow" sx={{textAlign: 'center'}}>
                             <Typography variant="h6" sx={{mb: 2}}>
                                 Background Image
                             </Typography>
@@ -216,10 +223,10 @@ function AdminPanel() {
                                     />
                                 </IconButton>
                             </Box>
-                        </Box>
+                        </Grid>
 
                         {/* Logo Image */}
-                        <Box sx={{textAlign: 'center'}}>
+                        <Grid size="grow" sx={{textAlign: 'center'}}>
                             <Typography variant="h6" sx={{mb: 2}}>
                                 Logo Image
                             </Typography>
@@ -264,10 +271,10 @@ function AdminPanel() {
                                     />
                                 </IconButton>
                             </Box>
-                        </Box>
+                        </Grid>
 
                         {/* AI Chat Icon */}
-                        <Box sx={{textAlign: 'center'}}>
+                        <Grid size="grow" sx={{textAlign: 'center'}}>
                             <Typography variant="h6" sx={{mb: 2}}>
                                 AI Chat Icon
                             </Typography>
@@ -312,8 +319,56 @@ function AdminPanel() {
                                     />
                                 </IconButton>
                             </Box>
-                        </Box>
-                    </Box>
+                        </Grid>
+
+                        {/* Hero Image */}
+                        <Grid size="grow" sx={{textAlign: 'center'}}>
+                            <Typography variant="h6" sx={{mb: 2}}>
+                                Hero Image
+                            </Typography>
+                            <Box
+                                sx={{
+                                    position: 'relative',
+                                    display: 'inline-block',
+                                }}
+                            >
+                                <Box
+                                    component="img"
+                                    src={heroPreview || null}
+                                    sx={{
+                                        width: 200,
+                                        height: 200,
+                                        objectFit: 'cover',
+                                        borderRadius: 2,
+                                        border: '2px solid white',
+                                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                                    }}
+                                />
+                                <IconButton
+                                    component="label"
+                                    sx={{
+                                        position: 'absolute',
+                                        right: 0,
+                                        bottom: 0,
+                                        bgcolor: 'primary.light',
+                                        color: 'white',
+                                        '&:hover': {
+                                            bgcolor: 'primary.dark',
+                                        },
+                                        boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                                    }}
+                                >
+                                    <CameraAltIcon fontSize="small" />
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        hidden
+                                        onChange={(e) => handleFileChange(e, setHeroFile, setHeroPreview)}
+                                    />
+                                </IconButton>
+                            </Box>
+                        </Grid>
+                    </Grid>
 
                     <Box
                         sx={{

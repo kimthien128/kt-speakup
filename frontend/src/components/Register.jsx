@@ -1,13 +1,14 @@
 import React, {useState} from 'react';
-import axios from 'axios';
 import {Link, useNavigate} from 'react-router-dom';
+import useSiteConfig from '../hooks/useSiteConfig';
+import axios from 'axios';
+
 import {
     Box,
     Grid,
     TextField,
     Button,
     Typography,
-    Alert,
     Link as MuiLink,
     FormControlLabel,
     Checkbox,
@@ -22,8 +23,11 @@ import {
     Divider,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import CircularProgress from '@mui/material/CircularProgress';
+import Alert from '@mui/material/Alert';
 
 function Register() {
+    const {config, loading: configLoading, error: configError} = useSiteConfig();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -75,6 +79,15 @@ function Register() {
             console.error(err);
         }
     };
+
+    // Xử lý config
+    if (configLoading) {
+        return <CircularProgress />;
+    }
+    if (configError) {
+        return <Alert severity="error">{configError}</Alert>;
+    }
+
     return (
         <Grid container>
             {/* Bên trái: Hình ảnh minh họa */}
@@ -82,30 +95,18 @@ function Register() {
                 <Box
                     sx={{
                         height: '100%',
-                        backgroundImage:
-                            'url("https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=2070&auto=format&fit=crop")',
-                        backgroundSize: 'cover',
+                        backgroundImage: config?.heroImage
+                            ? `url(${config.heroImage})`
+                            : 'linear-gradient(135deg, #3a7bd5 0%, #00d2ff 100%)',
+                        backgroundSize: 'contain',
                         backgroundPosition: 'center',
                         borderTopLeftRadius: 40,
                         borderBottomLeftRadius: 40,
                         display: 'flex',
-                        alignItems: 'center',
+                        // alignItems: 'center',
                         justifyContent: 'center',
-                        color: '#fff',
+                        color: 'text.secondary',
                         p: 4,
-                        position: 'relative',
-                        '&:before': {
-                            content: '""',
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            background: 'rgba(0, 0, 0, 0.3)',
-                            zIndex: 1,
-                            borderTopLeftRadius: 40,
-                            borderBottomLeftRadius: 40,
-                        },
                     }}
                 >
                     <Box

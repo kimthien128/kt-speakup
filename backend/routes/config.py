@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from datetime import datetime, timedelta
 from minio.error import S3Error
 from routes.auth import get_current_user, UserInDB
-from utils import minio_client, IMAGE_BUCKET
+from utils import minio_client, IMAGE_BUCKET, MINIO_ENDPOINT
 from database import db
 import uuid
 import os
@@ -16,31 +16,40 @@ class SiteConfig(BaseModel):
     backgroundImage: str | None
     logoImage: str | None
     aiChatIcon: str | None
+    heroImage: str | None
     updatedAt: str
     
 # Lấy config hiện tại
 @router.get("/", response_model=SiteConfig)
 async def get_config():
     config = await db.site_configs.find_one({"_id": "site_config_id"})
+    
+    # Nếu chưa có config hoặc thiếu trường nào thì bổ sung
+    default_config = {
+        "backgroundImage": None,
+        "logoImage": None,
+        "aiChatIcon": None,
+        "heroImage": None,  # Thêm heroImage nếu chưa có
+        "updatedAt": datetime.now().isoformat()
+    }
+    
     if not config:
-        # Nếu chưa có config, tạo mặc định
-        default_config = {
-            "_id": "site_config_id",
-            "backgroundImage": None,
-            "logoImage": None,
-            "aiChatIcon": None,
-            "updatedAt": datetime.now().isoformat()
-        }
+        config = {"_id": "site_config_id", **default_config}
         await db.site_configs.insert_one(default_config)
-        return default_config
+    else:
+        # Đảm bảo tất cả các trường có mặt
+        for key, value in default_config.items():
+            if key not in config:
+                config[key] = value
     return config
 
 # Cập nhật config
-@router.patch("/")
+@router.patch("/", response_model=SiteConfig)
 async def update_config(
     background: UploadFile = File(None),
     logo: UploadFile = File(None),
     aiIcon: UploadFile = File(None),
+    hero: UploadFile = File(None),
     current_user: UserInDB = Depends(get_current_user)
 ):
     # Kiểm tra quyền admin
@@ -48,13 +57,14 @@ async def update_config(
         raise HTTPException(status_code=403, detail="Permission denied")
     
     # Lấy config hiện tại
-    config = await db.site_config.find_one({"_id": "site_config_id"})
+    config = await db.site_configs.find_one({"_id": "site_config_id"})
     if not config:
         config = {
             "_id": "site_config_id",
             "backgroundImage": None,
             "logoImage": None,
             "aiChatIcon": None,
+            "heroImage": None,
             "updatedAt": datetime.now().isoformat()
         }
         
@@ -62,7 +72,7 @@ async def update_config(
     
     # Xử lý upload từng file
     allowed_extensions = {".png", ".jpg", ".jpeg", ".gif"}
-    for file, field in [(background, "backgroundImage"), (logo, "logoImage"), (aiIcon, "aiChatIcon")]:
+    for file, field in [(background, "backgroundImage"), (logo, "logoImage"), (aiIcon, "aiChatIcon"), (hero, "heroImage")]:
         if file:
             # Validate file type
             file_extension = os.path.splitext(file.filename)[1].lower()
@@ -87,11 +97,15 @@ async def update_config(
                 )
                 
                 # Tạo presigned URL
-                url = minio_client.presigned_get_object(
-                    IMAGE_BUCKET,
-                    file_name,
-                    expires=timedelta(days=7)
-                )
+                # url = minio_client.presigned_get_object(
+                #     IMAGE_BUCKET,
+                #     file_name,
+                #     expires=timedelta(days=7)
+                # )
+                
+                # Dùng policy public read, not write
+                url = f"http://{MINIO_ENDPOINT}/{IMAGE_BUCKET}/{file_name}"
+                
                 update_data[field] = url
             except S3Error as e:
                 print(f"Error uploading to MinIO: {e}")
@@ -100,9 +114,10 @@ async def update_config(
                 await file.close()
             
             # Xóa file cũ nếu có
-            if config.get(field):
+            old_url = config.get(field)
+            if old_url:
                 try:
-                    old_file_name = config[field].split("/")[-1].split("?")[0]
+                    old_file_name = old_url.split("/")[-1].split("?")[0]
                     minio_client.remove_object(IMAGE_BUCKET, old_file_name)
                 except S3Error as e:
                     print(f"Error deleting old file from MinIO: {e}")

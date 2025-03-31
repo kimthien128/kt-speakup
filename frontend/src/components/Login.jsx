@@ -1,19 +1,14 @@
 import React, {useEffect, useState} from 'react';
-import axios from 'axios';
 import {Link} from 'react-router-dom';
-import {
-    Box,
-    Grid,
-    TextField,
-    Button,
-    Typography,
-    Alert,
-    Link as MuiLink,
-    FormControlLabel,
-    Switch,
-} from '@mui/material';
+import useSiteConfig from '../hooks/useSiteConfig';
+import axios from 'axios';
+
+import {Box, Grid, TextField, Button, Typography, Link as MuiLink, FormControlLabel, Switch} from '@mui/material';
+import CircularProgress from '@mui/material/CircularProgress';
+import Alert from '@mui/material/Alert';
 
 function Login({setToken, setUserEmail}) {
+    const {config, loading: configLoading, error: configError} = useSiteConfig();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [rememberMe, setRememberMe] = useState(false); // State cho switch
@@ -55,6 +50,15 @@ function Login({setToken, setUserEmail}) {
             console.error('Login error:', err.response?.data || err.message);
         }
     };
+
+    // Xử lý config
+    if (configLoading) {
+        return <CircularProgress />;
+    }
+    if (configError) {
+        return <Alert severity="error">{configError}</Alert>;
+    }
+
     return (
         <Grid container>
             {/* Bên trái: Hình ảnh minh họa */}
@@ -62,30 +66,18 @@ function Login({setToken, setUserEmail}) {
                 <Box
                     sx={{
                         height: '100%',
-                        backgroundImage:
-                            'url("https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=2070&auto=format&fit=crop")', // Hình minh họa
-                        backgroundSize: 'cover',
+                        backgroundImage: config?.heroImage
+                            ? `url(${config.heroImage})`
+                            : 'linear-gradient(135deg, #3a7bd5 0%, #00d2ff 100%)',
+                        backgroundSize: 'contain',
                         backgroundPosition: 'center',
                         borderTopLeftRadius: 40,
                         borderBottomLeftRadius: 40,
                         display: 'flex',
-                        alignItems: 'center',
+                        // alignItems: 'end',
                         justifyContent: 'center',
-                        color: '#fff',
+                        color: 'text.secondary',
                         p: 4,
-                        position: 'relative',
-                        '&:before': {
-                            content: '""',
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            background: 'rgba(0, 0, 0, 0.3)', // Overlay để làm nổi bật text
-                            zIndex: 1,
-                            borderTopLeftRadius: 40,
-                            borderBottomLeftRadius: 40,
-                        },
                     }}
                 >
                     <Box

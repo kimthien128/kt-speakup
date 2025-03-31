@@ -22,7 +22,7 @@ function MainLayout({children}) {
                 height: '100vh',
                 background: config?.backgroundImage
                     ? `url("${config.backgroundImage}")`
-                    : 'linear-gradient(135deg, #ef88bb 0%, #291850 100%)',
+                    : 'linear-gradient(135deg, #3a7bd5 0%, #00d2ff 100%)',
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 boxSizing: 'border-box',

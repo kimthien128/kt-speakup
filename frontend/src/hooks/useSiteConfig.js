@@ -23,3 +23,27 @@ export default function useSiteConfig() {
 
     return {config, loading, error};
 }
+
+/*
+Usage:
+
+import useSiteConfig from '../hooks/useSiteConfig';
+import CircularProgress from '@mui/material/CircularProgress';
+import Alert from '@mui/material/Alert';
+-----------------------------------------
+const {config, loading: configLoading, error: configError} = useSiteConfig();
+-----------------------------------------
+// Xử lý config, đặt trước return
+if (configLoading) {
+    return <CircularProgress />;
+}
+if (configError) {
+    return <Alert severity="error">{configError}</Alert>;
+}
+-----------------------------------------
+// Sử dụng config, VD:
+src={config?.logoImage || null}
+background: config?.backgroundImage
+            ? `url("${config.backgroundImage}")`
+            : 'linear-gradient(135deg, #ef88bb 0%, #291850 100%)',
+*/

@@ -1,5 +1,6 @@
 import os
 import time
+import json
 from minio import Minio
 from minio.error import S3Error
 
@@ -25,11 +26,39 @@ IMAGE_BUCKET = os.getenv("IMAGE_BUCKET")
 
 # Khởi tạo MinIO client
 minio_client = Minio(
-    MINIO_ENDPOINT,
+    endpoint=MINIO_ENDPOINT,
     access_key=MINIO_ACCESS_KEY,
     secret_key=MINIO_SECRET_KEY,
     secure=False  # Đặt True nếu dùng HTTPS
 )
+
+BUCKET_POLICY = {
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": [
+                "s3:GetObject"
+            ],
+            "Resource": [
+                f"arn:aws:s3:::{IMAGE_BUCKET}/*"
+            ]
+        }
+    ]
+}
+
+try:
+    # Kiểm tra nếu bucket đã tồn tại
+    if not minio_client.bucket_exists(IMAGE_BUCKET):
+        minio_client.make_bucket(IMAGE_BUCKET)
+        print(f"Created bucket: {IMAGE_BUCKET}")
+    
+    # Áp dụng policy
+    minio_client.set_bucket_policy(IMAGE_BUCKET, json.dumps(BUCKET_POLICY))
+    print(f"Public read policy set for bucket: {IMAGE_BUCKET}")
+except S3Error as e:
+    print(f"Error configuring MinIO bucket: {e}")
 
 # Hàm dọn cache (time to live = 1 giờ)
 def clean_cache():
