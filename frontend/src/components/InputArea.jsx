@@ -22,6 +22,8 @@ import SendIcon from '@mui/icons-material/Send';
 import SpeechToTextIcon from '@mui/icons-material/RecordVoiceOver';
 import ModelTrainingIcon from '@mui/icons-material/ModelTraining';
 import TextToSpeechIcon from '@mui/icons-material/VoiceOverOff';
+import VolumeUpIcon from '@mui/icons-material/VolumeUp';
+import TranslateIcon from '@mui/icons-material/Translate';
 import {Icon} from '@mui/material';
 
 function InputArea({chatId, setChatId, onSendMessage, refreshChats}) {
@@ -31,6 +33,7 @@ function InputArea({chatId, setChatId, onSendMessage, refreshChats}) {
     const [sttMethod, setSttMethod] = useState('vosk');
     const [ttsMethod, setTtsMethod] = useState('gtts');
     const [generateMethod, setGenerateMethod] = useState('mistral');
+    const [isPlaying, setIsPlaying] = useState(false);
     const mediaRecorderRef = useRef(null);
     const {playSound, audioRef} = useAudioPlayer();
 
@@ -115,7 +118,7 @@ function InputArea({chatId, setChatId, onSendMessage, refreshChats}) {
     // Lấy gợi ý từ AI
     const fetchSuggestions = async (baseText, currentChatId) => {
         const suggestionPrompts = [
-            `Short follow-up to: "${baseText}"`,
+            `Please answer or ask the following follow-up questions to stimulate conversation for this sentence:: "${baseText}"`,
             // `Short next question after: "${baseText}"` // Tạm thời chỉ lấy 1 gợi ý
         ];
         const newSuggestions = [];
@@ -130,12 +133,105 @@ function InputArea({chatId, setChatId, onSendMessage, refreshChats}) {
                         },
                     }
                 );
-                if (!res.data.error) newSuggestions.push(res.data.response);
+                if (!res.data.error) {
+                    newSuggestions.push(res.data.response);
+
+                    // Lưu suggestion mới nhất vào database
+                    if (newSuggestions.length > 0) {
+                        const latestSuggestion = newSuggestions[0];
+                        await axios.put(
+                            `/chats/${currentChatId}/suggestion`,
+                            {
+                                latest_suggestion: latestSuggestion,
+                                translate_suggestion: '',
+                                suggestion_audio_url: '',
+                            },
+                            {
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                            }
+                        );
+                    }
+                }
             } catch (err) {
                 console.error('Suggestion error:', err);
             }
         }
         setSuggestions(newSuggestions.slice(0, 1)); // Lấy 2 gợi ý thì đổi thành 2
+    };
+
+    // Hàm tạo âm thanh cho suggestion và cập nhật suggestion_audio_url
+    const generateSuggestionsAudio = async (suggestion, currentChatId) => {
+        // if (isPlaying) return; // Ngăn chặn phát nhiều audio cùng lúc
+        // setIsPlaying(true);
+
+        try {
+            // Kiểm tra có audio trên database chưa
+            const chatResponse = await axios.get(`/chats/${currentChatId}`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            const chatData = chatResponse.data;
+            let audioUrl = chatData.suggestion_audio_url;
+
+            //Nếu đã có suggestion_audio_url, phát âm thanh trực tiếp
+            if (audioUrl) {
+                console.log('Using existing suggestion audio URL:', audioUrl);
+                await playSound({audioUrl});
+                return;
+            }
+
+            //Nếu không có suggestion_audio_url, tạo mới bằng playSound
+            console.log('Generating new suggestion audio...');
+            const result = await playSound({
+                word: suggestion,
+                ttsMethod,
+                chatId: currentChatId,
+                updateSuggestionAudioUrl: true,
+            });
+            if (result && result.audioUrl) {
+                console.log('Generated and updated suggestion audio URL:', result.audioUrl);
+            }
+        } catch (err) {
+            console.error('Error generating suggestion audio:', err);
+        }
+    };
+
+    // Hàm dịch suggestion và cập nhật translation trong database
+    const translateSuggestion = async (suggestion, currentChatId) => {
+        try {
+            // Gọi endpoint /translate để dịch suggestion
+            const translateResponse = await axios.post(
+                `/translate`,
+                {text: suggestion, target_lang: 'vi'},
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
+            const translatedText = translateResponse.data.translated_text;
+
+            // Cập nhật translation vào database
+            await axios.put(
+                `/chats/${currentChatId}/suggestion`,
+                {
+                    translate_suggestion: translatedText,
+                },
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
+
+            return translatedText;
+        } catch (err) {
+            console.error('Error translating suggestion:', err);
+            throw err;
+        }
     };
 
     // Gửi tin nhắn và xử lý phản hồi
@@ -462,27 +558,56 @@ function InputArea({chatId, setChatId, onSendMessage, refreshChats}) {
                             </Typography>
                             {suggestions.length > 0 ? (
                                 suggestions.map((suggestion, index) => (
-                                    <Typography key={index} sx={{mb: 0.5, fontSize: '0.9rem'}}>
-                                        {suggestion && typeof suggestion === 'string' ? (
-                                            suggestion.split(' ').map((word, i) => (
-                                                <span
-                                                    key={i}
-                                                    onDoubleClick={(e) => handleWordClick(word, e)}
-                                                    style={{
-                                                        padding: '2px 4px',
-                                                        borderRadius: 1,
-                                                        '&:hover': {
-                                                            bgcolor: 'primary.light',
-                                                        },
-                                                    }}
-                                                >
-                                                    {word}{' '}
-                                                </span>
-                                            ))
-                                        ) : (
-                                            <span>No suggestion available</span>
-                                        )}
-                                    </Typography>
+                                    <Box key={index}>
+                                        <Typography sx={{fontSize: '0.9rem'}}>
+                                            {suggestion && typeof suggestion === 'string' ? (
+                                                suggestion.split(' ').map((word, i) => (
+                                                    <Box
+                                                        component="span"
+                                                        key={i}
+                                                        onDoubleClick={(e) => handleWordClick(word, e)}
+                                                        sx={{
+                                                            borderRadius: 1,
+                                                            '&:hover': {
+                                                                bgcolor: 'grey.300',
+                                                            },
+                                                        }}
+                                                    >
+                                                        {word}{' '}
+                                                    </Box>
+                                                ))
+                                            ) : (
+                                                <span>No suggestion available</span>
+                                            )}
+                                        </Typography>
+
+                                        {/* Icon */}
+                                        <IconButton
+                                            onClick={() => generateSuggestionsAudio(suggestion, chatId)}
+                                            sx={{
+                                                bgcolor: 'primary.main',
+                                                color: 'white',
+                                                '&:hover': {
+                                                    bgcolor: 'primary.dark',
+                                                },
+                                            }}
+                                        >
+                                            <VolumeUpIcon fontSize="small" />
+                                        </IconButton>
+                                        <IconButton
+                                            onClick={() => translateSuggestion(suggestion, chatId)}
+                                            sx={{
+                                                ml: 1,
+                                                bgcolor: 'primary.main',
+                                                color: 'white',
+                                                '&:hover': {
+                                                    bgcolor: 'primary.dark',
+                                                },
+                                            }}
+                                        >
+                                            <TranslateIcon fontSize="small" />
+                                        </IconButton>
+                                    </Box>
                                 ))
                             ) : (
                                 <Typography>No suggestions available</Typography>

@@ -5,6 +5,8 @@ import wave
 import json
 import os
 import time
+import httpx
+import asyncio
 import assemblyai as aai
 from utils import ASSEMBLYAI_API_KEY, VOSK_MODEL_DIR
 
@@ -62,18 +64,24 @@ async def stt(request: Request, method: str = Query("vosk")):
                     result = json.loads(rec.FinalResult())
                     print(f"Final result: {result}")
                     transcript = result.get('text', '')
+        
         elif method == 'assemblyai':
             print('Starting AssemblyAI transcription...')
             transcriber = aai.Transcriber()
+            # Gọi API AssemblyAI với file WAV
             transcript_obj = transcriber.transcribe(wav_path)
-            if transcript_obj.status == "completed":
+            if transcript_obj.status == aai.TranscriptStatus.completed:
                 transcript = transcript_obj.text or "No speech detected"
                 print(f"AssemblyAI transcript: {transcript}")
-            else:
+            elif transcript_obj.status == aai.TranscriptStatus.error:
                 print(f"AssemblyAI error: {transcript_obj.error}")
+                transcript = ''
+            else:
+                print(f"AssemblyAI status: {transcript_obj.status}")
                 transcript = ''
             if not transcript:
                 print("Warning: AssemblyAI returned empty transcript")
+        
         else:
             return {'error': f'Unsupported STT method: {method}'}, 400
     except Exception as e:

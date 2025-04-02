@@ -282,11 +282,11 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
 
                                     <Avatar
                                         alt="User Avatar"
-                                        src={userInfo.avatarPath || '/default-avatar.png'}
+                                        src={userInfo?.avatarPath || ''}
                                         sx={{bgcolor: 'primary.main', width: 40, height: 40}}
                                     >
                                         {/* Hiển thị chữ cái đầu nếu không có avatarPath */}
-                                        {!userInfo.avatarPath && getAvatarInitial(userInfo)}
+                                        {userInfo && !userInfo.avatarPath ? getAvatarInitial(userInfo) : null}
                                     </Avatar>
                                 </Box>
                             )}

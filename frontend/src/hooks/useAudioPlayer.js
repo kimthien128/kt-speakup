@@ -6,7 +6,14 @@ const useAudioPlayer = () => {
 
     // Nếu có audioUrl (từ API): Phát trực tiếp.
     // Nếu không có cả hai, kiểm tra và tạo TTS với word.
-    const playSound = async ({audioUrl = '', word = '', ttsMethod = 'gtts', chatId = '', index = ''} = {}) => {
+    const playSound = async ({
+        audioUrl = '',
+        word = '',
+        ttsMethod = 'gtts',
+        chatId = '',
+        index = '',
+        updateSuggestionAudioUrl = false,
+    } = {}) => {
         const playAudioBlob = async (blob, source) => {
             if (!blob || blob.size === 0) {
                 throw new Error('Empty or invalid audio blob'); // Ném lỗi nếu blob rỗng
@@ -15,6 +22,7 @@ const useAudioPlayer = () => {
             console.log(`Playing audio from ${source}:`, url);
             const audio = new Audio(url);
             await audio.play();
+            return url;
         };
 
         const generateTts = async (text, chatId, index) => {
@@ -35,8 +43,15 @@ const useAudioPlayer = () => {
                 const audioBlob = await audioResponse.blob();
                 await playAudioBlob(audioBlob, `TTS (${ttsMethod})`);
 
-                // Dùng chatId và index từ tham số
-                if (chatId && index !== '') {
+                // Cập nhật audioUrl vào database
+                if (updateSuggestionAudioUrl && chatId) {
+                    await axios.put(
+                        `/chats/${chatId}/suggestion`,
+                        {suggestion_audio_url: audioUrl},
+                        {headers: {'Content-Type': 'application/json'}}
+                    );
+                    console.log(`Updated suggestion_audio_url for chatId: ${chatId}`);
+                } else if (chatId && index !== '') {
                     await axios.patch(
                         `/chats/${chatId}/audioUrl`,
                         {index, audioUrl},
@@ -45,7 +60,7 @@ const useAudioPlayer = () => {
                     console.log(`Updated audioUrl for chatId: ${chatId}, index: ${index}`);
                 }
 
-                return ttsResponse.headers['x-audio-filename'];
+                return {audioUrl, filename: ttsResponse.headers['x-audio-filename']};
             } catch (err) {
                 console.error('Error generating TTS:', err);
                 return null;

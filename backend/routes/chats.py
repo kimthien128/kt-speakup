@@ -89,20 +89,32 @@ async def delete_chat(chat_id: str, current_user: UserInDB = Depends(get_current
     except Exception as e:
         print(f"Error deleting chat: {e}")
         raise HTTPException(status_code=500, detail="Failed to delete chat")
+
+# Hàm phụ để kiểm tra quyền sở hữu chat
+async def check_chat_ownership(chat_id: str, user_id: str):
+    if not ObjectId.is_valid(chat_id):
+        raise HTTPException(status_code=400, detail="Invalid chat ID")
+    chat = await db.chats.find_one({"_id": ObjectId(chat_id), "user_id": user_id})
+    if not chat:
+        raise HTTPException(status_code=404, detail="Chat not found or not owned by user")
+    return ObjectId(chat_id)
     
+# Cập nhật title của chat
 @router.put("/{chat_id}")
 async def update_chat_title(chat_id: str, request: Request, current_user: UserInDB = Depends(get_current_user)):
     try:
-        # Kiểm tra ObjectId hợp lệ
-        if not ObjectId.is_valid(chat_id):
-            raise HTTPException(status_code=400, detail="Invalid chat ID")
+        # Kiểm tra quyền sở hữu
+        chat_id_obj = await check_chat_ownership(chat_id, current_user.id)
         
+        # Lấy dữ liệu từ request body
         data = await request.json()
         new_title = data.get("title")
         if not new_title or not isinstance(new_title, str):
             raise HTTPException(status_code=400, detail="Invalid title: must be a non-empty string")
+        
+        # Cập nhật title
         result = await db.chats.update_one(
-            {"_id": ObjectId(chat_id), "user_id": current_user.id},
+            {"_id": chat_id_obj},
             {"$set": {"title": new_title}}
         )
         if result.modified_count == 0:
@@ -111,6 +123,54 @@ async def update_chat_title(chat_id: str, request: Request, current_user: UserIn
     except Exception as e:
         print(f"Error updating chat title: {e}")
         raise HTTPException(status_code=500, detail="Failed to updated chat title")
+
+# Cập nhật các trường liên quan đến suggestion
+@router.put("/{chat_id}/suggestion")
+async def update_chat_suggestion(chat_id: str, request: Request, current_user: UserInDB = Depends(get_current_user)):
+    try:
+        # Kiểm tra quyền sở hữu
+        chat_id_obj = await check_chat_ownership(chat_id, current_user.id)
+        
+        # Lấy dữ liệu từ request body
+        data = await request.json()
+        update_data = {}
+        
+        # Kiểm tra và thêm latest_suggestion (nếu có)
+        latest_suggestion = data.get("latest_suggestion")
+        if latest_suggestion is not None:
+            if not isinstance(latest_suggestion, str):
+                raise HTTPException(status_code=400, detail="Invalid latest_suggestion: must be a string")
+            update_data["latest_suggestion"] = latest_suggestion
+            
+        # Kiểm tra và thêm translation (nếu có)
+        translate_suggestion = data.get("translate_suggestion")
+        if translate_suggestion is not None:
+            if not isinstance(translate_suggestion, str):
+                raise HTTPException(status_code=400, detail="Invalid translate_suggestion: must be a string")
+            update_data["translate_suggestion"] = translate_suggestion
+            
+        # Kiểm tra và thêm suggestion_audio_url (nếu có)
+        suggestion_audio_url = data.get("suggestion_audio_url")
+        if suggestion_audio_url is not None:
+            if not isinstance(suggestion_audio_url, str):
+                raise HTTPException(status_code=400, detail="Invalid suggestion_audio_url: must be a string")
+            update_data["suggestion_audio_url"] = suggestion_audio_url
+            
+        # Kiểm tra xem có dữ liệu nào để cập nhật không
+        if not update_data:
+            raise HTTPException(status_code=400, detail="No valid fields to update")
+        
+        # Cập nhật vào database
+        result = await db.chats.update_one(
+            {"_id": chat_id_obj},
+            {"$set": update_data}
+        )
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Chat not found or no changes made")
+        return {"message": "Chat suggestion updated successfully"}
+    except Exception as e:
+        print(f"Error updating chat suggestion: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update chat suggestion")
 
 # Chỉ trả về phần lịch sử tin nhắn (history) của chat dựa trên chat_id
 @router.get("/{chat_id}/history")

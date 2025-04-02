@@ -12,6 +12,7 @@ ffmpeg-python
 requests #Dùng để gọi API Hugging Face (blenderbot)
 python-dotenv
 assemblyai
+httpx==0.23.0
 gtts
 huggingface_hub
 google-generativeai
