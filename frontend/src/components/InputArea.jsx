@@ -54,7 +54,7 @@ function InputArea({chatId, setChatId, onSendMessage, refreshChats}) {
     const handleMenuClose = () => {
         setAnchorEl(null);
         setMenuType(null);
-        handleSpeedDialClose();
+        // handleSpeedDialClose(); // Đóng SpeedDial sau khi chọn xong
     };
 
     // Xử lý chọn method
@@ -62,6 +62,7 @@ function InputArea({chatId, setChatId, onSendMessage, refreshChats}) {
         if (menuType === 'stt') setSttMethod(method);
         if (menuType === 'generate') setGenerateMethod(method);
         if (menuType === 'tts') setTtsMethod(method);
+        console.log(`Selected ${menuType} method: ${method}`);
         handleMenuClose();
     };
 
@@ -231,11 +232,10 @@ function InputArea({chatId, setChatId, onSendMessage, refreshChats}) {
 
     const handleWordClick = (word, event) => {
         console.log(`Clicked word: ${word}`); // Xử lý thêm nếu cần
-        setTranscript((prev) => (prev ? `${prev} ${word}` : word));
     };
 
     return (
-        <Box sx={{p: 2}}>
+        <Box sx={{px: 2, pb: 2}}>
             <Box
                 sx={{
                     borderTop: '1px solid',
@@ -253,57 +253,109 @@ function InputArea({chatId, setChatId, onSendMessage, refreshChats}) {
                 }}
             >
                 {/* Khu vực 1: Icon Settings (SpeedDial) */}
-
                 <Box
                     sx={{
                         position: 'absolute',
-                        top: -32,
+                        top: -16,
                         left: 0,
                     }}
                 >
-                    <Backdrop open={speedDialOpen} sx={{zIndex: 1, borderRadius: 10}} />
+                    {/* Backdrop hiển thị khi speedDialOpen là true */}
+                    <Backdrop
+                        open={speedDialOpen}
+                        sx={{
+                            zIndex: 1,
+                            borderRadius: 10,
+                            bgcolor: 'rgba(0, 0, 0, 0.5)',
+                        }}
+                        onClick={handleSpeedDialClose}
+                    />
+                    <IconButton
+                        onClick={() => setSpeedDialOpen((prev) => !prev)} //Toggle
+                        sx={{
+                            width: 40,
+                            height: 40,
+                            bgcolor: speedDialOpen ? 'primary.light' : 'grey.200',
+                            color: speedDialOpen ? 'primary.contrastText' : 'grey.primary',
+                            '&:hover': {
+                                bgcolor: speedDialOpen ? 'primary.dark' : 'grey.300',
+                            },
+                            zIndex: 1,
+                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+                        }}
+                    >
+                        <SettingsIcon />
+                    </IconButton>
 
-                    <SpeedDial
-                        ariaLabel="Settings"
+                    {/* Modal settings method */}
+                    <Box
                         sx={{
                             position: 'absolute',
                             top: 0,
-                            left: 0,
-                            '& .MuiSpeedDial-fab': {
-                                // Style cho nút chính
-                                width: 40,
-                                height: 40,
-                            },
-                            '& .MuiSpeedDial-actions': {
-                                // Style cho các action
-                                gap: 15,
-                                '& .MuiSpeedDialAction-staticTooltipLabel': {
-                                    transform: 'translateY(-150%)', // Đẩy tooltip
-                                    whiteSpace: 'nowrap', // Ngăn text xuống dòng
-                                },
-                            },
+                            left: 120,
+                            display: speedDialOpen ? 'flex' : 'none',
+                            gap: 12,
+                            zIndex: 1,
                         }}
-                        icon={<SettingsIcon />}
-                        onClose={handleSpeedDialClose}
-                        onOpen={handleSpeedDialOpen}
-                        open={speedDialOpen}
-                        direction="right"
                     >
-                        {actions.map((action) => (
-                            <SpeedDialAction
-                                key={action.name}
-                                icon={action.icon}
-                                tooltipTitle={action.name}
-                                tooltipOpen
-                                onClick={(e) => handleMenuOpen(e, action.type)}
-                            />
+                        {actions.map((action, index) => (
+                            <Box key={action.name} sx={{position: 'relative'}}>
+                                {/* Nút con */}
+                                <IconButton
+                                    onClick={(e) => handleMenuOpen(e, action.type)}
+                                    sx={{
+                                        width: 40,
+                                        height: 40,
+                                        bgcolor: 'background.paper',
+                                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+                                        '&:hover': {
+                                            bgcolor: 'grey.100',
+                                        },
+                                    }}
+                                >
+                                    {action.icon}
+                                </IconButton>
+
+                                {/* Tooltip cho nút con */}
+                                <Typography
+                                    sx={{
+                                        position: 'absolute',
+                                        top: -40,
+                                        left: '50%',
+                                        transform: 'translateX(-50%)',
+                                        whiteSpace: 'nowrap',
+                                        bgcolor: 'background.paper',
+                                        boxShadow: '0 1px 4px rgba(0, 0, 0, 0.1)',
+                                        borderRadius: 1,
+                                        p: 1,
+                                        fontSize: '0.75rem',
+                                    }}
+                                >
+                                    {action.name}
+                                </Typography>
+                            </Box>
                         ))}
-                    </SpeedDial>
+                    </Box>
 
                     {/* Menu cho STT */}
-                    <Menu anchorEl={anchorEl} open={Boolean(anchorEl) && menuType === 'stt'} onClose={handleMenuClose}>
-                        <MenuItem onClick={() => handleMethodSelect('assemblyai')}>AssemblyAI (API)</MenuItem>
-                        <MenuItem onClick={() => handleMethodSelect('vosk')}>Vosk (Local)</MenuItem>
+                    <Menu
+                        anchorEl={anchorEl}
+                        open={Boolean(anchorEl) && menuType === 'stt'}
+                        onClose={handleMenuClose}
+                        sx={{mt: 1}}
+                    >
+                        <MenuItem
+                            onClick={() => handleMethodSelect('assemblyai')}
+                            sx={{bgcolor: sttMethod === 'assemblyai' ? 'primary.light' : 'inherit'}}
+                        >
+                            AssemblyAI (API)
+                        </MenuItem>
+                        <MenuItem
+                            onClick={() => handleMethodSelect('vosk')}
+                            sx={{bgcolor: sttMethod === 'vosk' ? 'primary.light' : 'inherit'}}
+                        >
+                            Vosk (Local)
+                        </MenuItem>
                     </Menu>
 
                     {/* Menu cho Generate Model */}
@@ -311,15 +363,41 @@ function InputArea({chatId, setChatId, onSendMessage, refreshChats}) {
                         anchorEl={anchorEl}
                         open={Boolean(anchorEl) && menuType === 'generate'}
                         onClose={handleMenuClose}
+                        sx={{mt: 1}}
                     >
-                        <MenuItem onClick={() => handleMethodSelect('mistral')}>Mistral</MenuItem>
-                        <MenuItem onClick={() => handleMethodSelect('gemini')}>Gemini</MenuItem>
+                        <MenuItem
+                            onClick={() => handleMethodSelect('mistral')}
+                            sx={{bgcolor: generateMethod === 'mistral' ? 'primary.light' : 'inherit'}}
+                        >
+                            Mistral
+                        </MenuItem>
+                        <MenuItem
+                            onClick={() => handleMethodSelect('gemini')}
+                            sx={{bgcolor: generateMethod === 'gemini' ? 'primary.light' : 'inherit'}}
+                        >
+                            Gemini
+                        </MenuItem>
                     </Menu>
 
                     {/* Menu cho TTS */}
-                    <Menu anchorEl={anchorEl} open={Boolean(anchorEl) && menuType === 'tts'} onClose={handleMenuClose}>
-                        <MenuItem onClick={() => handleMethodSelect('gtts')}>gTTS (Google)</MenuItem>
-                        <MenuItem onClick={() => handleMethodSelect('piper')}>Piper (Local)</MenuItem>
+                    <Menu
+                        anchorEl={anchorEl}
+                        open={Boolean(anchorEl) && menuType === 'tts'}
+                        onClose={handleMenuClose}
+                        sx={{mt: 1}}
+                    >
+                        <MenuItem
+                            onClick={() => handleMethodSelect('gtts')}
+                            sx={{bgcolor: ttsMethod === 'gtts' ? 'primary.light' : 'inherit'}}
+                        >
+                            gTTS (Google)
+                        </MenuItem>
+                        <MenuItem
+                            onClick={() => handleMethodSelect('piper')}
+                            sx={{bgcolor: ttsMethod === 'piper' ? 'primary.light' : 'inherit'}}
+                        >
+                            Piper (Local)
+                        </MenuItem>
                     </Menu>
                 </Box>
 
@@ -341,15 +419,21 @@ function InputArea({chatId, setChatId, onSendMessage, refreshChats}) {
                     >
                         <IconButton
                             onClick={() => setSuggestionsOpen(!suggestionsOpen)}
+                            // disabled={suggestions.length <= 0}
                             sx={{
                                 position: 'absolute',
                                 top: -32,
-                                right: 0,
-                                bgcolor: suggestionsOpen ? 'primary.light' : 'grey.200',
-                                color: suggestionsOpen ? 'primary.contrastText' : 'grey.primary',
+                                right: -8,
+                                bgcolor: suggestions.length > 0 ? 'primary.light' : 'grey.200',
+                                color: suggestions.length > 0 ? 'primary.contrastText' : 'grey.primary',
                                 '&:hover': {
-                                    bgcolor: suggestionsOpen ? 'primary.main' : 'grey.300',
+                                    bgcolor: suggestions.length > 0 ? 'primary.main' : 'grey.300',
                                 },
+                                '&: disabled': {
+                                    bgcolor: 'grey.200',
+                                    color: 'grey.500',
+                                },
+                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
                             }}
                         >
                             <LightbulbIcon />
@@ -378,7 +462,7 @@ function InputArea({chatId, setChatId, onSendMessage, refreshChats}) {
                             </Typography>
                             {suggestions.length > 0 ? (
                                 suggestions.map((suggestion, index) => (
-                                    <Typography key={index} sx={{mb: 0.5}}>
+                                    <Typography key={index} sx={{mb: 0.5, fontSize: '0.9rem'}}>
                                         {suggestion && typeof suggestion === 'string' ? (
                                             suggestion.split(' ').map((word, i) => (
                                                 <span
@@ -442,7 +526,7 @@ function InputArea({chatId, setChatId, onSendMessage, refreshChats}) {
                             flexGrow: 1,
                             padding: '8px 12px',
                             borderRadius: 2,
-                            border: '1px solid #ccc',
+                            border: 'none',
                             resize: 'none',
                             fontSize: '1rem',
                             fontFamily: 'inherit',
