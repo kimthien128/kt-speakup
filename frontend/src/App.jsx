@@ -1,4 +1,4 @@
-import React, {useState, useRef, useEffect} from 'react';
+import React, {useState, useRef, useEffect, use} from 'react';
 import {BrowserRouter as Router, Routes, Route, useParams, useNavigate, Navigate} from 'react-router-dom';
 import axios from './axiosInstance';
 import {Box, Container} from '@mui/material';
@@ -18,6 +18,11 @@ function ChatPage({userEmail, onLogout, onSendMessageRef}) {
     const [selectedChatId, setSelectedChatId] = useState(chatId);
     const refreshChatsRef = useRef(null);
     const refreshVocabRef = useRef(null);
+    const [suggestionData, setSuggestionData] = useState({
+        latest_suggestion: '',
+        translate_suggestion: '',
+        suggestion_audio_url: '',
+    }); // Dữ liệu suggestion từ backend
 
     useEffect(() => {
         if (chatId && chatId !== 'undefined' && chatId !== 'null') {
@@ -26,6 +31,37 @@ function ChatPage({userEmail, onLogout, onSendMessageRef}) {
             setSelectedChatId(null); // Đặt null nếu chatId không hợp lệ
         }
     }, [chatId]);
+
+    // Lấy suggestionData khi selectedChatId thay đổi
+    useEffect(() => {
+        const fetchSuggestion = async () => {
+            if (!selectedChatId) {
+                setSuggestionData({
+                    latest_suggestion: '',
+                    translate_suggestion: '',
+                    suggestion_audio_url: '',
+                });
+                return;
+            }
+            try {
+                const res = await axios.get(`/chats/${selectedChatId}`);
+                const {latest_suggestion, translate_suggestion, suggestion_audio_url} = res.data;
+                setSuggestionData({
+                    latest_suggestion: latest_suggestion || '',
+                    translate_suggestion: translate_suggestion || '',
+                    suggestion_audio_url: suggestion_audio_url || '',
+                });
+            } catch (err) {
+                console.error('Error fetching suggestion:', err);
+                setSuggestionData({
+                    latest_suggestion: '',
+                    translate_suggestion: '',
+                    suggestion_audio_url: '',
+                });
+            }
+        };
+        fetchSuggestion();
+    }, [selectedChatId]);
 
     const handleSelectChat = (newChatId) => {
         setSelectedChatId(newChatId);
@@ -39,6 +75,14 @@ function ChatPage({userEmail, onLogout, onSendMessageRef}) {
 
     const handleWordClick = (word, event) => {
         console.log('Clicked word:', word, 'at:', event.pageX, event.pageY);
+    };
+
+    // Callback để cập nhật suggestionData
+    const updateSuggestionData = (newData) => {
+        setSuggestionData((prevData) => ({
+            ...prevData,
+            ...newData,
+        }));
     };
 
     return (
@@ -87,6 +131,8 @@ function ChatPage({userEmail, onLogout, onSendMessageRef}) {
                     }}
                     onSendMessage={onSendMessageRef.current}
                     refreshChats={refreshChatsRef.current} // Truyền refreshChats vào InputArea
+                    suggestionData={suggestionData}
+                    updateSuggestionData={updateSuggestionData} // Truyền callback
                 />
             </Box>
 

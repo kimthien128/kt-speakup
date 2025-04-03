@@ -47,7 +47,7 @@ async def get_all_chats(current_user: UserInDB = Depends(get_current_user)):
         print(f"Error fetching all chats: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch chats")
 
-# Trả về toàn bộ thông tin của một chat (title, history, vocab_ids, user_id)
+# Trả về toàn bộ thông tin của một chat
 @router.get("/{chat_id}")
 async def get_chat(chat_id: str, current_user: UserInDB = Depends(get_current_user)):
     try:
@@ -168,6 +168,9 @@ async def update_chat_suggestion(chat_id: str, request: Request, current_user: U
         if result.modified_count == 0:
             raise HTTPException(status_code=404, detail="Chat not found or no changes made")
         return {"message": "Chat suggestion updated successfully"}
+    except HTTPException as e:
+        # Trả về mã lỗi chính xác (400, 404, v.v.)
+        raise e
     except Exception as e:
         print(f"Error updating chat suggestion: {e}")
         raise HTTPException(status_code=500, detail="Failed to update chat suggestion")

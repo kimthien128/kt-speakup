@@ -26,7 +26,7 @@ import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import TranslateIcon from '@mui/icons-material/Translate';
 import {Icon} from '@mui/material';
 
-function InputArea({chatId, setChatId, onSendMessage, refreshChats}) {
+function InputArea({chatId, setChatId, onSendMessage, refreshChats, suggestionData, updateSuggestionData}) {
     const [transcript, setTranscript] = useState('');
     const [suggestions, setSuggestions] = useState([]);
     const [isRecording, setIsRecording] = useState(false);
@@ -44,6 +44,7 @@ function InputArea({chatId, setChatId, onSendMessage, refreshChats}) {
 
     // State cho khu vực Suggestions
     const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+    const [showTranslation, setShowTranslation] = useState(false);
 
     // Xử lý mở/đóng SpeedDial
     const handleSpeedDialOpen = () => setSpeedDialOpen(true);
@@ -163,8 +164,8 @@ function InputArea({chatId, setChatId, onSendMessage, refreshChats}) {
 
     // Hàm tạo âm thanh cho suggestion và cập nhật suggestion_audio_url
     const generateSuggestionsAudio = async (suggestion, currentChatId) => {
-        // if (isPlaying) return; // Ngăn chặn phát nhiều audio cùng lúc
-        // setIsPlaying(true);
+        if (isPlaying) return; // Ngăn chặn phát nhiều audio cùng lúc
+        setIsPlaying(true);
 
         try {
             // Kiểm tra có audio trên database chưa
@@ -196,12 +197,20 @@ function InputArea({chatId, setChatId, onSendMessage, refreshChats}) {
             }
         } catch (err) {
             console.error('Error generating suggestion audio:', err);
+        } finally {
+            setIsPlaying(false);
         }
     };
 
     // Hàm dịch suggestion và cập nhật translation trong database
     const translateSuggestion = async (suggestion, currentChatId) => {
         try {
+            // Nếu translation đã tồn tại và giống với giá trị hiện tại, không gọi API
+            if (suggestionData.translate_suggestion && showTranslation) {
+                setShowTranslation(false);
+                return;
+            }
+
             // Gọi endpoint /translate để dịch suggestion
             const translateResponse = await axios.post(
                 `/translate`,
@@ -212,21 +221,25 @@ function InputArea({chatId, setChatId, onSendMessage, refreshChats}) {
                     },
                 }
             );
-            const translatedText = translateResponse.data.translated_text;
+            const translatedText = translateResponse.data.translatedText;
 
-            // Cập nhật translation vào database
-            await axios.put(
-                `/chats/${currentChatId}/suggestion`,
-                {
-                    translate_suggestion: translatedText,
-                },
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
+            // Chir Cập nhật translation vào database neeus có thay đổi
+            if (suggestionData.translate_suggestion !== translatedText) {
+                await axios.put(
+                    `/chats/${currentChatId}/suggestion`,
+                    {
+                        translate_suggestion: translatedText,
                     },
-                }
-            );
-
+                    {
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    }
+                );
+                // Cập nhật suggestionData qua callback từ ChatPage
+                updateSuggestionData({translate_suggestion: translatedText});
+            }
+            setShowTranslation(true); // Hiển thị translation
             return translatedText;
         } catch (err) {
             console.error('Error translating suggestion:', err);
@@ -515,15 +528,14 @@ function InputArea({chatId, setChatId, onSendMessage, refreshChats}) {
                     >
                         <IconButton
                             onClick={() => setSuggestionsOpen(!suggestionsOpen)}
-                            // disabled={suggestions.length <= 0}
                             sx={{
                                 position: 'absolute',
                                 top: -32,
                                 right: -8,
-                                bgcolor: suggestions.length > 0 ? 'primary.light' : 'grey.200',
-                                color: suggestions.length > 0 ? 'primary.contrastText' : 'grey.primary',
+                                bgcolor: suggestionData.latest_suggestion ? 'primary.light' : 'grey.200',
+                                color: suggestionData.latest_suggestion ? 'primary.contrastText' : 'grey.primary',
                                 '&:hover': {
-                                    bgcolor: suggestions.length > 0 ? 'primary.main' : 'grey.300',
+                                    bgcolor: suggestionData.latest_suggestion ? 'primary.main' : 'grey.300',
                                 },
                                 '&: disabled': {
                                     bgcolor: 'grey.200',
@@ -542,7 +554,7 @@ function InputArea({chatId, setChatId, onSendMessage, refreshChats}) {
                                 p: 2,
                                 borderRadius: 2,
                                 bgcolor: 'grey.100',
-                                maxHeight: 150,
+                                maxHeight: 200,
                                 overflowY: 'auto',
                                 boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
                             }}
@@ -556,59 +568,75 @@ function InputArea({chatId, setChatId, onSendMessage, refreshChats}) {
                             >
                                 Suggestions:
                             </Typography>
-                            {suggestions.length > 0 ? (
-                                suggestions.map((suggestion, index) => (
-                                    <Box key={index}>
+                            {/* suggestionData lấy từ props */}
+                            {suggestionData.latest_suggestion ? (
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 1,
+                                        mb: 1,
+                                    }}
+                                >
+                                    <Box sx={{flexGrow: 1}}>
                                         <Typography sx={{fontSize: '0.9rem'}}>
-                                            {suggestion && typeof suggestion === 'string' ? (
-                                                suggestion.split(' ').map((word, i) => (
-                                                    <Box
-                                                        component="span"
-                                                        key={i}
-                                                        onDoubleClick={(e) => handleWordClick(word, e)}
-                                                        sx={{
-                                                            borderRadius: 1,
-                                                            '&:hover': {
-                                                                bgcolor: 'grey.300',
-                                                            },
-                                                        }}
-                                                    >
-                                                        {word}{' '}
-                                                    </Box>
-                                                ))
-                                            ) : (
-                                                <span>No suggestion available</span>
-                                            )}
+                                            {suggestionData.latest_suggestion.split(' ').map((word, i) => (
+                                                <Box
+                                                    component="span"
+                                                    key={i}
+                                                    onDoubleClick={(e) => handleWordClick(word, e)}
+                                                    sx={{
+                                                        '&:hover': {
+                                                            bgcolor: 'grey.300',
+                                                        },
+                                                    }}
+                                                >
+                                                    {word}{' '}
+                                                </Box>
+                                            ))}
                                         </Typography>
-
-                                        {/* Icon */}
-                                        <IconButton
-                                            onClick={() => generateSuggestionsAudio(suggestion, chatId)}
-                                            sx={{
-                                                bgcolor: 'primary.main',
-                                                color: 'white',
-                                                '&:hover': {
-                                                    bgcolor: 'primary.dark',
-                                                },
-                                            }}
-                                        >
-                                            <VolumeUpIcon fontSize="small" />
-                                        </IconButton>
-                                        <IconButton
-                                            onClick={() => translateSuggestion(suggestion, chatId)}
-                                            sx={{
-                                                ml: 1,
-                                                bgcolor: 'primary.main',
-                                                color: 'white',
-                                                '&:hover': {
-                                                    bgcolor: 'primary.dark',
-                                                },
-                                            }}
-                                        >
-                                            <TranslateIcon fontSize="small" />
-                                        </IconButton>
+                                        {showTranslation && suggestionData.translate_suggestion && (
+                                            <Typography
+                                                sx={{
+                                                    fontSize: '0.8rem',
+                                                    color: 'text.secondary',
+                                                    mt: 0.5,
+                                                }}
+                                            >
+                                                Translation: {suggestionData.translate_suggestion}
+                                            </Typography>
+                                        )}
                                     </Box>
-                                ))
+
+                                    {/* Icon */}
+                                    <IconButton
+                                        onClick={() =>
+                                            generateSuggestionsAudio(suggestionData.latest_suggestion, chatId)
+                                        }
+                                        sx={{
+                                            bgcolor: 'primary.main',
+                                            color: 'white',
+                                            '&:hover': {
+                                                bgcolor: 'primary.dark',
+                                            },
+                                        }}
+                                    >
+                                        <VolumeUpIcon fontSize="small" />
+                                    </IconButton>
+                                    <IconButton
+                                        onClick={() => translateSuggestion(suggestionData.latest_suggestion, chatId)}
+                                        sx={{
+                                            ml: 1,
+                                            bgcolor: 'primary.main',
+                                            color: 'white',
+                                            '&:hover': {
+                                                bgcolor: 'primary.dark',
+                                            },
+                                        }}
+                                    >
+                                        <TranslateIcon fontSize="small" />
+                                    </IconButton>
+                                </Box>
                             ) : (
                                 <Typography>No suggestions available</Typography>
                             )}
