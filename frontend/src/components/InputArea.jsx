@@ -1,18 +1,21 @@
+// components/InputArea.jsx
 import React, {useState, useRef} from 'react';
 import axios from '../axiosInstance';
 import useAudioPlayer from '../hooks/useAudioPlayer';
+import useWordInfo from '../hooks/useWordInfo';
+import {toast} from 'react-toastify';
 
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import TextareaAutosize from '@mui/material/TextareaAutosize';
 import Collapse from '@mui/material/Collapse';
 import Typography from '@mui/material/Typography';
-import SpeedDial from '@mui/material/SpeedDial';
-import SpeedDialAction from '@mui/material/SpeedDialAction';
 import Backdrop from '@mui/material/Backdrop';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Divider from '@mui/material/Divider';
+import {Tooltip as MuiTooltip} from '@mui/material';
+import Button from '@mui/material/Button';
 
 import SettingsIcon from '@mui/icons-material/Settings';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
@@ -24,9 +27,17 @@ import ModelTrainingIcon from '@mui/icons-material/ModelTraining';
 import TextToSpeechIcon from '@mui/icons-material/VoiceOverOff';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import TranslateIcon from '@mui/icons-material/Translate';
-import {Icon} from '@mui/material';
+import BookmarkAddIcon from '@mui/icons-material/BookmarkAdd';
 
-function InputArea({chatId, setChatId, onSendMessage, refreshChats, suggestionData, updateSuggestionData}) {
+function InputArea({
+    chatId,
+    setChatId,
+    onSendMessage,
+    refreshChats,
+    suggestionData,
+    updateSuggestionData,
+    onVocabAdded,
+}) {
     const [transcript, setTranscript] = useState('');
     const [suggestions, setSuggestions] = useState([]);
     const [isRecording, setIsRecording] = useState(false);
@@ -36,6 +47,11 @@ function InputArea({chatId, setChatId, onSendMessage, refreshChats, suggestionDa
     const [isPlaying, setIsPlaying] = useState(false);
     const mediaRecorderRef = useRef(null);
     const {playSound, audioRef} = useAudioPlayer();
+    const {tooltip, tooltipRef, handleWordClick, handlePlay, handleAddToVocab} = useWordInfo({
+        chatId,
+        onVocabAdded,
+        dictionarySource: 'dictionaryapi',
+    });
 
     // State cho SpeedDial (Settings)
     const [speedDialOpen, setSpeedDialOpen] = useState(false);
@@ -58,7 +74,6 @@ function InputArea({chatId, setChatId, onSendMessage, refreshChats, suggestionDa
     const handleMenuClose = () => {
         setAnchorEl(null);
         setMenuType(null);
-        // handleSpeedDialClose(); // Đóng SpeedDial sau khi chọn xong
     };
 
     // Xử lý chọn method
@@ -337,10 +352,6 @@ function InputArea({chatId, setChatId, onSendMessage, refreshChats, suggestionDa
                 onSendMessage(errorMessage);
             }
         }
-    };
-
-    const handleWordClick = (word, event) => {
-        console.log(`Clicked word: ${word}`); // Xử lý thêm nếu cần
     };
 
     return (
@@ -706,6 +717,106 @@ function InputArea({chatId, setChatId, onSendMessage, refreshChats, suggestionDa
                         <SendIcon />
                     </IconButton>
                 </Box>
+
+                {/* Tooltip cho từ vựng */}
+                {tooltip && (
+                    <MuiTooltip
+                        open
+                        title={
+                            <div ref={tooltipRef}>
+                                <Box sx={{p: 1}}>
+                                    <Typography
+                                        variant="subtitle1"
+                                        sx={{fontSize: '1.2rem', textTransform: 'capitalize'}}
+                                    >
+                                        <strong>{tooltip.word}</strong>
+                                    </Typography>
+                                    <Typography variant="body2" sx={{fontSize: '.95rem', mt: 1}}>
+                                        {tooltip.definition}
+                                    </Typography>
+                                    <Typography variant="body2" sx={{fontSize: '.95rem', my: 1}}>
+                                        {tooltip.phonetic}
+                                    </Typography>
+                                    <Box sx={{display: 'flex', gap: 1}}>
+                                        <Button
+                                            variant="outlined"
+                                            size="small"
+                                            startIcon={<VolumeUpIcon fontSize="small" />}
+                                            onClick={() => handlePlay(tooltip.audio, tooltip.word)}
+                                            sx={{
+                                                textTransform: 'none',
+                                                color: 'text.secondary',
+                                                borderColor: 'divider',
+                                                '&:hover': {
+                                                    bgcolor: 'action.hover',
+                                                    borderColor: 'text.secondary',
+                                                },
+                                            }}
+                                        >
+                                            Pronounce
+                                        </Button>
+                                        <Button
+                                            variant="outlined"
+                                            size="small"
+                                            startIcon={<BookmarkAddIcon fontSize="small" />}
+                                            onClick={handleAddToVocab}
+                                            disabled={tooltip.definition === 'N/A'}
+                                            sx={{
+                                                textTransform: 'none',
+                                                color: 'text.secondary',
+                                                borderColor: 'divider',
+                                                '&:hover': {
+                                                    bgcolor: 'action.hover',
+                                                    borderColor: 'text.secondary',
+                                                },
+                                                '&:disabled': {
+                                                    opacity: 0.5,
+                                                },
+                                            }}
+                                        >
+                                            Add to vocab
+                                        </Button>
+                                    </Box>
+                                </Box>
+                            </div>
+                        }
+                        placement="top"
+                        componentsProps={{
+                            tooltip: {
+                                sx: {
+                                    bgcolor: 'white',
+                                    color: 'text.primary',
+                                    p: 2,
+                                    fontSize: '1.4rem',
+                                    maxWidth: 400,
+                                    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.3)',
+                                    borderRadius: 2,
+                                },
+                            },
+                        }}
+                        PopperProps={{
+                            anchorEl: {
+                                getBoundingClientRect: () => ({
+                                    top: tooltip.y,
+                                    left: tooltip.x,
+                                    right: tooltip.x,
+                                    bottom: tooltip.y,
+                                    width: 0,
+                                    height: 0,
+                                }),
+                            },
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                position: 'absolute',
+                                top: tooltip.y + 20,
+                                left: tooltip.x,
+                                zIndex: 999,
+                            }}
+                        ></Box>
+                    </MuiTooltip>
+                )}
 
                 {/* Audio element ẩn */}
                 <audio ref={audioRef} style={{display: 'none'}} />

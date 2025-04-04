@@ -133,6 +133,7 @@ function ChatPage({userEmail, onLogout, onSendMessageRef}) {
                     refreshChats={refreshChatsRef.current} // Truyền refreshChats vào InputArea
                     suggestionData={suggestionData}
                     updateSuggestionData={updateSuggestionData} // Truyền callback
+                    onVocabAdded={refreshVocabRef} // Truyền ref để cập nhật vocab
                 />
             </Box>
 

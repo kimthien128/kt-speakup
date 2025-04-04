@@ -29,7 +29,7 @@ async def add_vocab(request: Request, current_user: dict = Depends(get_current_u
         
         # Kiểm tra trùng lặp
         if await db.vocab.find_one({"word": word_data["word"], "chat_id": ObjectId(chat_id), "user_id": current_user.id}):
-            raise HTTPException(status_code=400, detail="Word already exists in this chat")
+            raise HTTPException(status_code=400, detail="The word already exists in the collection.")
         
         # Cập nhật vocab_ids trong chats
         result = await db.vocab.insert_one(word_data)

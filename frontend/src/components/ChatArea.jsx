@@ -1,10 +1,11 @@
+// components/ChatArea.jsx
 import React, {useState, useRef, useEffect} from 'react';
 import axios from '../axiosInstance';
 import useAudioPlayer from '../hooks/useAudioPlayer';
 import useSiteConfig from '../hooks/useSiteConfig';
 import useUserInfo from '../hooks/useUserInfo';
+import useWordInfo from '../hooks/useWordInfo.js';
 import {getAvatarInitial} from '../utils/avatarUtils';
-
 import {toast, ToastContainer} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; // Import CSS của thư viện toastify
 
@@ -24,12 +25,15 @@ import BookmarkAddIcon from '@mui/icons-material/BookmarkAdd';
 function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded}) {
     const {config, loading: configLoading, error: configError} = useSiteConfig(); // Lấy config từ backend
     const {userInfo, loading: userLoading, error: userError} = useUserInfo(userEmail); // Hook lấy thông tin user
-    const [tooltip, setTooltip] = useState(null);
     const [chatHistory, setChatHistory] = useState([]);
     const [isPlaying, setIsPlaying] = useState(false);
     const [translateTooltip, setTranslateTooltip] = useState(null); // Tooltip cho bản dịch
-    const tooltipRef = useRef(null); // Ref để tham chiếu vùng tooltip
     const {playSound, audioRef} = useAudioPlayer(); // Ref để quản lý audio element
+    const {tooltip, tooltipRef, handleWordClick, handlePlay, handleAddToVocab} = useWordInfo({
+        chatId,
+        onVocabAdded,
+        dictionarySource: 'dictionaryapi',
+    }); // Tooltip cho từ vựng
 
     // Lấy lịch sử chat từ backend khi chatId thay đổi
     useEffect(() => {
@@ -67,59 +71,8 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
         }
     }, [onSendMessage]);
 
-    // Loại bỏ dấu câu ở đầu và cuối từ
-    const cleanWord = (word) => {
-        return word.replace(/^[^a-zA-Z']+|[^a-zA-Z']+$/g, '');
-    };
-
-    // Xử lý double-click từ
-    const handleWordClick = async (word, event) => {
-        const cleanedWord = cleanWord(word);
-        if (!cleanedWord) return;
-
-        // Hiển thị tooltip ngay lập tức với trạng thái "Loading"
-        setTooltip({
-            word: cleanedWord,
-            definition: 'Loading...',
-            phonetic: 'Loading...',
-            audio: 'Loading...',
-            x: event.pageX,
-            y: event.pageY,
-        });
-        try {
-            const res = await axios.post(
-                `/word-info`,
-                {word: cleanedWord},
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
-            console.log('Word info:', res.data);
-            setTooltip({
-                word: cleanedWord,
-                definition: res.data.definition || 'No definition found',
-                phonetic: res.data.phonetic || 'N/A',
-                audio: res.data.audio || '',
-                x: event.pageX,
-                y: event.pageY,
-            });
-            onWordClick(cleanedWord, event); // Callback để InputArea xử lý thêm nếu cần
-        } catch (err) {
-            console.error('Error fetching word info:', err.response?.data || err.message);
-            setTooltip({
-                word: cleanedWord,
-                definition: 'Failed to fetch info',
-                phonetic: 'N/A',
-                audio: '',
-                x: event.pageX,
-                y: event.pageY,
-            });
-        }
-    };
-
-    const handlePlay = async (audioUrl, text, index) => {
+    // Phát âm thanh
+    const handlePlayMessage = async (audioUrl, text, index) => {
         if (isPlaying) return;
         setIsPlaying(true);
         try {
@@ -135,11 +88,13 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
             }
         } catch (err) {
             console.error('Error playing audio:', err);
+            toast.error('Failed to play audio');
         } finally {
             setIsPlaying(false);
         }
     };
 
+    // Dịch tin nhắn AI
     const handleTranslate = async (text, index, event) => {
         try {
             const res = await axios.post(
@@ -158,53 +113,6 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
             setTranslateTooltip({text: 'Failed to translate', x: event.pageX, y: event.pageY});
         }
     };
-
-    const addToVocab = async () => {
-        if (!tooltip || !chatId) return;
-        try {
-            await axios.post(
-                `/vocab`,
-                {...tooltip, chat_id: chatId},
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
-            toast.success(`Added ${tooltip.word} to vocab`);
-            if (onVocabAdded && onVocabAdded.current) {
-                onVocabAdded.current(); // Gọi hàm refresh từ RightSidebar
-            }
-        } catch (err) {
-            if (err.response && err.response.status === 400) {
-                toast.warn(err.response.data.detail);
-            } else {
-                console.error('Error adding to vocab:', err.response?.data || err.message);
-                toast.error('Failed to add to vocab');
-            }
-        }
-    };
-
-    // Đóng tooltip khi click bên ngoài
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (
-                tooltipRef.current &&
-                !tooltipRef.current.contains(event.target) &&
-                !event.target.closest('.MuiTooltip-popper') // kiểm tra phần tử tooltip của MUI
-            ) {
-                setTooltip(null);
-                setTranslateTooltip(null);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-
-        // Cleanup sự kiện khi tooltip bị tắt hoặc component unmount
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [tooltip, translateTooltip]); // Chạy lại khi tooltip thay đổi
 
     // Xử lý config
     if (configLoading || userLoading) {
@@ -274,18 +182,23 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                                                 component="span"
                                                 noWrap
                                                 onDoubleClick={(e) => handleWordClick(word, e)}
+                                                sx={{
+                                                    '&:hover': {
+                                                        bgcolor: 'white',
+                                                    },
+                                                }}
                                             >
                                                 {word}&nbsp;
                                             </Typography>
                                         ))}
                                     </Box>
 
+                                    {/* Hiển thị chữ cái đầu nếu không có avatarPath */}
                                     <Avatar
                                         alt="User Avatar"
                                         src={userInfo?.avatarPath || ''}
                                         sx={{bgcolor: 'primary.main', width: 40, height: 40}}
                                     >
-                                        {/* Hiển thị chữ cái đầu nếu không có avatarPath */}
                                         {userInfo && !userInfo.avatarPath ? getAvatarInitial(userInfo) : null}
                                     </Avatar>
                                 </Box>
@@ -333,10 +246,17 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                                                 component="span"
                                                 noWrap
                                                 onDoubleClick={(e) => handleWordClick(word, e)}
+                                                sx={{
+                                                    '&:hover': {
+                                                        bgcolor: 'grey.300',
+                                                    },
+                                                }}
                                             >
                                                 {word}&nbsp;
                                             </Typography>
                                         ))}
+
+                                        {/* Nút phát âm thanh và dịch */}
                                         {msg.ai && msg.ai != '...' && (
                                             <Box
                                                 sx={{
@@ -351,7 +271,7 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                                             >
                                                 <IconButton
                                                     size="small"
-                                                    onClick={() => handlePlay(msg.audioUrl, msg.ai, index)}
+                                                    onClick={() => handlePlayMessage(msg.audioUrl, msg.ai, index)}
                                                     sx={{
                                                         bgcolor: 'rgba(66, 165, 245, .95)',
                                                         color: 'white',
@@ -470,9 +390,7 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                                         variant="outlined"
                                         size="small"
                                         startIcon={<VolumeUpIcon fontSize="small" />}
-                                        onClick={() =>
-                                            playSound({audioUrl: tooltip.audio, word: tooltip.word, ttsMethod: 'gtts'})
-                                        }
+                                        onClick={() => handlePlay(tooltip.audio, tooltip.word)}
                                         sx={{
                                             textTransform: 'none',
                                             color: 'text.secondary',
@@ -489,8 +407,8 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                                         variant="outlined"
                                         size="small"
                                         startIcon={<BookmarkAddIcon fontSize="small" />}
-                                        onClick={addToVocab}
-                                        disabled={tooltip.phonetic == 'N/A'}
+                                        onClick={handleAddToVocab}
+                                        disabled={tooltip.definition == 'N/A'}
                                         sx={{
                                             textTransform: 'none',
                                             color: 'text.secondary',
