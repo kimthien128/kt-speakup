@@ -13,7 +13,6 @@ import Typography from '@mui/material/Typography';
 import Backdrop from '@mui/material/Backdrop';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import Divider from '@mui/material/Divider';
 import {Tooltip as MuiTooltip} from '@mui/material';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -40,7 +39,6 @@ function InputArea({
     onVocabAdded,
 }) {
     const [transcript, setTranscript] = useState('');
-    const [suggestions, setSuggestions] = useState([]);
     const [isRecording, setIsRecording] = useState(false);
     const [sttMethod, setSttMethod] = useState('vosk');
     const [ttsMethod, setTtsMethod] = useState('gtts');
@@ -136,7 +134,7 @@ function InputArea({
     // Lấy gợi ý từ AI
     const fetchSuggestions = async (baseText, currentChatId) => {
         const suggestionPrompts = [
-            `Please answer or ask the following follow-up questions to stimulate conversation for this sentence:: "${baseText}"`,
+            `Provide ONLY ONE direct follow-up question or response (without any introductory phrase) for this sentence: "${baseText}"`,
             // `Short next question after: "${baseText}"` // Tạm thời chỉ lấy 1 gợi ý
         ];
         const newSuggestions = [];
@@ -170,13 +168,17 @@ function InputArea({
                                 },
                             }
                         );
+                        updateSuggestionData({
+                            latest_suggestion: latestSuggestion,
+                            translate_suggestion: '',
+                            suggestion_audio_url: '',
+                        });
                     }
                 }
             } catch (err) {
                 console.error('Suggestion error:', err);
             }
         }
-        setSuggestions(newSuggestions.slice(0, 1)); // Lấy 2 gợi ý thì đổi thành 2
     };
 
     // Hàm tạo âm thanh cho suggestion và cập nhật suggestion_audio_url
@@ -297,6 +299,7 @@ function InputArea({
         // Hiển thị tin nhắn người dùng ngay lập tức
         const userMessage = {user: transcript, ai: '...'};
         if (onSendMessage) {
+            console.log('Send message:', userMessage);
             onSendMessage(userMessage); // Gửi tin nhắn tạm ngay lập tức
         }
         const temp = transcript;
@@ -345,17 +348,24 @@ function InputArea({
 
             // Cập nhật ChatArea với phản hồi AI
             const updatedMessage = {user: userInput, ai: aiResponse};
-            if (onSendMessage) onSendMessage(updatedMessage);
+            if (onSendMessage) {
+                onSendMessage(updatedMessage);
+            }
 
             // Cập nhật danh sách sau khi gửi tin nhắn
             if (refreshChats) await refreshChats();
 
             // Lấy gợi ý dựa trên response
-            await fetchSuggestions(aiResponse, currentChatId);
+            try {
+                await fetchSuggestions(aiResponse, currentChatId);
+            } catch (err) {
+                console.error('Error fetching suggestions:', err);
+            }
         } catch (err) {
             console.log('Error in handleSend:', err.response?.data || err.message);
             const errorMessage = {user: userInput, ai: 'Error processing response'};
             if (onSendMessage) {
+                console.log('Calling onSendMessage with error message:', errorMessage);
                 onSendMessage(errorMessage);
             }
         }

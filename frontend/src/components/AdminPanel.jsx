@@ -125,11 +125,14 @@ function AdminPanel() {
                 display: 'flex',
                 justifyContent: 'center',
                 width: '100%',
+                height: '100%',
             }}
         >
             <Box
                 sx={{
-                    width: '90%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    width: '100%',
                 }}
             >
                 <Box
@@ -139,6 +142,7 @@ function AdminPanel() {
                         textAlign: 'center',
                         my: 4,
                         position: 'relative',
+                        flexShrink: 0, // Đảm bảo phần này không bị co lại
                     }}
                 >
                     {/* Back Button */}
@@ -174,205 +178,220 @@ function AdminPanel() {
                         borderRadius: 2,
                         boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
                         bgcolor: 'white',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        flex: 1,
+                        overflow: 'auto',
+                        width: '100%',
                     }}
                 >
-                    <Grid container>
-                        {/* Background Image */}
-                        <Grid size="grow" sx={{textAlign: 'center'}}>
-                            <Typography variant="h6" sx={{mb: 2}}>
-                                Background Image
-                            </Typography>
-                            <Box
-                                sx={{
-                                    position: 'relative',
-                                    display: 'inline-block',
-                                }}
-                            >
+                    <Box
+                        sx={{
+                            overflowY: 'auto',
+                            flexGrow: 1,
+                        }}
+                    >
+                        <Grid container>
+                            {/* Background Image */}
+                            <Grid size={{xs: 6, md: 4, lg: 3}} sx={{textAlign: 'center'}}>
+                                <Typography variant="h6" sx={{mb: 2}}>
+                                    Background Image
+                                </Typography>
                                 <Box
-                                    component="img"
-                                    src={backgroundPreview || null}
                                     sx={{
-                                        width: 200,
-                                        height: 200,
-                                        objectFit: 'cover',
-                                        borderRadius: 2,
-                                        border: '2px solid white',
-                                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                                    }}
-                                />
-                                <IconButton
-                                    component="label"
-                                    sx={{
-                                        position: 'absolute',
-                                        right: 0,
-                                        bottom: 0,
-                                        bgcolor: 'primary.light',
-                                        color: 'white',
-                                        '&:hover': {
-                                            bgcolor: 'primary.dark',
-                                        },
-                                        boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                                        position: 'relative',
+                                        display: 'inline-block',
                                     }}
                                 >
-                                    <CameraAltIcon fontSize="small" />
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        hidden
-                                        onChange={(e) => handleFileChange(e, setBackgroundFile, setBackgroundPreview)}
+                                    <Box
+                                        component="img"
+                                        src={backgroundPreview || null}
+                                        sx={{
+                                            width: 200,
+                                            height: 200,
+                                            objectFit: 'cover',
+                                            borderRadius: 2,
+                                            border: '2px solid white',
+                                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                                        }}
                                     />
-                                </IconButton>
-                            </Box>
-                        </Grid>
+                                    <IconButton
+                                        component="label"
+                                        sx={{
+                                            position: 'absolute',
+                                            right: 0,
+                                            bottom: 0,
+                                            bgcolor: 'primary.light',
+                                            color: 'white',
+                                            '&:hover': {
+                                                bgcolor: 'primary.dark',
+                                            },
+                                            boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                                        }}
+                                    >
+                                        <CameraAltIcon fontSize="small" />
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            hidden
+                                            onChange={(e) =>
+                                                handleFileChange(e, setBackgroundFile, setBackgroundPreview)
+                                            }
+                                        />
+                                    </IconButton>
+                                </Box>
+                            </Grid>
 
-                        {/* Logo Image */}
-                        <Grid size="grow" sx={{textAlign: 'center'}}>
-                            <Typography variant="h6" sx={{mb: 2}}>
-                                Logo Image
-                            </Typography>
-                            <Box
-                                sx={{
-                                    position: 'relative',
-                                    display: 'inline-block',
-                                }}
-                            >
+                            {/* Logo Image */}
+                            <Grid size={{xs: 6, md: 4, lg: 3}} sx={{textAlign: 'center'}}>
+                                <Typography variant="h6" sx={{mb: 2}}>
+                                    Logo Image
+                                </Typography>
                                 <Box
-                                    component="img"
-                                    src={logoPreview || null}
                                     sx={{
-                                        width: 200,
-                                        height: 200,
-                                        objectFit: 'cover',
-                                        borderRadius: 2,
-                                        border: '2px solid white',
-                                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                                    }}
-                                />
-                                <IconButton
-                                    component="label"
-                                    sx={{
-                                        position: 'absolute',
-                                        right: 0,
-                                        bottom: 0,
-                                        bgcolor: 'primary.light',
-                                        color: 'white',
-                                        '&:hover': {
-                                            bgcolor: 'primary.dark',
-                                        },
-                                        boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                                        position: 'relative',
+                                        display: 'inline-block',
                                     }}
                                 >
-                                    <CameraAltIcon fontSize="small" />
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        hidden
-                                        onChange={(e) => handleFileChange(e, setLogoFile, setLogoPreview)}
+                                    <Box
+                                        component="img"
+                                        src={logoPreview || null}
+                                        sx={{
+                                            width: 200,
+                                            height: 200,
+                                            objectFit: 'cover',
+                                            borderRadius: 2,
+                                            border: '2px solid white',
+                                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                                        }}
                                     />
-                                </IconButton>
-                            </Box>
-                        </Grid>
+                                    <IconButton
+                                        component="label"
+                                        sx={{
+                                            position: 'absolute',
+                                            right: 0,
+                                            bottom: 0,
+                                            bgcolor: 'primary.light',
+                                            color: 'white',
+                                            '&:hover': {
+                                                bgcolor: 'primary.dark',
+                                            },
+                                            boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                                        }}
+                                    >
+                                        <CameraAltIcon fontSize="small" />
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            hidden
+                                            onChange={(e) => handleFileChange(e, setLogoFile, setLogoPreview)}
+                                        />
+                                    </IconButton>
+                                </Box>
+                            </Grid>
 
-                        {/* AI Chat Icon */}
-                        <Grid size="grow" sx={{textAlign: 'center'}}>
-                            <Typography variant="h6" sx={{mb: 2}}>
-                                AI Chat Icon
-                            </Typography>
-                            <Box
-                                sx={{
-                                    position: 'relative',
-                                    display: 'inline-block',
-                                }}
-                            >
+                            {/* AI Chat Icon */}
+                            <Grid size={{xs: 6, md: 4, lg: 3}} sx={{textAlign: 'center'}}>
+                                <Typography variant="h6" sx={{mb: 2}}>
+                                    AI Chat Icon
+                                </Typography>
                                 <Box
-                                    component="img"
-                                    src={aiIconPreview || null}
                                     sx={{
-                                        width: 200,
-                                        height: 200,
-                                        objectFit: 'cover',
-                                        borderRadius: 2,
-                                        border: '2px solid white',
-                                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                                    }}
-                                />
-                                <IconButton
-                                    component="label"
-                                    sx={{
-                                        position: 'absolute',
-                                        right: 0,
-                                        bottom: 0,
-                                        bgcolor: 'primary.light',
-                                        color: 'white',
-                                        '&:hover': {
-                                            bgcolor: 'primary.dark',
-                                        },
-                                        boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                                        position: 'relative',
+                                        display: 'inline-block',
                                     }}
                                 >
-                                    <CameraAltIcon fontSize="small" />
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        hidden
-                                        onChange={(e) => handleFileChange(e, setAiIconFile, setAiIconPreview)}
+                                    <Box
+                                        component="img"
+                                        src={aiIconPreview || null}
+                                        sx={{
+                                            width: 200,
+                                            height: 200,
+                                            objectFit: 'cover',
+                                            borderRadius: 2,
+                                            border: '2px solid white',
+                                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                                        }}
                                     />
-                                </IconButton>
-                            </Box>
-                        </Grid>
+                                    <IconButton
+                                        component="label"
+                                        sx={{
+                                            position: 'absolute',
+                                            right: 0,
+                                            bottom: 0,
+                                            bgcolor: 'primary.light',
+                                            color: 'white',
+                                            '&:hover': {
+                                                bgcolor: 'primary.dark',
+                                            },
+                                            boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                                        }}
+                                    >
+                                        <CameraAltIcon fontSize="small" />
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            hidden
+                                            onChange={(e) => handleFileChange(e, setAiIconFile, setAiIconPreview)}
+                                        />
+                                    </IconButton>
+                                </Box>
+                            </Grid>
 
-                        {/* Hero Image */}
-                        <Grid size="grow" sx={{textAlign: 'center'}}>
-                            <Typography variant="h6" sx={{mb: 2}}>
-                                Hero Image
-                            </Typography>
-                            <Box
-                                sx={{
-                                    position: 'relative',
-                                    display: 'inline-block',
-                                }}
-                            >
+                            {/* Hero Image */}
+                            <Grid size={{xs: 6, md: 4, lg: 3}} sx={{textAlign: 'center'}}>
+                                <Typography variant="h6" sx={{mb: 2}}>
+                                    Hero Image
+                                </Typography>
                                 <Box
-                                    component="img"
-                                    src={heroPreview || null}
                                     sx={{
-                                        width: 200,
-                                        height: 200,
-                                        objectFit: 'cover',
-                                        borderRadius: 2,
-                                        border: '2px solid white',
-                                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                                    }}
-                                />
-                                <IconButton
-                                    component="label"
-                                    sx={{
-                                        position: 'absolute',
-                                        right: 0,
-                                        bottom: 0,
-                                        bgcolor: 'primary.light',
-                                        color: 'white',
-                                        '&:hover': {
-                                            bgcolor: 'primary.dark',
-                                        },
-                                        boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                                        position: 'relative',
+                                        display: 'inline-block',
                                     }}
                                 >
-                                    <CameraAltIcon fontSize="small" />
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        hidden
-                                        onChange={(e) => handleFileChange(e, setHeroFile, setHeroPreview)}
+                                    <Box
+                                        component="img"
+                                        src={heroPreview || null}
+                                        sx={{
+                                            width: 200,
+                                            height: 200,
+                                            objectFit: 'cover',
+                                            borderRadius: 2,
+                                            border: '2px solid white',
+                                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                                        }}
                                     />
-                                </IconButton>
-                            </Box>
+                                    <IconButton
+                                        component="label"
+                                        sx={{
+                                            position: 'absolute',
+                                            right: 0,
+                                            bottom: 0,
+                                            bgcolor: 'primary.light',
+                                            color: 'white',
+                                            '&:hover': {
+                                                bgcolor: 'primary.dark',
+                                            },
+                                            boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                                        }}
+                                    >
+                                        <CameraAltIcon fontSize="small" />
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            hidden
+                                            onChange={(e) => handleFileChange(e, setHeroFile, setHeroPreview)}
+                                        />
+                                    </IconButton>
+                                </Box>
+                            </Grid>
                         </Grid>
-                    </Grid>
+                    </Box>
 
                     <Box
                         sx={{
                             mt: 4,
+                            flexShrink: 0, // Đảm bảo phần này không bị co lại
                         }}
                     >
                         {/* Thông báo và nút Save */}

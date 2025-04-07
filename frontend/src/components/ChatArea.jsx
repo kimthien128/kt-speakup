@@ -1,5 +1,5 @@
 // components/ChatArea.jsx
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import axios from '../axiosInstance';
 import useAudioPlayer from '../hooks/useAudioPlayer';
 import useSiteConfig from '../hooks/useSiteConfig';
@@ -43,6 +43,17 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
         dictionarySource: 'dictionaryapi',
     });
 
+    // Thêm ref để tham chiếu đến container chứa danh sách tin nhắn, để cuộn xuống khi có tin nhắn mới
+    const chatContainerRef = useRef(null);
+    useEffect(() => {
+        if (chatContainerRef.current) {
+            chatContainerRef.current.scrollTo({
+                top: chatContainerRef.current.scrollHeight,
+                behavior: 'smooth', // Cuộn mượt
+            });
+        }
+    }, [chatHistory]);
+
     // Lấy lịch sử chat từ backend khi chatId thay đổi
     useEffect(() => {
         const fetchHistory = async () => {
@@ -65,7 +76,6 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
     useEffect(() => {
         if (onSendMessage) {
             onSendMessage.current = (message) => {
-                console.log('Received new message:', message);
                 setChatHistory((prev) => {
                     // Thay thế tin nhắn tạm cuối cùng (ai: '...')
                     const lastIndex = prev.length - 1;
@@ -119,6 +129,7 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
         <>
             {/* Nội dung chat */}
             <Box
+                ref={chatContainerRef}
                 sx={{
                     p: 2,
                     maxWidth: '900px',

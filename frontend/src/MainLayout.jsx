@@ -55,6 +55,7 @@ function MainLayout({children}) {
                     bgcolor: 'rgba(255, 255, 255, 0.8)',
                     width: '100%',
                     zIndex: 2,
+                    height: '100%',
                 }}
             >
                 {children}
