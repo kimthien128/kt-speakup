@@ -1,10 +1,10 @@
 // components/ChatArea.jsx
-import React, {useState, useRef, useEffect} from 'react';
+import React, {useState, useEffect} from 'react';
 import axios from '../axiosInstance';
 import useAudioPlayer from '../hooks/useAudioPlayer';
 import useSiteConfig from '../hooks/useSiteConfig';
 import useUserInfo from '../hooks/useUserInfo';
-import useWordInfo from '../hooks/useWordInfo.js';
+import useKTTooltip from '../hooks/useKTTooltip.js';
 import {getAvatarInitial} from '../utils/avatarUtils';
 import {toast, ToastContainer} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; // Import CSS của thư viện toastify
@@ -27,13 +27,21 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
     const {userInfo, loading: userLoading, error: userError} = useUserInfo(userEmail); // Hook lấy thông tin user
     const [chatHistory, setChatHistory] = useState([]);
     const [isPlaying, setIsPlaying] = useState(false);
-    const [translateTooltip, setTranslateTooltip] = useState(null); // Tooltip cho bản dịch
     const {playSound, audioRef} = useAudioPlayer(); // Ref để quản lý audio element
-    const {tooltip, tooltipRef, handleWordClick, handlePlay, handleAddToVocab} = useWordInfo({
+    const {
+        wordTooltip,
+        wordTooltipRef,
+        translateTooltip,
+        translateTooltipRef,
+        handleWordClick,
+        handlePlay,
+        handleAddToVocab,
+        handleTranslate,
+    } = useKTTooltip({
         chatId,
         onVocabAdded,
         dictionarySource: 'dictionaryapi',
-    }); // Tooltip cho từ vựng
+    });
 
     // Lấy lịch sử chat từ backend khi chatId thay đổi
     useEffect(() => {
@@ -91,26 +99,6 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
             toast.error('Failed to play audio');
         } finally {
             setIsPlaying(false);
-        }
-    };
-
-    // Dịch tin nhắn AI
-    const handleTranslate = async (text, index, event) => {
-        try {
-            const res = await axios.post(
-                `/chats/${chatId}/translate-ai`,
-                {text: text, target_lang: 'vi', chat_id: chatId, index: index},
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
-            console.log('Translate response:', res.data);
-            setTranslateTooltip({text: res.data.translatedTextAi, x: event.pageX, y: event.pageY});
-        } catch (err) {
-            console.error('Error translating:', err);
-            setTranslateTooltip({text: 'Failed to translate', x: event.pageX, y: event.pageY});
         }
     };
 
@@ -349,16 +337,16 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
             </Box>
 
             {/* Tooltip cho từ vựng*/}
-            {tooltip && (
+            {wordTooltip && (
                 <MuiTooltip
                     open
                     title={
                         <div
-                            ref={tooltipRef} // Gán ref cho vùng tooltip
+                            ref={wordTooltipRef} // Gắn ref cho vùng tooltip
                         >
                             <Box sx={{p: 1}}>
                                 <Typography variant="subtitle1" sx={{fontSize: '1.2rem', textTransform: 'capitalize'}}>
-                                    <strong>{tooltip.word}</strong>
+                                    <strong>{wordTooltip.word}</strong>
                                 </Typography>
                                 <Typography
                                     variant="body2"
@@ -367,7 +355,7 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                                         mt: 1,
                                     }}
                                 >
-                                    {tooltip.definition}
+                                    {wordTooltip.definition}
                                 </Typography>
                                 <Typography
                                     variant="body2"
@@ -376,7 +364,7 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                                         my: 1,
                                     }}
                                 >
-                                    {tooltip.phonetic}
+                                    {wordTooltip.phonetic}
                                 </Typography>
 
                                 {/* Button phất âm và Add to vocab */}
@@ -390,7 +378,7 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                                         variant="outlined"
                                         size="small"
                                         startIcon={<VolumeUpIcon fontSize="small" />}
-                                        onClick={() => handlePlay(tooltip.audio, tooltip.word)}
+                                        onClick={() => handlePlay(wordTooltip.audio, wordTooltip.word)}
                                         sx={{
                                             textTransform: 'none',
                                             color: 'text.secondary',
@@ -408,7 +396,7 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                                         size="small"
                                         startIcon={<BookmarkAddIcon fontSize="small" />}
                                         onClick={handleAddToVocab}
-                                        disabled={tooltip.definition == 'N/A'}
+                                        disabled={wordTooltip.definition == 'N/A'}
                                         sx={{
                                             textTransform: 'none',
                                             color: 'text.secondary',
@@ -445,10 +433,10 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                     PopperProps={{
                         anchorEl: {
                             getBoundingClientRect: () => ({
-                                top: tooltip.y,
-                                left: tooltip.x,
-                                right: tooltip.x,
-                                bottom: tooltip.y,
+                                top: wordTooltip.y,
+                                left: wordTooltip.x,
+                                right: wordTooltip.x,
+                                bottom: wordTooltip.y,
                                 width: 0,
                                 height: 0,
                             }),
@@ -458,8 +446,8 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                     <Box
                         sx={{
                             position: 'absolute',
-                            top: tooltip.y + 20,
-                            left: tooltip.x,
+                            top: wordTooltip.y + 20,
+                            left: wordTooltip.x,
                             zIndex: 999,
                         }}
                     ></Box>
@@ -472,7 +460,7 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                     open
                     title={
                         <div
-                            ref={tooltipRef} // Gán ref cho vùng translateTooltip
+                            ref={translateTooltipRef} // Gán ref cho vùng translateTooltip
                         >
                             <Typography
                                 variant="body2"

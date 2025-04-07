@@ -2,12 +2,15 @@ import {useState, useEffect, useRef} from 'react';
 import {fetchWordInfo} from '../services/dictionaryService';
 import {cleanWord, addToVocab} from '../utils/vocabUtils';
 import {toast} from 'react-toastify';
+import axios from '../axiosInstance';
 
 import useAudioPlayer from './useAudioPlayer';
 
-const useWordInfo = ({chatId, onVocabAdded, dictionarySource = 'dictionaryapi'}) => {
-    const [tooltip, setTooltip] = useState(null);
-    const tooltipRef = useRef(null); // Ref để tham chiếu vùng tooltip
+const useKTTooltip = ({chatId, onVocabAdded, dictionarySource = 'dictionaryapi'}) => {
+    const [wordTooltip, setWordTooltip] = useState(null);
+    const [translateTooltip, setTranslateTooltip] = useState(null);
+    const wordTooltipRef = useRef(null); // Ref để tham chiếu vùng word tooltip
+    const translateTooltipRef = useRef(null); // Ref để tham chiếu vùng translate tooltip
     const {playSound, audioRef} = useAudioPlayer(); // Ref để quản lý audio element
 
     // Xử lý double-click từ
@@ -17,8 +20,8 @@ const useWordInfo = ({chatId, onVocabAdded, dictionarySource = 'dictionaryapi'})
 
         console.log(`Handling word click: ${cleanedWord}, source: ${dictionarySource}`);
 
-        // Hiển thị tooltip ngay lập tức với trạng thái "Loading"
-        setTooltip({
+        // Hiển thị word tooltip ngay lập tức với trạng thái "Loading"
+        setWordTooltip({
             word: cleanedWord,
             definition: 'Loading...',
             phonetic: 'Loading...',
@@ -35,7 +38,7 @@ const useWordInfo = ({chatId, onVocabAdded, dictionarySource = 'dictionaryapi'})
                 throw new Error('Invalid word info response');
             }
 
-            setTooltip({
+            setWordTooltip({
                 word: cleanedWord,
                 definition: res.definition || 'No definition found',
                 phonetic: res.phonetic || 'N/A',
@@ -45,7 +48,7 @@ const useWordInfo = ({chatId, onVocabAdded, dictionarySource = 'dictionaryapi'})
             });
         } catch (err) {
             console.error('Error fetching word info:', err.message);
-            setTooltip({
+            setWordTooltip({
                 word: cleanedWord,
                 definition: 'Failed to fetch info',
                 phonetic: 'N/A',
@@ -69,30 +72,53 @@ const useWordInfo = ({chatId, onVocabAdded, dictionarySource = 'dictionaryapi'})
 
     // Thêm từ vào vocab
     const handleAddToVocab = async () => {
-        if (!tooltip || !chatId) {
-            console.error('Cannot add to vocab: Missing word or chat ID', {tooltip, chatId});
+        if (!wordTooltip || !chatId) {
+            console.error('Cannot add to vocab: Missing word or chat ID', {wordTooltip, chatId});
             toast.error('Cannot add to vocab: Missing word or chat ID');
             return;
         }
 
         try {
-            await addToVocab({...tooltip, chatId, onVocabAdded});
-            toast.success(`Added ${tooltip.word} to vocab`);
+            await addToVocab({...wordTooltip, chatId, onVocabAdded});
+            toast.success(`Added ${wordTooltip.word} to vocab`);
         } catch (err) {
             console.error('Error adding to vocab:', err.message);
             toast.error(err.message || 'Failed to add to vocab');
         }
     };
 
-    // Đóng tooltip khi click bên ngoài
+    // Dịch tin nhắn AI
+    const handleTranslate = async (text, index, event) => {
+        try {
+            const res = await axios.post(
+                `/chats/${chatId}/translate-ai`,
+                {text: text, target_lang: 'vi', chat_id: chatId, index: index},
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
+            console.log('Translate response:', res.data);
+            setTranslateTooltip({text: res.data.translatedTextAi, x: event.pageX, y: event.pageY});
+        } catch (err) {
+            console.error('Error translating:', err);
+            setTranslateTooltip({text: 'Failed to translate', x: event.pageX, y: event.pageY});
+        }
+    };
+
+    // Đóng mọi tooltip khi click bên ngoài
     useEffect(() => {
         const handleClickOutside = (event) => {
-            if (
-                tooltipRef.current &&
-                !tooltipRef.current.contains(event.target) &&
-                !event.target.closest('.MuiTooltip-popper') // kiểm tra phần tử tooltip của MUI
-            ) {
-                setTooltip(null);
+            const isOutsideWordTooltip = wordTooltipRef.current && !wordTooltipRef.current.contains(event.target);
+            const isOutsideTranslateTooltip =
+                translateTooltipRef.current && !translateTooltipRef.current.contains(event.target);
+            const isOutsideMuiTooltip = !event.target.closest('.MuiTooltip-popper');
+            if (isOutsideWordTooltip && isOutsideMuiTooltip) {
+                setWordTooltip(null);
+            }
+            if (isOutsideTranslateTooltip && isOutsideMuiTooltip) {
+                setTranslateTooltip(null);
             }
         };
 
@@ -105,12 +131,16 @@ const useWordInfo = ({chatId, onVocabAdded, dictionarySource = 'dictionaryapi'})
     }, []);
 
     return {
-        tooltip,
-        setTooltip,
-        tooltipRef,
+        wordTooltip,
+        setWordTooltip,
+        wordTooltipRef,
+        translateTooltip,
+        setTranslateTooltip,
+        translateTooltipRef,
         handleWordClick,
         handlePlay,
         handleAddToVocab,
+        handleTranslate,
     };
 };
-export default useWordInfo;
+export default useKTTooltip;

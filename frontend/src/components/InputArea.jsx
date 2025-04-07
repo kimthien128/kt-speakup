@@ -2,7 +2,7 @@
 import React, {useState, useRef} from 'react';
 import axios from '../axiosInstance';
 import useAudioPlayer from '../hooks/useAudioPlayer';
-import useWordInfo from '../hooks/useWordInfo';
+import useKTTooltip from '../hooks/useKTTooltip';
 import {toast} from 'react-toastify';
 
 import Box from '@mui/material/Box';
@@ -47,7 +47,7 @@ function InputArea({
     const [isPlaying, setIsPlaying] = useState(false);
     const mediaRecorderRef = useRef(null);
     const {playSound, audioRef} = useAudioPlayer();
-    const {tooltip, tooltipRef, handleWordClick, handlePlay, handleAddToVocab} = useWordInfo({
+    const {wordTooltip, wordTooltipRef, handleWordClick, handlePlay, handleAddToVocab} = useKTTooltip({
         chatId,
         onVocabAdded,
         dictionarySource: 'dictionaryapi',
@@ -719,30 +719,30 @@ function InputArea({
                 </Box>
 
                 {/* Tooltip cho từ vựng */}
-                {tooltip && (
+                {wordTooltip && (
                     <MuiTooltip
                         open
                         title={
-                            <div ref={tooltipRef}>
+                            <div ref={wordTooltipRef}>
                                 <Box sx={{p: 1}}>
                                     <Typography
                                         variant="subtitle1"
                                         sx={{fontSize: '1.2rem', textTransform: 'capitalize'}}
                                     >
-                                        <strong>{tooltip.word}</strong>
+                                        <strong>{wordTooltip.word}</strong>
                                     </Typography>
                                     <Typography variant="body2" sx={{fontSize: '.95rem', mt: 1}}>
-                                        {tooltip.definition}
+                                        {wordTooltip.definition}
                                     </Typography>
                                     <Typography variant="body2" sx={{fontSize: '.95rem', my: 1}}>
-                                        {tooltip.phonetic}
+                                        {wordTooltip.phonetic}
                                     </Typography>
                                     <Box sx={{display: 'flex', gap: 1}}>
                                         <Button
                                             variant="outlined"
                                             size="small"
                                             startIcon={<VolumeUpIcon fontSize="small" />}
-                                            onClick={() => handlePlay(tooltip.audio, tooltip.word)}
+                                            onClick={() => handlePlay(wordTooltip.audio, wordTooltip.word)}
                                             sx={{
                                                 textTransform: 'none',
                                                 color: 'text.secondary',
@@ -760,7 +760,7 @@ function InputArea({
                                             size="small"
                                             startIcon={<BookmarkAddIcon fontSize="small" />}
                                             onClick={handleAddToVocab}
-                                            disabled={tooltip.definition === 'N/A'}
+                                            disabled={wordTooltip.definition === 'N/A'}
                                             sx={{
                                                 textTransform: 'none',
                                                 color: 'text.secondary',
@@ -797,10 +797,10 @@ function InputArea({
                         PopperProps={{
                             anchorEl: {
                                 getBoundingClientRect: () => ({
-                                    top: tooltip.y,
-                                    left: tooltip.x,
-                                    right: tooltip.x,
-                                    bottom: tooltip.y,
+                                    top: wordTooltip.y,
+                                    left: wordTooltip.x,
+                                    right: wordTooltip.x,
+                                    bottom: wordTooltip.y,
                                     width: 0,
                                     height: 0,
                                 }),
@@ -810,8 +810,8 @@ function InputArea({
                         <Box
                             sx={{
                                 position: 'absolute',
-                                top: tooltip.y + 20,
-                                left: tooltip.x,
+                                top: wordTooltip.y + 20,
+                                left: wordTooltip.x,
                                 zIndex: 999,
                             }}
                         ></Box>
