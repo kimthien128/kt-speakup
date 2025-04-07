@@ -523,7 +523,7 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
             )}
 
             <audio ref={audioRef} style={{display: 'none'}}></audio>
-            <ToastContainer position="bottom-left" autoClose={2800} />
+            <ToastContainer position="bottom-left" autoClose={2500} />
         </>
     );
 }
