@@ -16,6 +16,7 @@ import MenuItem from '@mui/material/MenuItem';
 import Divider from '@mui/material/Divider';
 import {Tooltip as MuiTooltip} from '@mui/material';
 import Button from '@mui/material/Button';
+import CircularProgress from '@mui/material/CircularProgress';
 
 import SettingsIcon from '@mui/icons-material/Settings';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
@@ -45,6 +46,7 @@ function InputArea({
     const [ttsMethod, setTtsMethod] = useState('gtts');
     const [generateMethod, setGenerateMethod] = useState('mistral');
     const [isPlaying, setIsPlaying] = useState(false);
+    const [loading, setLoading] = useState(false);
     const mediaRecorderRef = useRef(null);
     const {playSound, audioRef} = useAudioPlayer();
     const {wordTooltip, wordTooltipRef, handleWordClick, handlePlay, handleAddToVocab} = useKTTooltip({
@@ -219,10 +221,12 @@ function InputArea({
 
     // Hàm dịch suggestion và cập nhật translation trong database
     const translateSuggestion = async (suggestion, currentChatId) => {
+        setLoading(true);
         try {
             // Nếu translation đã tồn tại và giống với giá trị hiện tại, không gọi API
             if (suggestionData.translate_suggestion && showTranslation) {
                 setShowTranslation(false);
+                setLoading(false);
                 return;
             }
 
@@ -255,10 +259,13 @@ function InputArea({
                 updateSuggestionData({translate_suggestion: translatedText});
             }
             setShowTranslation(true); // Hiển thị translation
+            setLoading(false);
             return translatedText;
         } catch (err) {
             console.error('Error translating suggestion:', err);
             throw err;
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -645,7 +652,7 @@ function InputArea({
                                             },
                                         }}
                                     >
-                                        <TranslateIcon fontSize="small" />
+                                        {loading ? <CircularProgress size={20} /> : <TranslateIcon fontSize="small" />}
                                     </IconButton>
                                 </Box>
                             ) : (
