@@ -4,13 +4,13 @@ import axios from '../axiosInstance';
 
 const DEFAULT_DICTIONARY_SOURCE = 'dictionaryapi'; // Nguồn từ điển mặc định
 
-export const fetchWordInfo = async (word, source = DEFAULT_DICTIONARY_SOURCE) => {
+export const fetchWordInfo = async (word, source = DEFAULT_DICTIONARY_SOURCE, limit = 2) => {
     try {
         console.log(`Fetching word info for word: ${word}, source: ${source}`);
 
         const res = await axios.post(
             `/word-info`,
-            {word, source}, // Truyền source vào body để backend biết gọi API nào
+            {word, source, limit}, // Truyền source vào body để backend biết gọi API nào
             {
                 headers: {
                     'Content-Type': 'application/json',

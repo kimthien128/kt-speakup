@@ -80,7 +80,7 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                 hideDialog();
             },
             confirmText: 'Delete',
-            confirmColor: 'primary',
+            confirmColor: 'error',
         });
 
         const deleteChat = async (chatId) => {

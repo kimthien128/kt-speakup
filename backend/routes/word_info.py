@@ -38,15 +38,12 @@ async def word_info(request: Request):
         # Chuẩn hóa dữ liệu trả về
         definition = "No definition found"
         phonetic = "N/A"
-        audio = ""
-        etymologies = []
+        audio = []
         examples = []
-        frequency = 0
         hyphenation = []
         phrases = []
         pronunciations = []
         related_words = []
-        scrabble_score = 0
         top_example = ""
         
         
@@ -57,7 +54,7 @@ async def word_info(request: Request):
                 response = await client.get(api_url, headers=headers) # Dùng await với httpx
                 print(f"Dictionary API response: {response.status_code}, {response.text}")
             if response.status_code != 200:
-                return {"definition": "No definition found", "phonetic": "N/A", "audio": ""}
+                return {"definition": "No definition found", "phonetic": "N/A", "audio": []}
             
             result = response.json()
         
@@ -74,14 +71,15 @@ async def word_info(request: Request):
                 phonetic = entry.get("phonetic", "N/A")
                 # Lấy audio từ phonetics (ưu tiên link không rỗng)
                 phonetics = entry.get("phonetics", [])
-                audio = next(
-                    (item["audio"] for item in phonetics if item.get("audio","")), ""
-                    # Nếu không có audio nào hợp lệ, trả về chuỗi rỗng
+                audio_url = next(
+                    (item["audio"] for item in phonetics if item.get("audio","")), None
+                    # Nếu không có audio nào hợp lệ, trả về None
                 )
+                audio = [audio_url] if audio_url else []
             else:
                 definition = "No definition found"
                 phonetic = "N/A"
-                audio = ""
+                audio = []
                 
         elif source == 'wordnik':
             async with httpx.AsyncClient() as client:
@@ -103,20 +101,13 @@ async def word_info(request: Request):
                 audio_response = await client.get(audio_url, headers=headers)
                 if audio_response.status_code == 200:
                     audio_data = audio_response.json()
-                    if isinstance(audio_data, list) and len(audio_data) > 0 and "fileUrl" in audio_data[0]:
-                        audio = audio_data[0]["fileUrl"]
+                    if isinstance(audio_data, list) and len(audio_data) > 0:
+                        audio_files = [item["fileUrl"] for item in audio_data if isinstance(item, dict) and "fileUrl" in item][:2]
+                        audio = audio_files  # Trả về danh sách 2 âm thanh
+                        print(f"Found {len(audio_files)} audio files for word: {word}")
                     else:
                         print(f"No audio found for word: {word}")
-                
-                # 3. Lấy etymologies : từ nguyên
-                etymologies_url = f"{base_url}/etymologies"
-                etymologies_response = await client.get(etymologies_url, headers=headers)
-                if etymologies_response.status_code == 200:
-                    etymologies_data = etymologies_response.json()
-                    if isinstance(etymologies_data, list):
-                        etymologies = etymologies_data[:limit]
-                    else:
-                        print(f"No etymologies found for word: {word}")
+                        audio = []  # Trả về danh sách rỗng nếu không có âm thanh
                     
                 # 4. Lấy examples : ví dụ
                 examples_url = f"{base_url}/examples?limit={limit}"
@@ -128,16 +119,6 @@ async def word_info(request: Request):
                         examples = [example["text"] for example in examples_list if isinstance(example, dict) and "text" in example][:limit]
                     else:
                         print(f"No examples found for word: {word}")
-                    
-                # 5. Lấy frequency : tần suất
-                frequency_url = f"{base_url}/frequency?useCanonical=false&startYear=1800&endYear=2025"
-                frequency_response = await client.get(frequency_url, headers=headers)
-                if frequency_response.status_code == 200:
-                    frequency_data = frequency_response.json()
-                    if isinstance(frequency_data, dict):
-                        frequency = frequency_data.get("totalCount", 0)
-                    else:
-                        print(f"No frequency data found for word: {word}")
                     
                 # 6. Lấy hyphenation: gạch nối
                 hyphenation_url = f"{base_url}/hyphenation?useCanonical=false"
@@ -191,16 +172,6 @@ async def word_info(request: Request):
                     else:
                         print(f"No related words found for word: {word}")
                         
-                # 10. Lấy scrabble score : điểm scrabble
-                scrabble_score_url = f"{base_url}/scrabbleScore"
-                scrabble_score_response = await client.get(scrabble_score_url, headers=headers)
-                if scrabble_score_response.status_code == 200:
-                    scrabble_score_data = scrabble_score_response.json()
-                    if isinstance(scrabble_score_data, dict):
-                        scrabble_score = scrabble_score_data.get("value", 0)
-                    else:
-                        print(f"No scrabble score found for word: {word}")
-                    
                 # 11. Lấy top example 
                 top_example_url = f"{base_url}/topExample"
                 top_example_response = await client.get(top_example_url, headers=headers)
@@ -215,14 +186,11 @@ async def word_info(request: Request):
             "definition": definition,
             "phonetic": phonetic,
             "audio": audio,
-            "etymologies": etymologies,
             "examples": examples,
-            "frequency": frequency,
             "hyphenation": hyphenation,
             "phrases": phrases,
             "pronunciations": pronunciations,
             "relatedWords": related_words,
-            "scrabbleScore": scrabble_score,
             "topExample": top_example
         }
     except Exception as e:
@@ -233,14 +201,11 @@ async def word_info(request: Request):
         return {
             "definition": "No definition found",
             "phonetic": "N/A",
-            "audio": "",
-            "etymologies": [],
+            "audio": [],
             "examples": [],
-            "frequency": 0,
             "hyphenation": [],
             "phrases": [],
             "pronunciations": [],
             "relatedWords": [],
-            "scrabbleScore": 0,
             "topExample": ""
         }

@@ -17,6 +17,7 @@ class SiteConfig(BaseModel):
     logoImage: str | None
     aiChatIcon: str | None
     heroImage: str | None
+    saveWordImage: str | None
     updatedAt: str
     
 # Lấy config hiện tại
@@ -29,7 +30,8 @@ async def get_config():
         "backgroundImage": None,
         "logoImage": None,
         "aiChatIcon": None,
-        "heroImage": None,  # Thêm heroImage nếu chưa có
+        "heroImage": None,
+        "saveWordImage": None,
         "updatedAt": datetime.now().isoformat()
     }
     
@@ -50,6 +52,7 @@ async def update_config(
     logo: UploadFile = File(None),
     aiIcon: UploadFile = File(None),
     hero: UploadFile = File(None),
+    saveWord: UploadFile = File(None),
     current_user: UserInDB = Depends(get_current_user)
 ):
     # Kiểm tra quyền admin
@@ -65,6 +68,7 @@ async def update_config(
             "logoImage": None,
             "aiChatIcon": None,
             "heroImage": None,
+            "saveWordImage": None,
             "updatedAt": datetime.now().isoformat()
         }
         
@@ -72,7 +76,7 @@ async def update_config(
     
     # Xử lý upload từng file
     allowed_extensions = {".png", ".jpg", ".jpeg", ".gif"}
-    for file, field in [(background, "backgroundImage"), (logo, "logoImage"), (aiIcon, "aiChatIcon"), (hero, "heroImage")]:
+    for file, field in [(background, "backgroundImage"), (logo, "logoImage"), (aiIcon, "aiChatIcon"), (hero, "heroImage"), (saveWord, "saveWordImage")]:
         if file:
             # Validate file type
             file_extension = os.path.splitext(file.filename)[1].lower()

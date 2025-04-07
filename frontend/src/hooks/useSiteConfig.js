@@ -46,4 +46,11 @@ src={config?.logoImage || null}
 background: config?.backgroundImage
             ? `url("${config.backgroundImage}")`
             : 'linear-gradient(135deg, #ef88bb 0%, #291850 100%)',
+
+//hoặc
+<img
+    src={config?.logoImage || null}
+    alt="KT SpeakUp Logo"
+    style={{width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center'}}
+/>
 */

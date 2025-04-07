@@ -1,3 +1,4 @@
+//hooks/useKTTooltip.js
 import {useState, useEffect, useRef} from 'react';
 import {fetchWordInfo} from '../services/dictionaryService';
 import {cleanWord, addToVocab} from '../utils/vocabUtils';
@@ -31,18 +32,20 @@ const useKTTooltip = ({chatId, onVocabAdded, dictionarySource = 'dictionaryapi'}
         });
         try {
             const res = await fetchWordInfo(cleanedWord, dictionarySource);
-            console.log('Word info response:', res);
             // Kiểm tra res có hợp lệ không
             if (!res || typeof res !== 'object' || !res.definition) {
                 console.error('Invalid word info response:', res);
                 throw new Error('Invalid word info response');
             }
 
+            // Lấy âm thanh đầu tiên từ danh sách res.audio (nếu có)
+            const audioUrl = Array.isArray(res.audio) && res.audio.length > 0 ? res.audio[0] : '';
+
             setWordTooltip({
                 word: cleanedWord,
                 definition: res.definition || 'No definition found',
                 phonetic: res.phonetic || 'N/A',
-                audio: res.audio || '',
+                audio: audioUrl,
                 x: event.pageX,
                 y: event.pageY,
             });

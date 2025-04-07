@@ -18,7 +18,7 @@ function MainLayout({children}) {
         <Box
             sx={{
                 display: 'flex',
-                p: 4,
+                p: {md: 0, lg: 4},
                 height: '100vh',
                 background: config?.backgroundImage
                     ? `url("${config.backgroundImage}")`
@@ -46,9 +46,9 @@ function MainLayout({children}) {
                 disableGutters // Tắt padding mặc định
                 sx={{
                     display: 'flex',
-                    borderRadius: 10,
-                    border: '1px solid',
-                    borderColor: 'rgba(255, 255, 255, 0.9)',
+                    borderRadius: {md: 0, lg: 10},
+                    border: {md: 'none', lg: '1px solid'},
+                    borderColor: {md: 'none', lg: 'rgba(255, 255, 255, 0.9)'},
                     boxShadow: '0 0 25px rgba(0, 0, 0, 0.15)',
                     boxSizing: 'border-box',
                     backdropFilter: 'blur(20px)',

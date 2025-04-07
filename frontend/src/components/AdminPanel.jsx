@@ -19,6 +19,8 @@ function AdminPanel() {
     const [aiIconPreview, setAiIconPreview] = useState('');
     const [heroFile, setHeroFile] = useState(null);
     const [heroPreview, setHeroPreview] = useState('');
+    const [saveWordFile, setSaveWordFile] = useState(null);
+    const [saveWordPreview, setSaveWordPreview] = useState('');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [loading, setLoading] = useState(false);
@@ -40,6 +42,7 @@ function AdminPanel() {
                 setLogoPreview(res.data.logoImage || '');
                 setAiIconPreview(res.data.aiChatIcon || '');
                 setHeroPreview(res.data.heroImage || '');
+                setSaveWordPreview(res.data.saveWordImage || '');
             } catch (err) {
                 setError('Failed to load config');
                 console.error('Error fetching config:', err.response?.data || err.message);
@@ -90,6 +93,7 @@ function AdminPanel() {
                     if (logoFile) formData.append('logo', logoFile);
                     if (aiIconFile) formData.append('aiIcon', aiIconFile);
                     if (heroFile) formData.append('hero', heroFile);
+                    if (saveWordFile) formData.append('saveWord', saveWordFile);
 
                     const res = await axios.patch('/config', formData, {
                         headers: {
@@ -102,10 +106,12 @@ function AdminPanel() {
                     setLogoPreview(res.data.logoImage || '');
                     setAiIconPreview(res.data.aiChatIcon || '');
                     setHeroPreview(res.data.heroImage || '');
+                    setSaveWordPreview(res.data.saveWordImage || '');
                     setBackgroundFile(null);
                     setLogoFile(null);
                     setAiIconFile(null);
                     setHeroFile(null);
+                    setSaveWordFile(null);
                     setSuccess('Config updated successfully');
                 } catch (err) {
                     setError(err.response?.data?.detail || 'Failed to update config');
@@ -381,6 +387,54 @@ function AdminPanel() {
                                             accept="image/*"
                                             hidden
                                             onChange={(e) => handleFileChange(e, setHeroFile, setHeroPreview)}
+                                        />
+                                    </IconButton>
+                                </Box>
+                            </Grid>
+
+                            {/* Save word Image */}
+                            <Grid size={{xs: 6, md: 4, lg: 3}} sx={{textAlign: 'center'}}>
+                                <Typography variant="h6" sx={{mb: 2}}>
+                                    Save Word Image
+                                </Typography>
+                                <Box
+                                    sx={{
+                                        position: 'relative',
+                                        display: 'inline-block',
+                                    }}
+                                >
+                                    <Box
+                                        component="img"
+                                        src={saveWordPreview || null}
+                                        sx={{
+                                            width: 200,
+                                            height: 200,
+                                            objectFit: 'cover',
+                                            borderRadius: 2,
+                                            border: '2px solid white',
+                                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                                        }}
+                                    />
+                                    <IconButton
+                                        component="label"
+                                        sx={{
+                                            position: 'absolute',
+                                            right: 0,
+                                            bottom: 0,
+                                            bgcolor: 'primary.light',
+                                            color: 'white',
+                                            '&:hover': {
+                                                bgcolor: 'primary.dark',
+                                            },
+                                            boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                                        }}
+                                    >
+                                        <CameraAltIcon fontSize="small" />
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            hidden
+                                            onChange={(e) => handleFileChange(e, setSaveWordFile, setSaveWordPreview)}
                                         />
                                     </IconButton>
                                 </Box>

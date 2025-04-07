@@ -65,3 +65,36 @@ async def get_vocab(chat_id: str, current_user: UserInDB = Depends(get_current_u
     except Exception as e:
         print(f"Error getting vocab: {e}")
         raise HTTPException(status_code=500, detail="Failed to get vocab")
+    
+# xóa từ vựng
+@router.delete("/{chatId}/{vocab_id}")
+async def delete_vocab(chatId: str, vocab_id: str, current_user: UserInDB = Depends(get_current_user)):
+    try:
+        print(f"Deleting vocab with ID: {vocab_id} for chatId: {chatId}, user_id: {current_user.id}")
+        
+        # Kiểm tra chat_id hợp lệ và thuộc về user
+        chat = await db.chats.find_one({"_id": ObjectId(chatId), "user_id": current_user.id})
+        if not chat:
+            print(f"Chat not found or not owned: {chatId}")
+            raise HTTPException(status_code=404, detail="Chat not found or not owned by user")
+        
+        # Tìm và xóa từ vựng dựa trên vocab_id
+        vocab = await db.vocab.find_one({"_id": ObjectId(vocab_id), "chat_id": ObjectId(chatId), "user_id": current_user.id})
+        if not vocab:
+            print(f"Vocab not found: {vocab_id}")
+            raise HTTPException(status_code=404, detail="Vocab not found")
+        
+        # Xóa từ vựng khỏi collection vocab
+        await db.vocab.delete_one({"_id": ObjectId(vocab_id)})
+        
+        # Cập nhật vocab_ids trong chats
+        await db.chats.update_one(
+            {"_id": ObjectId(chatId)},
+            {"$pull": {"vocab_ids": str(vocab_id)}}
+        )
+        print(f"Deleted vocab with vocab_id: {vocab_id} from chat_id: {chatId}")
+        return {"message": f"Deleted vocab with ID {vocab_id}"}
+    
+    except Exception as e:
+        print(f"Error deleting vocab: {e}")
+        raise HTTPException(status_code=500, detail="Failed to delete vocab")
