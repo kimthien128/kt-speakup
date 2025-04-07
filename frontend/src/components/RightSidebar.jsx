@@ -174,6 +174,8 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                 display: 'flex',
                 flexDirection: 'column',
                 flexShrink: 0,
+                borderLeft: '1px solid',
+                borderColor: 'divider',
             }}
         >
             {/* Phần 1: Thông tin user + Account Menu */}

@@ -101,9 +101,6 @@ function ChatPage({userEmail, onLogout, onSendMessageRef}) {
                     display: 'flex',
                     flexDirection: 'column',
                     height: '100%',
-                    borderLeft: '1px solid',
-                    borderRight: '1px solid',
-                    borderColor: 'divider',
                 }}
             >
                 <Box
