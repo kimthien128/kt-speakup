@@ -582,9 +582,11 @@ function InputArea({
                                 p: 2,
                                 borderRadius: 2,
                                 bgcolor: 'grey.100',
-                                maxHeight: 200,
+                                maxHeight: 180,
                                 overflowY: 'auto',
                                 boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                                scrollbarWidth: 'thin',
+                                scrollbarColor: 'rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.1)', // Màu thứ 2 là màu khi hover
                             }}
                         >
                             <Typography

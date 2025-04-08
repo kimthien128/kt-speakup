@@ -140,6 +140,8 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                     height: '100%',
                     position: 'relative',
                     overflowY: 'auto', // Cuộn nội dung bên trong ChatArea
+                    scrollbarWidth: 'thin',
+                    scrollbarColor: 'rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.1)', // Màu thứ 2 là màu khi hover
                 }}
             >
                 {chatHistory.length > 0 ? (

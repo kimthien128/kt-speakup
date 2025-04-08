@@ -195,6 +195,8 @@ function AdminPanel() {
                         sx={{
                             overflowY: 'auto',
                             flexGrow: 1,
+                            scrollbarWidth: 'thin',
+                            scrollbarColor: 'rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.1)', // Màu thứ 2 là màu khi hover
                         }}
                     >
                         <Grid container>

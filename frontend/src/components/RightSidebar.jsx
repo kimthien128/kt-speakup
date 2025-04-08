@@ -303,6 +303,8 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                     mb: 2,
                     textAlign: 'center',
                     flexShrink: 0,
+                    scrollbarWidth: 'thin',
+                    scrollbarColor: 'rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.1)', // Màu thứ 2 là màu khi hover
                 }}
             >
                 {vocabList.length > 0 && (
@@ -353,7 +355,7 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                         <img
                             src={config?.saveWordImage || null}
                             alt="KT SpeakUp Logo"
-                            style={{width: '120px', objectFit: 'cover', objectPosition: 'center'}}
+                            style={{width: '80px', objectFit: 'cover', objectPosition: 'center'}}
                         />
                         <Typography variant="body1">
                             {vocabList.length === 0 ? 'Save your first word !!' : ''}
@@ -368,7 +370,14 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
             {vocabList.length > 0 && (
                 <>
                     <Box sx={{flexGrow: 1, overflow: 'hidden', borderRadius: 1}}>
-                        <Box sx={{overflowY: 'auto', height: '100%'}}>
+                        <Box
+                            sx={{
+                                overflowY: 'auto',
+                                height: '100%',
+                                scrollbarWidth: 'thin',
+                                scrollbarColor: 'rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.1)',
+                            }}
+                        >
                             {loadingDetails ? (
                                 <CircularProgress />
                             ) : (

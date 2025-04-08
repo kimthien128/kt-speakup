@@ -199,6 +199,7 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                 borderColor: 'divider',
             }}
         >
+            {/* Đóng mở sidebar */}
             {isOpen ? (
                 <div>
                     {/* Logo */}
@@ -364,18 +365,6 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                             ))}
                         </List>
                     </Box>
-
-                    {/* Hiển thị ConfirmDialog */}
-                    <ConfirmDialog
-                        open={dialog.open}
-                        title={dialog.title}
-                        content={dialog.content}
-                        onConfirm={dialog.onConfirm}
-                        onCancel={hideDialog}
-                        confirmText={dialog.confirmText}
-                        confirmColor={dialog.confirmColor}
-                    />
-                    <ToastContainer position="bottom-left" autoClose={2500} />
                 </div>
             ) : (
                 <Box
@@ -419,6 +408,19 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                     {isOpen ? <MenuOpenIcon /> : <MenuIcon sx={{fontSize: '2rem', color: 'primary.main'}} />}
                 </IconButton>
             </Tooltip>
+
+            {/* Hiển thị ConfirmDialog */}
+            <ConfirmDialog
+                open={dialog.open}
+                title={dialog.title}
+                content={dialog.content}
+                onConfirm={dialog.onConfirm}
+                onCancel={hideDialog}
+                confirmText={dialog.confirmText}
+                confirmColor={dialog.confirmColor}
+            />
+
+            <ToastContainer position="bottom-left" autoClose={2500} />
         </Box>
     );
 }
