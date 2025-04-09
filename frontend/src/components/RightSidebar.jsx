@@ -1,5 +1,8 @@
 import React, {useState, useEffect} from 'react';
-import {Link as RouterLink} from 'react-router-dom';
+import {Link as RouterLink, useNavigate} from 'react-router-dom';
+
+import {useTheme} from '@mui/material/styles';
+import {useMediaQuery} from '@mui/material';
 
 import {
     Box,
@@ -8,7 +11,6 @@ import {
     Avatar,
     Chip,
     Divider,
-    TextField,
     Menu,
     MenuItem,
     IconButton,
@@ -19,6 +21,9 @@ import {
     ListItem,
     ListItemText,
     Tooltip,
+    FormControl,
+    OutlinedInput,
+    InputAdornment,
 } from '@mui/material';
 import Alert from '@mui/material/Alert';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -29,6 +34,9 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import SearchIcon from '@mui/icons-material/Search';
 import CancelIcon from '@mui/icons-material/Cancel';
 import DeleteIcon from '@mui/icons-material/Delete';
+import MenuOpenIcon from '@mui/icons-material/MenuOpen';
+import MenuIcon from '@mui/icons-material/Menu';
+import HomeIcon from '@mui/icons-material/Home'; // sau này thay logo
 
 import useSiteConfig from '../hooks/useSiteConfig';
 import ConfirmDialog from './ConfirmDialog';
@@ -39,6 +47,11 @@ import {fetchWordInfo} from '../services/dictionaryService';
 import axios from '../axiosInstance';
 
 function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // Kiểm tra nếu là thiết bị di động
+    const [isOpen, setIsOpen] = useState(!isMobile); // Mở rộng trên desktop, thu nhỏ trên mobile
+
+    const navigate = useNavigate();
     const [vocabList, setVocabList] = useState([]); //state cho danh sách từ vựng
     const [searchTerm, setSearchTerm] = useState(''); //state cho từ khóa tìm kiếm vocab
     const [anchorEl, setAnchorEl] = useState(null); //state cho menu user
@@ -69,6 +82,11 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
         });
     };
 
+    // tự động cập nhật isOpen khi kích thước màn hình thay đổi
+    useEffect(() => {
+        setIsOpen(!isMobile);
+    }, [isMobile]);
+
     // Hàm fetch từ vựng
     const fetchVocab = async () => {
         // Bỏ qua nếu chatId không hợp lệ
@@ -94,6 +112,7 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
     // Fetch từ vựng khi chatId thay đổi
     useEffect(() => {
         fetchVocab();
+        setWordDetails(null);
     }, [chatId]);
 
     // Hàm để parent gọi khi cần refresh
@@ -181,142 +200,88 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
     return (
         <Box
             sx={{
-                width: 300,
+                width: isOpen ? 300 : 60,
                 height: '100%',
-                p: 2,
+                p: isOpen ? 2 : 0,
                 display: 'flex',
                 flexDirection: 'column',
                 flexShrink: 0,
+                position: 'relative',
+                transition: 'width .3s ease',
                 borderLeft: '1px solid',
                 borderColor: 'divider',
             }}
         >
-            {/* Phần 1: Thông tin user + Account Menu */}
-            {userEmail && userInfo && (
-                <Box sx={{display: 'flex', alignItems: 'center', justifyContent: 'space-around', mb: 2}}>
-                    {/* Link: Admin thì hiện link quản lý, user thì hiện Welcome + displayName */}
-                    {userInfo.isAdmin ? (
-                        <Button
-                            component={RouterLink}
-                            to="/admin"
-                            startIcon={<AdminPanelSettingsIcon />}
-                            color="primary"
-                            sx={{
-                                textTransform: 'none',
-                                fontSize: '1rem',
-                            }}
-                        >
-                            Admin Panel
-                        </Button>
-                    ) : (
-                        <Typography
-                            variant="body1"
-                            sx={{
-                                overflow: 'hidden', //Giới hạn title
-                                textOverflow: 'ellipsis', //Thêm dấu ...
-                                whiteSpace: 'nowrap', //Không ngắt dòng
-                                '& > span': {
-                                    fontWeight: 'bold',
-                                    color: 'primary.main',
-                                },
-                            }}
-                        >
-                            Welcome <span>{userInfo.displayName || userEmail}</span>
-                        </Typography>
+            {/* Đóng mở sidebar */}
+            {isOpen ? (
+                <div>
+                    {/* Phần 1: Thông tin user + Account Menu */}
+                    {userEmail && userInfo && (
+                        <Box sx={{display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 2, mb: 2}}>
+                            {/* Link: Admin thì hiện link quản lý, user thì hiện Welcome + displayName */}
+                            {userInfo.isAdmin ? (
+                                <Button
+                                    component={RouterLink}
+                                    to="/admin"
+                                    startIcon={<AdminPanelSettingsIcon />}
+                                    color="primary"
+                                    sx={{
+                                        textTransform: 'none',
+                                        fontSize: '1rem',
+                                    }}
+                                >
+                                    Admin Panel
+                                </Button>
+                            ) : (
+                                <Typography
+                                    variant="body1"
+                                    sx={{
+                                        overflow: 'hidden', //Giới hạn title
+                                        textOverflow: 'ellipsis', //Thêm dấu ...
+                                        whiteSpace: 'nowrap', //Không ngắt dòng
+                                        '& > span': {
+                                            fontWeight: 'bold',
+                                            color: 'primary.main',
+                                        },
+                                    }}
+                                >
+                                    Welcome <span>{userInfo.displayName || userEmail}</span>
+                                </Typography>
+                            )}
+
+                            {/* Account Menu */}
+                            <IconButton onClick={handleMenuOpen}>
+                                <Avatar src={userInfo.avatarPath} sx={{bgcolor: 'primary.main'}}>
+                                    {/* Hiển thị chữ cái đầu nếu không có avatarPath */}
+                                    {!userInfo.avatarPath && getAvatarInitial(userInfo)}
+                                </Avatar>
+                            </IconButton>
+                        </Box>
                     )}
 
-                    {/* Account Menu */}
-                    <IconButton onClick={handleMenuOpen}>
-                        <Avatar src={userInfo.avatarPath} sx={{bgcolor: 'primary.main'}}>
-                            {/* Hiển thị chữ cái đầu nếu không có avatarPath */}
-                            {!userInfo.avatarPath && getAvatarInitial(userInfo)}
-                        </Avatar>
-                    </IconButton>
-                    <Menu
-                        anchorEl={anchorEl}
-                        open={Boolean(anchorEl)}
-                        onClose={handleMenuClose}
-                        anchorOrigin={{vertical: 'bottom', horizontal: 'right'}}
-                        transformOrigin={{vertical: 'top', horizontal: 'right'}}
-                        PaperProps={{
-                            sx: {
-                                mt: 1,
-                                borderRadius: 4,
-                                boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-                                minWidth: 180,
-                                bgcolor: 'background.paper',
-                            },
-                        }}
-                    >
-                        <MenuItem
-                            component={RouterLink}
-                            to="/profile"
-                            onClick={handleMenuClose}
-                            sx={{
-                                py: 1,
-                                px: 2,
-                                fontSize: '1rem',
-                                color: 'grey.800',
-                                '&:hover': {
-                                    bgcolor: 'primary.light', // Hiệu ứng hover
-                                    color: 'primary.contrastText', // Màu chữ khi hover
-                                },
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 1,
-                            }}
-                        >
-                            <AccountCircleIcon />
-                            Profile
-                        </MenuItem>
-                        <Divider sx={{my: 0.5}} />
-                        <MenuItem
-                            onClick={handleLogoutClick}
-                            sx={{
-                                py: 1,
-                                px: 2,
-                                fontSize: '1rem',
-                                color: 'grey.800',
-                                '&:hover': {
-                                    bgcolor: 'primary.light',
-                                    color: 'primary.contrastText',
-                                },
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 1,
-                            }}
-                        >
-                            <LogoutIcon />
-                            Logout
-                        </MenuItem>
-                    </Menu>
-                </Box>
-            )}
+                    {/* Phần 2: Danh sách từ vựng (Chip) */}
 
-            {/* Phần 2: Danh sách từ vựng (Chip) */}
-
-            <Box
-                sx={{
-                    maxHeight: '50%',
-                    minHeight: 100,
-                    overflowY: 'auto',
-                    mb: 2,
-                    textAlign: 'center',
-                    flexShrink: 0,
-                    scrollbarWidth: 'thin',
-                    scrollbarColor: 'rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.1)', // Màu thứ 2 là màu khi hover
-                }}
-            >
-                {vocabList.length > 0 && (
                     <Box
                         sx={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            mb: 1,
+                            maxHeight: wordDetails ? '40%' : '100%',
+                            overflowY: 'auto',
+                            mb: 2,
+                            textAlign: 'center',
+                            flexShrink: 0,
+                            scrollbarWidth: 'thin',
+                            scrollbarColor: 'rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.1)', // Màu thứ 2 là màu khi hover
                         }}
                     >
-                        <TextField
+                        {vocabList.length > 0 && (
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    mb: 1,
+                                }}
+                            >
+                                {/* <TextField
                             label="Search vocabulary"
                             variant="outlined"
                             size="small"
@@ -326,214 +291,387 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                             error={searchTerm && filteredVocab.length === 0}
                             helperText={searchTerm && filteredVocab.length === 0 ? 'No matches found' : ''}
                             sx={{my: 1}}
-                        />
-                        <Tooltip title={isDeleteMode ? 'Exit delete mode' : 'Delete vocabulary'}>
-                            <IconButton onClick={toggleDeleteMode} sx={{ml: 1}}>
-                                {isDeleteMode ? <CancelIcon color="error" /> : <DeleteIcon />}
-                            </IconButton>
-                        </Tooltip>
+                        /> */}
+                                <FormControl sx={{flexGrow: 1, mr: 1}} variant="outlined">
+                                    <OutlinedInput
+                                        type="text"
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        placeholder="Search vocabulary"
+                                        size="small"
+                                        startAdornment={
+                                            <InputAdornment position="start">
+                                                <SearchIcon />
+                                            </InputAdornment>
+                                        }
+                                    />
+                                </FormControl>
+                                <Tooltip title={isDeleteMode ? 'Exit delete mode' : 'Delete vocabulary'}>
+                                    <IconButton onClick={toggleDeleteMode} sx={{ml: 1}}>
+                                        {isDeleteMode ? <CancelIcon color="error" /> : <DeleteIcon />}
+                                    </IconButton>
+                                </Tooltip>
+                            </Box>
+                        )}
+                        {filteredVocab.length > 0 ? (
+                            <Box sx={{display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1}}>
+                                {filteredVocab.map((vocab) => (
+                                    <Chip
+                                        key={vocab._id}
+                                        label={vocab.word}
+                                        onClick={() => handleChipClick(vocab.word)}
+                                        onDelete={
+                                            isDeleteMode ? () => handleDeleteVocab(vocab._id, vocab.word) : undefined
+                                        }
+                                        sx={{
+                                            bgcolor: selectedWord === vocab.word ? 'primary.dark' : 'primary.light',
+                                            color: 'white',
+                                            '&:hover': {bgcolor: 'primary.main'},
+                                        }}
+                                    />
+                                ))}
+                            </Box>
+                        ) : chatId && chatId !== 'null' && chatId !== 'undefined' ? (
+                            <>
+                                <img
+                                    src={config?.saveWordImage || null}
+                                    alt="KT SpeakUp Logo"
+                                    style={{width: '80px', objectFit: 'cover', objectPosition: 'center'}}
+                                />
+                                <Typography variant="body1">
+                                    {vocabList.length === 0 ? 'Save your first word !!' : ''}
+                                </Typography>
+                            </>
+                        ) : (
+                            <></>
+                        )}
                     </Box>
-                )}
-                {filteredVocab.length > 0 ? (
-                    <Box sx={{display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1}}>
-                        {filteredVocab.map((vocab) => (
-                            <Chip
-                                key={vocab._id}
-                                label={vocab.word}
-                                onClick={() => handleChipClick(vocab.word)}
-                                onDelete={isDeleteMode ? () => handleDeleteVocab(vocab._id, vocab.word) : undefined}
-                                sx={{
-                                    bgcolor: selectedWord === vocab.word ? 'primary.light' : 'primary.light',
-                                    color: 'white',
-                                    '&:hover': {bgcolor: 'primary.main'},
-                                }}
-                            />
-                        ))}
-                    </Box>
-                ) : chatId && chatId !== 'null' && chatId !== 'undefined' ? (
-                    <>
-                        <img
-                            src={config?.saveWordImage || null}
-                            alt="KT SpeakUp Logo"
-                            style={{width: '80px', objectFit: 'cover', objectPosition: 'center'}}
-                        />
-                        <Typography variant="body1">
-                            {vocabList.length === 0 ? 'Save your first word !!' : ''}
-                        </Typography>
-                    </>
-                ) : (
-                    <></>
-                )}
-            </Box>
 
-            {/* Phần 3: Chi tiết từ vựng */}
-            {vocabList.length > 0 && (
-                <>
-                    <Box sx={{flexGrow: 1, overflow: 'hidden', borderRadius: 1}}>
-                        <Box
-                            sx={{
-                                overflowY: 'auto',
-                                height: '100%',
-                                scrollbarWidth: 'thin',
-                                scrollbarColor: 'rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.1)',
-                            }}
-                        >
-                            {loadingDetails ? (
-                                <CircularProgress />
-                            ) : (
-                                wordDetails && (
-                                    <>
-                                        <Accordion>
-                                            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                                <Typography>Definition</Typography>
-                                            </AccordionSummary>
-                                            <AccordionDetails>
-                                                <Typography>{wordDetails.definition || 'Not available'}</Typography>
-                                            </AccordionDetails>
-                                        </Accordion>
+                    {/* Phần 3: Chi tiết từ vựng */}
+                    {vocabList.length > 0 && (
+                        <>
+                            <Box sx={{flexGrow: 1, overflow: 'hidden', borderRadius: 1}}>
+                                <Box
+                                    sx={{
+                                        overflowY: 'auto',
+                                        overflowX: 'hidden',
+                                        height: '100%',
+                                        scrollbarWidth: 'thin',
+                                        scrollbarColor: 'rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.1)',
+                                        // Target cho Accordion root
+                                        '& .MuiAccordion-root': {
+                                            m: '0 !important',
+                                            borderBottom: '1px solid rgba(0, 0, 0, 0.1) !important',
+                                        },
+                                        '& .MuiAccordion-root:last-child': {
+                                            borderBottom: 'none !important',
+                                        },
+                                        // Target cho AccordionSummary
+                                        '& .MuiAccordionSummary-root': {
+                                            py: 0,
+                                            px: 1,
+                                            minHeight: '36px !important',
+                                            '& .MuiAccordionSummary-content': {my: 0.5},
+                                        },
+                                        '& .MuiAccordionSummary-content .MuiTypography-root': {
+                                            fontWeight: '500 !important', // Đậm toàn bộ tiêu đề
+                                        },
+                                        // Target cho MuiBox
+                                        '& .MuiBox-root': {
+                                            m: 0,
+                                        },
+                                        // Target cho AccordionDetails, ListItem
+                                        '& .MuiAccordionDetails-root, & .MuiListItem-root': {
+                                            px: 1,
+                                            py: 0,
+                                        },
+                                        // Target cho List, ListItemText
+                                        '& .MuiList-root, & .MuiListItemText-root': {
+                                            py: 0,
+                                            my: 0,
+                                        },
+                                        // Target cho MuiTypographyRoot
+                                        '& .MuiTypography-root.MuiTypography-subtitle1': {
+                                            fontWeight: '500',
+                                        },
+                                        '& .MuiListItemText-root': {},
+                                    }}
+                                >
+                                    {loadingDetails ? (
+                                        <CircularProgress />
+                                    ) : (
+                                        wordDetails && (
+                                            <>
+                                                <Accordion>
+                                                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                                        <Typography>Definition</Typography>
+                                                    </AccordionSummary>
+                                                    <AccordionDetails>
+                                                        <Typography>
+                                                            {wordDetails.definition || 'Not available'}
+                                                        </Typography>
+                                                    </AccordionDetails>
+                                                </Accordion>
 
-                                        <Accordion>
-                                            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                                <Typography>Phonetic</Typography>
-                                            </AccordionSummary>
-                                            <AccordionDetails>
-                                                <Typography>{wordDetails.phonetic || 'Not available'}</Typography>
-                                            </AccordionDetails>
-                                        </Accordion>
+                                                <Accordion>
+                                                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                                        <Typography>Phonetic</Typography>
+                                                    </AccordionSummary>
+                                                    <AccordionDetails>
+                                                        <Typography>
+                                                            {wordDetails.phonetic || 'Not available'}
+                                                        </Typography>
+                                                    </AccordionDetails>
+                                                </Accordion>
 
-                                        {wordDetails.audio && wordDetails.audio.length > 0 && (
-                                            <Accordion>
-                                                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                                    <Typography>Audio</Typography>
-                                                </AccordionSummary>
-                                                <AccordionDetails>
-                                                    {wordDetails.audio.map((audioUrl, index) => (
-                                                        <Box key={index}>
-                                                            <audio controls>
-                                                                <source src={audioUrl} type="audio/mpeg" />
-                                                                Your browser does not support the audio element.
-                                                            </audio>
-                                                        </Box>
-                                                    ))}
-                                                </AccordionDetails>
-                                            </Accordion>
-                                        )}
+                                                {wordDetails.audio && wordDetails.audio.length > 0 && (
+                                                    <Accordion>
+                                                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                                            <Typography>Audio</Typography>
+                                                        </AccordionSummary>
+                                                        <AccordionDetails>
+                                                            {wordDetails.audio.map((audioUrl, index) => (
+                                                                <Box key={index} sx={{width: '100%'}}>
+                                                                    <audio
+                                                                        controls
+                                                                        style={{
+                                                                            width: '100%',
+                                                                            height: '40px',
+                                                                        }}
+                                                                    >
+                                                                        <source src={audioUrl} type="audio/mpeg" />
+                                                                        Your browser does not support the audio element.
+                                                                    </audio>
+                                                                </Box>
+                                                            ))}
+                                                        </AccordionDetails>
+                                                    </Accordion>
+                                                )}
 
-                                        {wordDetails.examples && wordDetails.examples.length > 0 && (
-                                            <Accordion>
-                                                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                                    <Typography>Examples</Typography>
-                                                </AccordionSummary>
-                                                <AccordionDetails>
-                                                    <List>
-                                                        {wordDetails.examples.map((example, index) => (
-                                                            <ListItem key={index}>
-                                                                <ListItemText primary={example} />
-                                                            </ListItem>
-                                                        ))}
-                                                    </List>
-                                                </AccordionDetails>
-                                            </Accordion>
-                                        )}
-
-                                        {wordDetails.hyphenation && wordDetails.hyphenation.length > 0 && (
-                                            <Accordion>
-                                                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                                    <Typography>Hyphenation</Typography>
-                                                </AccordionSummary>
-                                                <AccordionDetails>
-                                                    <List>
-                                                        {wordDetails.hyphenation.map((part, index) => (
-                                                            <ListItem key={index}>
-                                                                <ListItemText primary={part} />
-                                                            </ListItem>
-                                                        ))}
-                                                    </List>
-                                                </AccordionDetails>
-                                            </Accordion>
-                                        )}
-
-                                        {wordDetails.phrases && wordDetails.phrases.length > 0 && (
-                                            <Accordion>
-                                                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                                    <Typography>Phrases</Typography>
-                                                </AccordionSummary>
-                                                <AccordionDetails>
-                                                    <List>
-                                                        {wordDetails.phrases.map((phrase, index) => (
-                                                            <ListItem key={index}>
-                                                                <ListItemText primary={phrase} />
-                                                            </ListItem>
-                                                        ))}
-                                                    </List>
-                                                </AccordionDetails>
-                                            </Accordion>
-                                        )}
-
-                                        {wordDetails.pronunciations && wordDetails.pronunciations.length > 0 && (
-                                            <Accordion>
-                                                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                                    <Typography>Pronunciations</Typography>
-                                                </AccordionSummary>
-                                                <AccordionDetails>
-                                                    <List>
-                                                        {wordDetails.pronunciations.map((pron, index) => (
-                                                            <ListItem key={index}>
-                                                                <ListItemText primary={pron} />
-                                                            </ListItem>
-                                                        ))}
-                                                    </List>
-                                                </AccordionDetails>
-                                            </Accordion>
-                                        )}
-
-                                        {wordDetails.relatedWords && wordDetails.relatedWords.length > 0 && (
-                                            <Accordion>
-                                                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                                    <Typography>Related Words</Typography>
-                                                </AccordionSummary>
-                                                <AccordionDetails>
-                                                    <List>
-                                                        {wordDetails.relatedWords.map((group, groupIndex) => (
-                                                            <Box key={groupIndex} sx={{mb: 2}}>
-                                                                <Typography
-                                                                    variant="subtitle1"
-                                                                    sx={{
-                                                                        fontWeight: 'bold',
-                                                                        textTransform: 'capitalize',
-                                                                    }}
-                                                                >
-                                                                    {group.relationshipType}
-                                                                </Typography>
-                                                                {group.words.map((word, wordIndex) => (
-                                                                    <ListItem key={`${groupIndex}-${wordIndex}`}>
-                                                                        <ListItemText primary={word} />
+                                                {wordDetails.examples && wordDetails.examples.length > 0 && (
+                                                    <Accordion>
+                                                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                                            <Typography>Examples</Typography>
+                                                        </AccordionSummary>
+                                                        <AccordionDetails>
+                                                            <List>
+                                                                {wordDetails.examples.map((example, index) => (
+                                                                    <ListItem key={index}>
+                                                                        <ListItemText primary={example} />
                                                                     </ListItem>
                                                                 ))}
-                                                            </Box>
-                                                        ))}
-                                                    </List>
-                                                </AccordionDetails>
-                                            </Accordion>
-                                        )}
+                                                            </List>
+                                                        </AccordionDetails>
+                                                    </Accordion>
+                                                )}
 
-                                        {wordDetails.topExample && (
-                                            <Accordion>
-                                                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                                    <Typography>Top Example</Typography>
-                                                </AccordionSummary>
-                                                <AccordionDetails>
-                                                    <Typography>{wordDetails.topExample}</Typography>
-                                                </AccordionDetails>
-                                            </Accordion>
-                                        )}
-                                    </>
-                                )
-                            )}
-                        </Box>
-                    </Box>
-                </>
+                                                {wordDetails.hyphenation && wordDetails.hyphenation.length > 0 && (
+                                                    <Accordion>
+                                                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                                            <Typography>Hyphenation</Typography>
+                                                        </AccordionSummary>
+                                                        <AccordionDetails>
+                                                            <List>
+                                                                {wordDetails.hyphenation.map((part, index) => (
+                                                                    <ListItem key={index}>
+                                                                        <ListItemText primary={part} />
+                                                                    </ListItem>
+                                                                ))}
+                                                            </List>
+                                                        </AccordionDetails>
+                                                    </Accordion>
+                                                )}
+
+                                                {wordDetails.phrases && wordDetails.phrases.length > 0 && (
+                                                    <Accordion>
+                                                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                                            <Typography>Phrases</Typography>
+                                                        </AccordionSummary>
+                                                        <AccordionDetails>
+                                                            <List sx={{p: 0}}>
+                                                                {wordDetails.phrases.map((phrase, index) => (
+                                                                    <ListItem
+                                                                        key={index}
+                                                                        sx={{
+                                                                            p: 0,
+                                                                        }}
+                                                                    >
+                                                                        <ListItemText primary={phrase} />
+                                                                    </ListItem>
+                                                                ))}
+                                                            </List>
+                                                        </AccordionDetails>
+                                                    </Accordion>
+                                                )}
+
+                                                {wordDetails.pronunciations &&
+                                                    wordDetails.pronunciations.length > 0 && (
+                                                        <Accordion>
+                                                            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                                                <Typography>Pronunciations</Typography>
+                                                            </AccordionSummary>
+                                                            <AccordionDetails>
+                                                                <List>
+                                                                    {wordDetails.pronunciations.map((pron, index) => (
+                                                                        <ListItem key={index}>
+                                                                            <ListItemText primary={pron} />
+                                                                        </ListItem>
+                                                                    ))}
+                                                                </List>
+                                                            </AccordionDetails>
+                                                        </Accordion>
+                                                    )}
+
+                                                {wordDetails.relatedWords && wordDetails.relatedWords.length > 0 && (
+                                                    <Accordion>
+                                                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                                            <Typography>Related Words</Typography>
+                                                        </AccordionSummary>
+                                                        <AccordionDetails>
+                                                            <List>
+                                                                {wordDetails.relatedWords.map((group, groupIndex) => (
+                                                                    <Box key={groupIndex} sx={{mb: 2}}>
+                                                                        <Typography
+                                                                            variant="subtitle1"
+                                                                            sx={{
+                                                                                fontWeight: 'bold',
+                                                                                textTransform: 'capitalize',
+                                                                            }}
+                                                                        >
+                                                                            {group.relationshipType}
+                                                                        </Typography>
+                                                                        {group.words.map((word, wordIndex) => (
+                                                                            <ListItem
+                                                                                key={`${groupIndex}-${wordIndex}`}
+                                                                            >
+                                                                                <ListItemText primary={word} />
+                                                                            </ListItem>
+                                                                        ))}
+                                                                    </Box>
+                                                                ))}
+                                                            </List>
+                                                        </AccordionDetails>
+                                                    </Accordion>
+                                                )}
+
+                                                {wordDetails.topExample && (
+                                                    <Accordion>
+                                                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                                            <Typography>Top Example</Typography>
+                                                        </AccordionSummary>
+                                                        <AccordionDetails>
+                                                            <Typography>{wordDetails.topExample}</Typography>
+                                                        </AccordionDetails>
+                                                    </Accordion>
+                                                )}
+                                            </>
+                                        )
+                                    )}
+                                </Box>
+                            </Box>
+                        </>
+                    )}
+                </div>
+            ) : (
+                <Box
+                    sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        height: '100%',
+                        gap: 2,
+                        py: 8,
+                    }}
+                >
+                    <IconButton onClick={handleMenuOpen}>
+                        <Avatar src={userInfo.avatarPath} sx={{bgcolor: 'primary.main'}}>
+                            {/* Hiển thị chữ cái đầu nếu không có avatarPath */}
+                            {!userInfo.avatarPath && getAvatarInitial(userInfo)}
+                        </Avatar>
+                    </IconButton>
+
+                    <Tooltip title="Admin panel" placement="right">
+                        <IconButton onClick={() => navigate('/admin')} sx={{mb: 2}}>
+                            <AdminPanelSettingsIcon sx={{fontSize: '2rem', color: 'primary.main'}} />
+                        </IconButton>
+                    </Tooltip>
+                </Box>
             )}
+
+            {/* Nút toggle ẩn/hiện sidebar */}
+            <Tooltip title={isOpen ? 'Close Sidebar' : 'Open Sidebar'} placement="right">
+                <IconButton
+                    sx={{
+                        position: 'absolute',
+                        top: 20,
+                        right: isOpen ? 260 : 5,
+                        transition: 'right .3s ease',
+                        zIndex: 1000,
+                    }}
+                    onClick={() => setIsOpen(!isOpen)}
+                >
+                    {isOpen ? <MenuOpenIcon /> : <MenuIcon sx={{fontSize: '2rem', color: 'primary.main'}} />}
+                </IconButton>
+            </Tooltip>
+
+            <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleMenuClose}
+                anchorOrigin={{vertical: 'bottom', horizontal: 'right'}}
+                transformOrigin={{vertical: 'top', horizontal: 'right'}}
+                PaperProps={{
+                    sx: {
+                        mt: 1,
+                        borderRadius: 4,
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                        minWidth: 180,
+                        bgcolor: 'background.paper',
+                    },
+                }}
+            >
+                <MenuItem
+                    component={RouterLink}
+                    to="/profile"
+                    onClick={handleMenuClose}
+                    sx={{
+                        py: 1,
+                        px: 2,
+                        fontSize: '1rem',
+                        color: 'grey.800',
+                        '&:hover': {
+                            bgcolor: 'primary.light', // Hiệu ứng hover
+                            color: 'primary.contrastText', // Màu chữ khi hover
+                        },
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                    }}
+                >
+                    <AccountCircleIcon />
+                    Profile
+                </MenuItem>
+                <Divider sx={{my: 0.5}} />
+                <MenuItem
+                    onClick={handleLogoutClick}
+                    sx={{
+                        py: 1,
+                        px: 2,
+                        fontSize: '1rem',
+                        color: 'grey.800',
+                        '&:hover': {
+                            bgcolor: 'primary.light',
+                            color: 'primary.contrastText',
+                        },
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                    }}
+                >
+                    <LogoutIcon />
+                    Logout
+                </MenuItem>
+            </Menu>
 
             {/* Hiển thị ConfirmDialog */}
             <ConfirmDialog

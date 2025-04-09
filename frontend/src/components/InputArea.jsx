@@ -3,7 +3,6 @@ import React, {useState, useRef} from 'react';
 import axios from '../axiosInstance';
 import useAudioPlayer from '../hooks/useAudioPlayer';
 import useKTTooltip from '../hooks/useKTTooltip';
-import {toast} from 'react-toastify';
 
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
@@ -779,7 +778,7 @@ function InputArea({
                                             size="small"
                                             startIcon={<BookmarkAddIcon fontSize="small" />}
                                             onClick={handleAddToVocab}
-                                            disabled={wordTooltip.definition === 'N/A'}
+                                            disabled={wordTooltip.definition === 'No definition found'}
                                             sx={{
                                                 textTransform: 'none',
                                                 color: 'text.secondary',

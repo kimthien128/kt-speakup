@@ -7,6 +7,9 @@ import {toast, ToastContainer} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; // Import CSS của thư viện toastify
 import axios from '../axiosInstance';
 
+import {useTheme} from '@mui/material/styles';
+import {useMediaQuery} from '@mui/material';
+
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
@@ -30,7 +33,10 @@ import MenuIcon from '@mui/icons-material/Menu';
 import HomeIcon from '@mui/icons-material/Home'; // sau này thay logo
 
 function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
-    const [isOpen, setIsOpen] = useState(true); // State để theo dõi trạng thái mở/đóng của sidebar
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // Kiểm tra nếu là thiết bị di động
+    const [isOpen, setIsOpen] = useState(!isMobile); // Mở rộng trên desktop, thu nhỏ trên mobile
+
     const {config, loading, error} = useSiteConfig();
     const [chats, setChats] = useState([]);
     const [editingChatId, setEditingChatId] = useState(null); // Theo dõi chat đang sửa
@@ -143,6 +149,11 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
         };
     };
 
+    // tự động cập nhật isOpen khi kích thước màn hình thay đổi
+    useEffect(() => {
+        setIsOpen(!isMobile);
+    }, [isMobile]);
+
     // Hủy chỉnh sửa khi click ra ngoài
     useEffect(() => {
         const handleClickOutside = (e) => {
@@ -231,7 +242,6 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                     >
                         {/* Search title chat */}
                         <FormControl sx={{flexGrow: 1, mr: 1}} variant="outlined">
-                            {/* <InputLabel>Search chats</InputLabel> */}
                             <OutlinedInput
                                 type="text"
                                 value={searchChatTitle}
@@ -278,7 +288,7 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                                     onClick={() => onSelectChat(chat._id)}
                                     sx={{
                                         borderRadius: 2,
-                                        mb: 1,
+                                        mb: 0.5,
                                         bgcolor: chat._id === selectedChatId ? 'rgba(0, 0, 0, .15)' : 'transparent',
                                         '&:hover': {
                                             bgcolor: 'rgba(0, 0, 0, .15)',
@@ -288,7 +298,7 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                                         justifyContent: 'space-between',
                                         alignItems: 'center',
                                         width: '100%',
-                                        minHeight: 60,
+                                        minHeight: 55,
                                     }}
                                 >
                                     {editingChatId === chat._id ? (
@@ -305,7 +315,7 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                                                 onChange={(e) => setEditTitle(e.target.value)}
                                                 onClick={(e) => e.stopPropagation()}
                                                 size="small"
-                                                sx={{flexGrow: 1, mr: 1}}
+                                                sx={{flexGrow: 1, ml: -1}}
                                             />
                                             <IconButton
                                                 edge="end"

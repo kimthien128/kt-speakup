@@ -132,7 +132,6 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                 ref={chatContainerRef}
                 sx={{
                     p: 2,
-                    maxWidth: '900px',
                     display: 'flex',
                     margin: '0 auto',
                     flexDirection: 'column',
@@ -409,7 +408,7 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                                         size="small"
                                         startIcon={<BookmarkAddIcon fontSize="small" />}
                                         onClick={handleAddToVocab}
-                                        disabled={wordTooltip.definition == 'N/A'}
+                                        disabled={wordTooltip.definition == 'No definition found'}
                                         sx={{
                                             textTransform: 'none',
                                             color: 'text.secondary',

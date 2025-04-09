@@ -83,7 +83,6 @@ const useKTTooltip = ({chatId, onVocabAdded, dictionarySource = 'dictionaryapi'}
 
         try {
             await addToVocab({...wordTooltip, chatId, onVocabAdded});
-            toast.success(`Added ${wordTooltip.word} to vocab`);
         } catch (err) {
             console.error('Error adding to vocab:', err.message);
             toast.error(err.message || 'Failed to add to vocab');
