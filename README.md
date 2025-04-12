@@ -50,7 +50,15 @@ python -m pip install llama-cpp-python
 
 -   tải file cài: https://dl.min.io/server/minio/release/windows-amd64/minio.exe
 -   Tạo thư mục lưu trữ: vd: D:\Code\minio\data
--   Chạy cmd truy cập vào thư mục minio, chạy lệnh: minio.exe server D:\Code\kt-speakup\minio\data --console-address ":9001"
+-   Chạy cmd truy cập vào thư mục minio, chạy lệnh:
+    -   set MINIO_ROOT_USER=your_new_username
+    -   set MINIO_ROOT_PASSWORD=your_secure_password
+    -   minio.exe server D:\Code\kt-speakup\minio\data --console-address ":9001"
+    -   hoặc đặt biến global cho máy tính thì dùng setx MINIO_ROOT_USER your_new_username
 -   Giữ cho server của minio luôn chạy
 
 ## download mongodb compass
+
+## Extension "File Tree Generator"
+
+-   tạo cây thư mục dưới dạng Markdown : shinotatwu-ds.file-tree-generator

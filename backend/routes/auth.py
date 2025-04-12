@@ -16,7 +16,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 # Cấu hình JWT
 SECRET_KEY = JWT_SECRET_KEY
 ALGORITHM = "HS256" # thuật toán mã hóa HMAC với SHA-256
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 # Token sẽ hết hạn sau 30 phút
+ACCESS_TOKEN_EXPIRE_MINUTES = 360 # Token hết hạn sau 360 phút (6 tiếng)
 
 # Kiểm tra bucket tồn tại, nếu không thì tạo
 try:

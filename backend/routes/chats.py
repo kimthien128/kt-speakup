@@ -12,6 +12,7 @@ class TranslateRequest(BaseModel):
     target_lang: str = "vi"
     index: int
 
+# Tạo một chat mới
 @router.post("")
 async def create_chat( current_user: UserInDB = Depends(get_current_user)):
     try:
@@ -47,7 +48,7 @@ async def get_all_chats(current_user: UserInDB = Depends(get_current_user)):
         print(f"Error fetching all chats: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch chats")
 
-# Trả về toàn bộ thông tin của một chat
+# Lấy thông tin chi tiết của một chat
 @router.get("/{chat_id}")
 async def get_chat(chat_id: str, current_user: UserInDB = Depends(get_current_user)):
     try:
@@ -66,7 +67,8 @@ async def get_chat(chat_id: str, current_user: UserInDB = Depends(get_current_us
     except Exception as e:
         print(f"Error fetching chat: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch chat")
-    
+
+# Xóa một chat    
 @router.delete("/{chat_id}")
 async def delete_chat(chat_id: str, current_user: UserInDB = Depends(get_current_user)):
     try:
@@ -194,6 +196,7 @@ async def get_chat_history(chat_id: str, current_user: UserInDB = Depends(get_cu
         print(f"Error fetching history: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch history")
 
+# Thêm một tin nhắn vào lịch sử chat
 @router.post("/{chat_id}/history")
 async def add_chat_history(chat_id: str, request: Request, current_user: UserInDB = Depends(get_current_user)):
     try:
@@ -318,7 +321,7 @@ async def translate_chat_ai(chat_id: str, request: TranslateRequest, current_use
         print(f"Error translating AI chat: {e}")
         raise HTTPException(status_code=500, detail="Failed to translate AI chat")
 
-
+# Lấy danh sách từ vựng của chat
 @router.get("/{chat_id}/vocab")
 async def get_chat_vocab(chat_id: str, current_user: UserInDB = Depends(get_current_user)):
     try:

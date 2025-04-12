@@ -1,44 +1,25 @@
+#routes/vocab.py
 from fastapi import APIRouter, Request, HTTPException, Depends
-from database import db
-from bson import ObjectId
 from routes.auth import UserInDB, get_current_user
+from database.database_factory import database
+from repositories.mongo_repository import MongoRepository
+from repositories.vocab_repository import VocabRepository
+from services.vocab_service import VocabService
 
 router = APIRouter()
 
+# Khởi tạo VocabService với repository tương ứng
+async def get_vocab_service():
+    db = await database.connect()
+    base_repository = MongoRepository(db) # Thay đổi ở đây nếu dùng database khác
+    vocab_repository = VocabRepository(base_repository)
+    return VocabService(vocab_repository)
+
 @router.post("")
-async def add_vocab(request: Request, current_user: dict = Depends(get_current_user)):
+async def add_vocab(request: Request, current_user: dict = Depends(get_current_user), vocab_service: VocabService = Depends(get_vocab_service)):
     try:
         data = await request.json()
-        chat_id = data.get("chat_id", "")
-        if not chat_id:
-            raise HTTPException(status_code=400, detail="chat_id is required")
-        
-        # Kiểm tra chat_id hợp lệ
-        chat = await db.chats.find_one({"_id": ObjectId(chat_id), "user_id": current_user.id})
-        if not chat:
-            raise HTTPException(status_code=404, detail="Chat not found or not owned by user")
-        
-        word_data = {
-            "word" : data.get("word", "").capitalize(), #viết hoa chữ cái đầu tiên
-            "definition": data.get("definition", "No definition found"),
-            "phonetic": data.get("phonetic", "N/A"),
-            "audio": data.get("audio", ""),
-            "chat_id": ObjectId(chat_id),
-            "user_id": current_user.id
-        }
-        
-        # Kiểm tra trùng lặp
-        if await db.vocab.find_one({"word": word_data["word"], "chat_id": ObjectId(chat_id), "user_id": current_user.id}):
-            raise HTTPException(status_code=400, detail="The word already exists in the collection.")
-        
-        # Cập nhật vocab_ids trong chats
-        result = await db.vocab.insert_one(word_data)
-        await db.chats.update_one(
-            {"_id": ObjectId(chat_id)},
-            {"$push": {"vocab_ids": str(result.inserted_id)}}
-        )
-        print(f"Inserted vocab: {word_data}, ID: {result.inserted_id}")
-        return {"message" : f'Added {word_data['word']} to vocab'}
+        return await vocab_service.add_vocab(data, current_user.id)
     except HTTPException as e:
         raise e
     except Exception as e:
@@ -47,54 +28,24 @@ async def add_vocab(request: Request, current_user: dict = Depends(get_current_u
 
 # Lấy từ vựng theo chat_id
 @router.get("/{chat_id}")
-async def get_vocab(chat_id: str, current_user: UserInDB = Depends(get_current_user)):
+async def get_vocab(chat_id: str, current_user: UserInDB = Depends(get_current_user), vocab_service: VocabService = Depends(get_vocab_service)):
     try:
         print(f"Fetching vocab for chat_id: {chat_id}, user_id: {current_user.id}")
-        chat = await db.chats.find_one({"_id": ObjectId(chat_id), "user_id": current_user.id})
-        if not chat:
-            print(f"Chat not found or not owned: {chat_id}")
-            raise HTTPException(status_code=404, detail="Chat not found or not owned by user")
-        
-        vocab_list = await db.vocab.find({"chat_id": ObjectId(chat_id)}).to_list(length=None)
-        print(f"Found {len(vocab_list)} vocab items for chat_id: {chat_id}")
-        for vocab in vocab_list:
-            vocab["_id"] = str(vocab["_id"])
-            vocab["chat_id"] = str(vocab["chat_id"])
-        return {"vocab": vocab_list}
-    
+        return await vocab_service.get_vocab(chat_id, current_user.id)
+    except HTTPException as e:
+        raise e
     except Exception as e:
         print(f"Error getting vocab: {e}")
         raise HTTPException(status_code=500, detail="Failed to get vocab")
     
 # xóa từ vựng
 @router.delete("/{chatId}/{vocab_id}")
-async def delete_vocab(chatId: str, vocab_id: str, current_user: UserInDB = Depends(get_current_user)):
+async def delete_vocab(chatId: str, vocab_id: str, current_user: UserInDB = Depends(get_current_user), vocab_service: VocabService = Depends(get_vocab_service)):
     try:
         print(f"Deleting vocab with ID: {vocab_id} for chatId: {chatId}, user_id: {current_user.id}")
-        
-        # Kiểm tra chat_id hợp lệ và thuộc về user
-        chat = await db.chats.find_one({"_id": ObjectId(chatId), "user_id": current_user.id})
-        if not chat:
-            print(f"Chat not found or not owned: {chatId}")
-            raise HTTPException(status_code=404, detail="Chat not found or not owned by user")
-        
-        # Tìm và xóa từ vựng dựa trên vocab_id
-        vocab = await db.vocab.find_one({"_id": ObjectId(vocab_id), "chat_id": ObjectId(chatId), "user_id": current_user.id})
-        if not vocab:
-            print(f"Vocab not found: {vocab_id}")
-            raise HTTPException(status_code=404, detail="Vocab not found")
-        
-        # Xóa từ vựng khỏi collection vocab
-        await db.vocab.delete_one({"_id": ObjectId(vocab_id)})
-        
-        # Cập nhật vocab_ids trong chats
-        await db.chats.update_one(
-            {"_id": ObjectId(chatId)},
-            {"$pull": {"vocab_ids": str(vocab_id)}}
-        )
-        print(f"Deleted vocab with vocab_id: {vocab_id} from chat_id: {chatId}")
-        return {"message": f"Deleted vocab with ID {vocab_id}"}
-    
+        return await vocab_service.delete_vocab(chatId, vocab_id, current_user.id)
+    except HTTPException as e:
+        raise e
     except Exception as e:
         print(f"Error deleting vocab: {e}")
         raise HTTPException(status_code=500, detail="Failed to delete vocab")
