@@ -8,6 +8,7 @@ import json
 from minio import Minio
 from minio.error import S3Error
 from .storage_client import StorageClient
+from ..logging_config import logger
 
 class MinioClient(StorageClient):
     def __init__(self):
@@ -44,13 +45,13 @@ class MinioClient(StorageClient):
             # Kiểm tra nếu bucket đã tồn tại
             if not self.bucket_exists(self.image_bucket):
                 self.make_bucket(self.image_bucket)
-                print(f"Created bucket: {self.image_bucket}")
+                logger.info(f"Created bucket: {self.image_bucket}")
             
             # Áp dụng policy
             self.set_bucket_policy(self.image_bucket, json.dumps(self.bucket_policy))
-            print(f"Public read policy set for bucket: {self.image_bucket}")
+            logger.info(f"Public read policy set for bucket: {self.image_bucket}")
         except S3Error as e:
-            print(f"Error configuring MinIO bucket: {e}")
+            logger.error(f"Error configuring MinIO bucket: {e}")
             
     def bucket_exists(self, bucket_name: str) -> bool:
         """Kiểm tra xem bucket có tồn tại hay không."""

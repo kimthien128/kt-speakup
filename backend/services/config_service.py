@@ -10,6 +10,7 @@ import io
 from ..repositories.config_repository import ConfigRepository
 from ..storage.storage_client import StorageClient
 from ..services.auth_service import UserInDB
+from ..logging_config import logger
 
 class SiteConfig:
     def __init__(self, backgroundImage: str | None, logoImage: str | None, aiChatIcon: str | None,
@@ -39,12 +40,14 @@ class ConfigService:
     async def get_config(self) -> dict:
         config = await self.config_repository.get_config()
         if not config:
+            logger.info("No site config found, creating default config")
             config = {"_id": "site_config_id", **self.default_config}
             await self.config_repository.update_config(self.default_config)
         else:
             for key, value in self.default_config.items():
                 if key not in config:
                     config[key] = value
+                    logger.debug(f"Added missing field {key} to site config")
         return config
     
     async def update_config(
@@ -58,11 +61,13 @@ class ConfigService:
         ) -> dict:
         # Kiểm tra quyền admin
         if not current_user.isAdmin:
+            logger.warning(f"User {current_user.id} attempted to update config without admin rights")
             raise HTTPException(status_code=403, detail="Permission denied")
         
         # Lấy config hiện tại
         config = await self.config_repository.get_config()
         if not config:
+            logger.info("No site config found, initializing with default")
             config = {"_id": "site_config_id", **self.default_config}
             
         update_data = {}
@@ -80,11 +85,13 @@ class ConfigService:
                 # Validate file type
                 file_extension = os.path.splitext(file.filename)[1].lower()
                 if file_extension not in allowed_extensions:
+                    logger.error(f"Invalid file type for {field}: {file_extension}")
                     raise HTTPException(status_code=400, detail=f"Only image files (jpg, jpeg, png, gif) are allowed for {field}")
 
                 # Validate file size (2MB)
                 content = await file.read()
                 if len(content) > 2 * 1024 * 1024:
+                    logger.error(f"File size too large for {field}: {len(content)} bytes")
                     raise HTTPException(status_code=400, detail=f"File size must be less than 2MB for {field}")
 
                 # Tạo tên file duy nhất
@@ -100,8 +107,9 @@ class ConfigService:
                     )
                     url = f"http://{self.minio_endpoint}/{self.image_bucket}/{file_name}"
                     update_data[field] = url
+                    logger.info(f"Uploaded {field} to MinIO: {url}")
                 except Exception as e:
-                    print(f"Error uploading to MinIO: {e}")
+                    logger.error(f"Failed to upload {field} to MinIO: {str(e)}")
                     raise HTTPException(status_code=500, detail=f"Failed to upload {field} to MinIO")
                 finally:
                     await file.close()
@@ -112,14 +120,16 @@ class ConfigService:
                     try:
                         old_file_name = old_url.split("/")[-1].split("?")[0]
                         self.storage_client.remove_object(self.image_bucket, old_file_name)
+                        logger.info(f"Deleted old file for {field}: {old_file_name}")
                     except Exception as e:
-                        print(f"Error deleting old file from MinIO: {e}")
+                        logger.warning(f"Failed to delete old file for {field}: {str(e)}")
 
         # Cập nhật updatedAt
         update_data["updatedAt"] = datetime.now().isoformat()
 
         # Cập nhật config trong database
         await self.config_repository.update_config(update_data)
+        logger.info("Updated site config successfully")
 
         # Lấy config đã cập nhật
         updated_config = await self.config_repository.get_config()

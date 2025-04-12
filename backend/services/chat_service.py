@@ -6,6 +6,7 @@
 from fastapi import HTTPException
 from bson import ObjectId
 from deep_translator import GoogleTranslator
+from ..logging_config import logger
 
 class ChatService:
     def __init__(self, chat_repository):
@@ -200,10 +201,10 @@ class ChatService:
             raise HTTPException(status_code=400, detail="Chat entry missing 'ai' field")
         
         if "translateAi" in chat_entry and chat_entry["translateAi"]:
-            print("AI chat already translated. Get from DB")
+            logger.info("AI chat already translated. Get from DB")
             return {"translatedTextAi": chat_entry["translateAi"], "message": "AI chat already translated"}
         
-        print("Translating AI chat...")
+        logger.info("Translating AI chat...")
         translator = GoogleTranslator(source='auto', target=target_lang)
         translated_text = translator.translate(chat_entry["ai"])
         

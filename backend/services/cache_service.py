@@ -4,6 +4,7 @@
 
 import time
 import os
+from ..logging_config import logger
 
 class CacheService:
     def __init__(self, storage_client):
@@ -23,6 +24,6 @@ class CacheService:
                 
                 if now - last_modified > 604800:  # 7 ngày = 604,800 giây
                     self.storage_client.remove_object(self.audio_bucket, obj.object_name)
-                    print(f'Deleted expired cache: {obj.object_name} (last modified: {stat.last_modified})')
+                    logger.info(f'Deleted expired cache: {obj.object_name} (last modified: {stat.last_modified})')
         except Exception as e:
-            print(f"Error cleaning cache: {e}")
+            logger.error(f"Error cleaning cache: {e}")

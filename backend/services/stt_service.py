@@ -7,6 +7,7 @@ import time
 from fastapi import HTTPException
 from .stt.stt_client import STTClient
 from .audio.audio_processor import AudioProcessor
+from ..logging_config import logger
 
 class STTService:
     def __init__(self, audio_processor: AudioProcessor, vosk_client: STTClient, assemblyai_client: STTClient):
@@ -32,7 +33,7 @@ class STTService:
             # Lưu file WebM
             with open(webm_path, 'wb') as f:
                 f.write(audio_blob)
-            print(f"Received audio size: {len(audio_blob)} bytes")
+            logger.info(f"Received audio size: {len(audio_blob)} bytes")
 
             # Chuyển đổi sang WAV
             self.audio_processor.convert_to_wav(webm_path, wav_path)
@@ -43,7 +44,7 @@ class STTService:
         except HTTPException as e:
             raise e
         except Exception as e:
-            print(f"Error: {e}")
+            logger.error(f"Error: {e}")
             raise HTTPException(status_code=500, detail=str(e))
         finally:
             # Xóa file âm thanh
@@ -51,6 +52,6 @@ class STTService:
                 if os.path.exists(file_path):
                     try:
                         os.remove(file_path)
-                        print(f"Deleted {file_path}")
+                        logger.info(f"Deleted {file_path}")
                     except OSError as e:
-                        print(f"Warning: Could not delete files {file_path} - {e}")
+                        logger.warning(f"Warning: Could not delete files {file_path} - {e}")

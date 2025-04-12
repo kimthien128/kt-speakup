@@ -2,6 +2,7 @@
 from fastapi import APIRouter, Request, Depends
 from ..services.dictionary_service import DictionaryService
 from ..dependencies import get_dictionaryapi_client, get_wordnik_client
+from ..logging_config import logger
 
 router = APIRouter()
 
@@ -18,4 +19,5 @@ async def word_info(request: Request, dictionary_service: DictionaryService = De
     word = data.get("word", "").strip().lower()
     source = data.get("source", "dictionaryapi").strip().lower()
     limit = data.get("limit", 2)
+    logger.info(f"Fetching word info for word: {word}, source: {source}")
     return await dictionary_service.get_word_info(word, source, limit)

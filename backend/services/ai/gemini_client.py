@@ -6,6 +6,7 @@ import google.generativeai as genai
 from fastapi import HTTPException
 from utils import GOOGLE_API_KEY
 from .ai_client import AIClient
+from ...logging_config import logger
 
 class GeminiClient(AIClient):
     def __init__(self):
@@ -35,5 +36,5 @@ class GeminiClient(AIClient):
             response = chat_session.send_message(transcript)
             return response.text.strip()
         except genai.types.generation_types.BrokenResponseError as e:
-            print(f'Gemini API error: {e}')
+            logger.error(f'Gemini API error: {e}')
             raise HTTPException(status_code=400, detail=f"Gemini API error: {str(e)}")

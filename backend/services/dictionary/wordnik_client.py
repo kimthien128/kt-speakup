@@ -6,6 +6,7 @@ from fastapi import HTTPException
 from ..http.http_client import HTTPClient
 from .dictionary_client import DictionaryClient
 from utils import WORDNIK_API_KEY
+from ...logging_config import logger
 
 class WordnikClient(DictionaryClient):
     def __init__(self, http_client: HTTPClient):
@@ -36,7 +37,7 @@ class WordnikClient(DictionaryClient):
                         definition = def_item["text"]
                         break
             else:
-                print(f"No definitions found for word: {word}")
+                logger.warning(f"No definitions found for word: {word}")
 
             # 2. Lấy audio
             audio_url = f"{self.base_url}/{word}/audio?limit={limit}"
@@ -44,9 +45,9 @@ class WordnikClient(DictionaryClient):
             if isinstance(audio_data, list) and len(audio_data) > 0:
                 audio_files = [item["fileUrl"] for item in audio_data if isinstance(item, dict) and "fileUrl" in item][:2]
                 audio = audio_files
-                print(f"Found {len(audio_files)} audio files for word: {word}")
+                logger.info(f"Found {len(audio_files)} audio files for word: {word}")
             else:
-                print(f"No audio found for word: {word}")
+                logger.warning(f"No audio found for word: {word}")
 
             # 3. Lấy examples
             examples_url = f"{self.base_url}/{word}/examples?limit={limit}"
@@ -55,7 +56,7 @@ class WordnikClient(DictionaryClient):
             if isinstance(examples_list, list):
                 examples = [example["text"] for example in examples_list if isinstance(example, dict) and "text" in example][:limit]
             else:
-                print(f"No examples found for word: {word}")
+                logger.warning(f"No examples found for word: {word}")
 
             # 4. Lấy hyphenation
             hyphenation_url = f"{self.base_url}/{word}/hyphenation?useCanonical=false"
@@ -63,7 +64,7 @@ class WordnikClient(DictionaryClient):
             if isinstance(hyphenation_data, list):
                 hyphenation = [part["text"] for part in hyphenation_data if isinstance(part, dict) and "text" in part][:limit]
             else:
-                print(f"No hyphenation data found for word: {word}")
+                logger.warning(f"No hyphenation data found for word: {word}")
 
             # 5. Lấy phrases
             phrases_url = f"{self.base_url}/{word}/phrases?limit={limit}"
@@ -75,7 +76,7 @@ class WordnikClient(DictionaryClient):
                     if isinstance(phrase, dict) and "gram1" in phrase and "gram2" in phrase
                 ][:limit]
             else:
-                print(f"No phrases found for word: {word}")
+                logger.warning(f"No phrases found for word: {word}")
 
             # 6. Lấy pronunciations
             pronunciations_url = f"{self.base_url}/{word}/pronunciations?limit={limit}&typeFormat=IPA"
@@ -84,7 +85,7 @@ class WordnikClient(DictionaryClient):
                 pronunciations = [pron["raw"] for pron in pronunciations_data if isinstance(pron, dict) and "raw" in pron][:limit]
                 phonetic = pronunciations[0] if pronunciations else "N/A"
             else:
-                print(f"No pronunciations found for word: {word}")
+                logger.warning(f"No pronunciations found for word: {word}")
 
             # 7. Lấy related words
             related_words_url = f"{self.base_url}/{word}/relatedWords?limitPerRelationshipType={limit}"
@@ -99,7 +100,7 @@ class WordnikClient(DictionaryClient):
                     if isinstance(rel, dict) and "relationshipType" in rel and "words" in rel
                 ]
             else:
-                print(f"No related words found for word: {word}")
+                logger.warning(f"No related words found for word: {word}")
 
             # 8. Lấy top example
             top_example_url = f"{self.base_url}/{word}/topExample"
@@ -107,7 +108,7 @@ class WordnikClient(DictionaryClient):
             if isinstance(top_example_data, dict):
                 top_example = top_example_data.get("text", "")
             else:
-                print(f"No top example found for word: {word}")
+                logger.warning(f"No top example found for word: {word}")
 
             return {
                 "definition": definition,
@@ -121,7 +122,7 @@ class WordnikClient(DictionaryClient):
                 "topExample": top_example
             }
         except Exception as e:
-            print(f"Wordnik error: {str(e)}")
+            logger.error(f"Wordnik error: {str(e)}")
             return {
                 "definition": "No definition found",
                 "phonetic": "N/A",

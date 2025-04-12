@@ -32,6 +32,7 @@ from fastapi import FastAPI
 import os
 from dotenv import load_dotenv
 from config.app_config import configure_app
+from .logging_config import logger
 from storage.minio_client import MinioClient
 from services.cache_service import CacheService
 from scheduler.scheduler_config import configure_scheduler
@@ -59,10 +60,12 @@ scheduler = configure_scheduler(cache_service)
 # Sự kiện khởi động
 @app.on_event("startup")
 async def startup_event():
+    logger.info("Application started")
     cache_service.clean_cache()  # Dọn cache khi khởi động
 
 @app.on_event("shutdown")
 def shutdown_scheduler():
+    logger.info("Application shutdown")
     scheduler.shutdown()
     
 if __name__ == '__main__':

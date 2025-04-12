@@ -6,6 +6,7 @@ import requests
 from fastapi import HTTPException
 from utils import OPENAI_API_KEY
 from .ai_client import AIClient
+from ...logging_config import logger
 
 class OpenAIClient(AIClient):
     def __init__(self):
@@ -25,7 +26,7 @@ class OpenAIClient(AIClient):
         
         response = requests.post(self.api_url, headers=self.headers, json=payload)
         if response.status_code != 200:
-            print(f"OpenAI API error: {response.status_code} - {response.text}")
+            logger.error(f"OpenAI API error: {response.status_code} - {response.text}")
             raise HTTPException(status_code=503, detail="OpenAI API unavailable")
 
         result = response.json()

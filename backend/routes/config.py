@@ -4,6 +4,7 @@ from ..services.auth_service import UserInDB
 from .auth import get_auth_service
 from ..services.config_service import ConfigService, SiteConfig
 from ..dependencies import get_config_repository, get_storage_client
+from ..logging_config import logger
 
 router = APIRouter()
 
@@ -26,6 +27,7 @@ def get_config_service(
 # Lấy config hiện tại
 @router.get("/", response_model=SiteConfig)
 async def get_config(config_service: ConfigService = Depends(get_config_service)):
+    logger.info("Fetching site config")
     return await config_service.get_config()
     
 # Cập nhật config
@@ -39,6 +41,7 @@ async def update_config(
     current_user: UserInDB = Depends(get_auth_service().get_current_user),
     config_service: ConfigService = Depends(get_config_service)
 ):
+    logger.info(f"User {current_user.id} is updating site config")
     return await config_service.update_config(
         background, logo, aiIcon, hero, saveWord, current_user
     )

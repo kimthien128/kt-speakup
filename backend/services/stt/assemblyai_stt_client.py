@@ -5,7 +5,7 @@
 import assemblyai as aai
 from utils import ASSEMBLYAI_API_KEY
 from .stt_client import STTClient
-
+from ...logging_config import logger
 
 class AssemblyAISTTClient(STTClient):
     def __init__(self):
@@ -13,17 +13,17 @@ class AssemblyAISTTClient(STTClient):
         self.transcribe = aai.Transcriber()
         
     def transcribe(self, wav_path : str) -> str:
-        print('Starting AssemblyAI transcription...')
+        logger.info('Starting AssemblyAI transcription...')
         transcript_obj = self.transcriber.transcribe(wav_path)
         if transcript_obj.status == aai.TranscriptStatus.completed:
             transcript = transcript_obj.text or "No speech detected"
-            print(f"AssemblyAI transcript: {transcript}")
+            logger.info(f"AssemblyAI transcript: {transcript}")
         elif transcript_obj.status == aai.TranscriptStatus.error:
-            print(f"AssemblyAI error: {transcript_obj.error}")
+            logger.error(f"AssemblyAI error: {transcript_obj.error}")
             transcript = ''
         else:
-            print(f"AssemblyAI status: {transcript_obj.status}")
+            logger.info(f"AssemblyAI status: {transcript_obj.status}")
             transcript = ''
         if not transcript:
-            print("Warning: AssemblyAI returned empty transcript")
+            logger.warning("Warning: AssemblyAI returned empty transcript")
         return transcript

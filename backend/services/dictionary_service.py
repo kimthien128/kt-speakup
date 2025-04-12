@@ -4,6 +4,7 @@
 
 from fastapi import HTTPException
 from .dictionary.dictionary_client import DictionaryClient
+from ..logging_config import logger
 
 class DictionaryService:
     def __init__(self, dictionaryapi_client: DictionaryClient, wordnik_client: DictionaryClient):
@@ -21,10 +22,13 @@ class DictionaryService:
         :return: Thông tin từ điển dưới dạng dict.
         """
         if not word:
+            logger.error("No word provided in request")
             raise HTTPException(status_code=400, detail="No word provided")
         if source not in self.clients:
+            logger.error(f"Unsupported dictionary source: {source}")
             raise HTTPException(status_code=400, detail=f"Unsupported dictionary source: {source}")
         
         word = word.strip().lower()
         source = source.strip().lower()
+        logger.debug(f"Calling {source} client for word: {word}, limit: {limit}")
         return await self.clients[source].get_word_info(word, limit)

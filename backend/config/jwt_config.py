@@ -7,6 +7,7 @@ from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from fastapi import HTTPException
 from utils import JWT_SECRET_KEY
+from ..logging_config import logger
 
 # Cấu hình cho JWT
 SECRET_KEY = JWT_SECRET_KEY
@@ -25,7 +26,7 @@ def get_password_hash(password: str) -> str:
     try:
         return pwd_context.hash(password)
     except Exception as e:
-        print(f"Error hashing password: {e}")
+        logger.error(f"Error hashing password: {e}")
         raise HTTPException(status_code=500, detail="Failed to hash password")
     
 def create_access_token(data: dict, expires_delta: timedelta = None) -> str:

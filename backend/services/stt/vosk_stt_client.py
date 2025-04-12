@@ -7,6 +7,7 @@ import json
 from vosk import Model, KaldiRecognizer
 from utils import VOSK_MODEL_DIR
 from .stt_client import STTClient
+from ...logging_config import logger
 
 class VoskSTTClient(STTClient):
     def __init__(self):
@@ -24,11 +25,11 @@ class VoskSTTClient(STTClient):
                     break
                 if self.rec.AcceptWaveform(data):
                     result = json.loads(self.rec.Result())
-                    print(f"Partial result: {result}")
+                    logger.info(f"Partial result: {result}")
                     transcript = result.get('text', '')
                     break
             if not transcript:
                 result = json.loads(self.rec.FinalResult())
-                print(f"Final result: {result}")
+                logger.info(f"Final result: {result}")
                 transcript = result.get('text', '')
         return transcript

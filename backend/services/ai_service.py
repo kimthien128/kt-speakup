@@ -5,6 +5,7 @@
 from fastapi import HTTPException
 from ..repositories.chat_repository import ChatRepository
 from .ai.ai_client import AIClient
+from ..logging_config import logger
 
 class AIService:
     def __init__(self, chat_repository: ChatRepository, openai_client: AIClient, mistral_client: AIClient, gemini_client: AIClient):
@@ -38,11 +39,11 @@ class AIService:
             if msg.get("ai"):
                 messages.append({"role": "assistant", "content": msg["ai"]})
         messages.append({"role": "user", "content": transcript})
-        print(f'{method.capitalize()} messages: {messages}')
+        logger.info(f'{method.capitalize()} messages: {messages}')
         
         # Gọi mô hình AI tương ứng
         generated_text = self.clients[method].generate_response(messages)
         if not generated_text:
             generated_text = "I don't know what to say!"
-        print(f'{method.capitalize()} response: {generated_text}')
+        logger.info(f'{method.capitalize()} response: {generated_text}')
         return {'response': generated_text}

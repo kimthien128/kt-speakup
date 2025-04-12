@@ -9,6 +9,7 @@ from .tts_client import TTSClient
 from ..audio.audio_processor import AudioProcessor
 from ...storage.storage_client import StorageClient
 from utils import CACHE_DIR
+from ...logging_config import logger
 
 class TTSService:
     def __init__(self, audio_processor: AudioProcessor, storage_client: StorageClient, gtts_client: TTSClient, piper_client: TTSClient):
@@ -51,11 +52,11 @@ class TTSService:
                 object_name=audio_filename,
                 file_path=temp_path
             )
-            print(f'Uploaded to MinIO: {audio_filename}')
+            logger.info(f'Uploaded to MinIO: {audio_filename}')
 
             # Tạo URL từ MinIO
             audio_url = self.storage_client.presigned_get_object(self.audio_bucket, audio_filename)
-            print(f'Returning audio URL: {audio_url}')
+            logger.info(f'Returning audio URL: {audio_url}')
 
             # Trả về URL trong header
             return Response(
@@ -66,7 +67,7 @@ class TTSService:
         except HTTPException as e:
             raise e
         except Exception as e:
-            print(f"Error: {e}")
+            logger.error(f"Error: {e}")
             raise HTTPException(status_code=500, detail=str(e))
         finally:
             # Xóa file tạm
@@ -75,4 +76,4 @@ class TTSService:
                     try:
                         os.remove(file_path)
                     except OSError as e:
-                        print(f"Warning: Could not delete file {file_path} - {e}")
+                        logger.warning(f"Warning: Could not delete file {file_path} - {e}")

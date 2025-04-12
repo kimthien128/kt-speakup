@@ -7,6 +7,7 @@ import subprocess
 from fastapi import HTTPException
 from utils import BASE_DIR
 from .tts_client import TTSClient
+from ...logging_config import logger
 
 class PiperClient(TTSClient):
     def __init__(self):
@@ -20,7 +21,7 @@ class PiperClient(TTSClient):
         process.stdin.close()
         stdout, stderr = process.communicate()
         if process.returncode != 0:
-            print(f'Piper error: {stderr}')
+            logger.error(f'Piper error: {stderr}')
             raise HTTPException(status_code=500, detail="Failed to generate audio with Piper")
-        print(f'Generated audio with Piper: {output_path}')
+        logger.info(f'Generated audio with Piper: {output_path}')
         return output_path

@@ -10,6 +10,7 @@ import uuid
 import os
 import io
 from config.jwt_config import  (verify_password, get_password_hash, create_access_token, decode_token, ACCESS_TOKEN_EXPIRE_MINUTES)
+from ..logging_config import logger
 
 class UserInDB:
     def __init__(self, email: str, hashed_password: str, avatarPath: str | None = None, displayName: str | None = None, phoneNumber: str | None = None, gender: str | None = None, location: str | None = None, isAdmin: bool = False, id: str = None):
@@ -64,7 +65,7 @@ class AuthService:
                     data={"sub": email},
                     expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
                 )
-                print(f"Renewed token for {email}: {new_token}")
+                logger.info(f"Renewed token for {email}: {new_token}")
                 if response: # Thêm new_token vào header nếu response có sẵn
                     response.headers["X-New-Token"] = new_token
         
@@ -155,7 +156,7 @@ class AuthService:
                 avatar_url = f"http://{self.minio_endpoint}/{self.avatar_bucket}/{file_name}"
                 update_data["avatarPath"] = avatar_url
             except Exception as e:
-                print(f"Error uploading to MinIO: {e}")
+                logger.error(f"Error uploading to MinIO: {e}")
                 raise HTTPException(status_code=500, detail="Failed to upload avatar to MinIO")
             finally:
                 await avatar.close()
@@ -166,9 +167,9 @@ class AuthService:
                     # Trích xuất tên file từ URL
                     old_file_name = old_avatar_path.split("/")[-1]
                     self.storage_client.remove_object(self.avatar_bucket, old_file_name)
-                    print(f"Deleted old avatar: {old_file_name}")
+                    logger.info(f"Deleted old avatar: {old_file_name}")
                 except Exception as e:
-                    print(f"Error deleting old avatar: {e}")
+                    logger.error(f"Error deleting old avatar: {e}")
                     # Không ném lỗi, chỉ log vì file mới đã upload thành công
             
         # Cập nhật thông tin user trong MongoDB

@@ -4,6 +4,7 @@
 
 from ..http.http_client import HTTPClient
 from .dictionary_client import DictionaryClient
+from ...logging_config import logger
 
 class DictionaryAPIClient(DictionaryClient):
     def __init__(self, http_client: HTTPClient):
@@ -44,7 +45,7 @@ class DictionaryAPIClient(DictionaryClient):
                 "topExample": ""
             }
         except Exception as e:
-            print(f"DictionaryAPI error: {str(e)}")
+            logger.error(f"DictionaryAPI error: {str(e)}")
             return {
                 "definition": "No definition found",
                 "phonetic": "N/A",

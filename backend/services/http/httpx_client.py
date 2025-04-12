@@ -4,12 +4,13 @@
 
 import httpx
 from .http_client import HTTPClient
+from ...logging_config import logger
 
 class HttpxClient(HTTPClient):
     async def get(self, url: str, headers: dict = None) -> dict:
         async with httpx.AsyncClient() as client:
-            print(f"Making request to: {url}")
+            logger.info(f"Making request to: {url}")
             response = await client.get(url, headers=headers or {})
-            print(f"Response: {response.status_code}, {response.text}")
+            logger.info(f"Response: {response.status_code}, {response.text}")
             response.raise_for_status()  # Ném lỗi nếu status code không phải 2xx
             return response.json()

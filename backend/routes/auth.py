@@ -5,6 +5,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from services.auth_service import AuthService, UserInDB
 from ..dependencies import get_auth_repository, get_storage_client
+from ..logging_config import logger
 
 router = APIRouter()
 
@@ -42,7 +43,7 @@ async def register(user: UserCreate, auth_service: AuthService = Depends(get_aut
     except HTTPException as e:
         raise e
     except Exception as e:
-        print(f"Error registering user: {e}")
+        logger.error(f"Error registering user: {e}")
         raise HTTPException(status_code=500, detail="Failed to register user")
 
 # Đăng nhập và tạo access token.
@@ -53,7 +54,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), auth_service: 
     except HTTPException as e:
         raise e
     except Exception as e:
-        print(f"Error logging in: {e}")
+        logger.error(f"Error logging in: {e}")
         raise HTTPException(status_code=500, detail="Failed to login")
 
 # Lấy thông tin user hiện tại
@@ -64,7 +65,7 @@ async def get_me(current_user: UserInDB = Depends(get_auth_service().get_current
     except HTTPException as e:
         raise e
     except Exception as e:
-        print(f"Error fetching user info: {e}")
+        logger.error(f"Error fetching user info: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch user info")
 
 # Cập nhật thông tin user
@@ -83,7 +84,7 @@ async def update_user(
     except HTTPException as e:
         raise e
     except Exception as e:
-        print(f"Error updating user: {e}")
+        logger.error(f"Error updating user: {e}")
         raise HTTPException(status_code=500, detail="Failed to update user")
     
 # Đổi mật khẩu
@@ -98,5 +99,5 @@ async def change_password(
     except HTTPException as e:
         raise e
     except Exception as e:
-        print(f"Error changing password: {e}")
+        logger.error(f"Error changing password: {e}")
         raise HTTPException(status_code=500, detail="Failed to change password")
