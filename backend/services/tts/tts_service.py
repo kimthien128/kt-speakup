@@ -1,0 +1,78 @@
+# services/tts_service.py
+# Xử lý logic nghiệp vụ liên quan đến TTS: xử lý file âm thanh, gọi dịch vụ TTS, upload lên MinIO.
+# Tuân thủ SRP: Chỉ xử lý logic nghiệp vụ, không xử lý API.
+
+import os
+import time
+from fastapi import HTTPException, Response
+from .tts_client import TTSClient
+from ..audio.audio_processor import AudioProcessor
+from ...storage.storage_client import StorageClient
+from utils import CACHE_DIR
+
+class TTSService:
+    def __init__(self, audio_processor: AudioProcessor, storage_client: StorageClient, gtts_client: TTSClient, piper_client: TTSClient):
+        self.audio_processor = audio_processor
+        self.storage_client = storage_client
+        self.clients = {
+            "gtts": gtts_client,
+            "piper": piper_client
+        }
+        self.audio_bucket = os.getenv("AUDIO_BUCKET")
+
+    async def generate_audio(self, text: str, method: str) -> Response:
+        if not text:
+            raise HTTPException(status_code=400, detail="No text provided")
+
+        if method not in self.clients:
+            raise HTTPException(status_code=400, detail=f"Unsupported TTS method: {method}")
+
+        # Phân biệt từ đơn và đoạn chat
+        is_single_word = ' ' not in text
+        timestamp = int(time.time() * 1000)
+        audio_filename = f"{text}.mp3" if is_single_word else f"output_{timestamp}.mp3"
+        temp_path = f"temp_{timestamp}.mp3"
+        wav_path = os.path.join(CACHE_DIR, f"output_{timestamp}.wav") if method == "piper" else None
+
+        try:
+            if method == "gtts":
+                # gTTS tạo trực tiếp file MP3
+                self.clients[method].generate_audio(text, temp_path)
+            else:
+                # Piper tạo file WAV, sau đó chuyển đổi sang MP3
+                self.clients[method].generate_audio(text, wav_path)
+                self.audio_processor.convert_to_mp3(wav_path, temp_path)
+                if os.path.exists(wav_path):
+                    os.remove(wav_path)
+
+            # Upload file lên MinIO
+            self.storage_client.put_object(
+                bucket_name=self.audio_bucket,
+                object_name=audio_filename,
+                file_path=temp_path
+            )
+            print(f'Uploaded to MinIO: {audio_filename}')
+
+            # Tạo URL từ MinIO
+            audio_url = self.storage_client.presigned_get_object(self.audio_bucket, audio_filename)
+            print(f'Returning audio URL: {audio_url}')
+
+            # Trả về URL trong header
+            return Response(
+                status_code=200,
+                headers={"x-audio-url": audio_url}
+            )
+
+        except HTTPException as e:
+            raise e
+        except Exception as e:
+            print(f"Error: {e}")
+            raise HTTPException(status_code=500, detail=str(e))
+        finally:
+            # Xóa file tạm
+            for file_path in [temp_path, wav_path]:
+                if file_path and os.path.exists(file_path):
+                    try:
+                        os.remove(file_path)
+                    except OSError as e:
+                        print(f"Warning: Could not delete file {file_path} - {e}")

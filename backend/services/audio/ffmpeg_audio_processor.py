@@ -4,9 +4,9 @@
 
 import ffmpeg
 from fastapi import HTTPException
-from .audio_processor import AduioProcessor
+from .audio_processor import AudioProcessor
 
-class FFmpegAudioProcessor(AduioProcessor):
+class FFmpegAudioProcessor(AudioProcessor):
     def convert_to_wav(self, input_path: str, output_path: str):
         try:
             stream = ffmpeg.input(input_path)
@@ -16,3 +16,13 @@ class FFmpegAudioProcessor(AduioProcessor):
         except ffmpeg.Error as e:
             print(f"FFmpeg error: {e.stderr.decode()}")
             raise HTTPException(status_code=500, detail="Failed to convert audio")
+    
+    def convert_to_mp3(self, input_path: str, output_path: str):
+        try:
+            stream = ffmpeg.input(input_path)
+            stream = ffmpeg.output(stream, output_path, acodec='mp3')
+            ffmpeg.run(stream, quiet=True)
+            print(f"Converted to MP3: {output_path}")
+        except ffmpeg.Error as e:
+            print(f"FFmpeg error: {e.stderr.decode()}")
+            raise HTTPException(status_code=500, detail="Failed to convert audio to MP3")
