@@ -1,13 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, Form
+from fastapi import APIRouter, Depends, File, UploadFile
 from pydantic import BaseModel
-from datetime import datetime, timedelta
-from minio.error import S3Error
-from routes.auth import get_current_user, UserInDB
-from utils import minio_client, IMAGE_BUCKET, MINIO_ENDPOINT
-from database import db
-import uuid
-import os
-import io
+from ..database.database_factory import database
+from ..repositories.mongo_repository import MongoRepository
+from ..repositories.config_repository import ConfigRepository
+from ..services.auth_service import UserInDB
+from .auth import get_auth_service
+from ..services.config_service import ConfigService, SiteConfig
+from ..storage.minio_client import MinioClient
 
 router = APIRouter()
 
@@ -19,32 +18,20 @@ class SiteConfig(BaseModel):
     heroImage: str | None
     saveWordImage: str | None
     updatedAt: str
-    
+
+# Khởi tạo ConfigService
+async def get_config_service():
+    db = await database.connect()
+    base_repository = MongoRepository(db)
+    config_repository = ConfigRepository(base_repository)
+    storage_client = MinioClient()
+    return ConfigService(config_repository, storage_client)
+
 # Lấy config hiện tại
 @router.get("/", response_model=SiteConfig)
-async def get_config():
-    config = await db.site_configs.find_one({"_id": "site_config_id"})
+async def get_config(config_service: ConfigService = Depends(get_config_service)):
+    return await config_service.get_config()
     
-    # Nếu chưa có config hoặc thiếu trường nào thì bổ sung
-    default_config = {
-        "backgroundImage": None,
-        "logoImage": None,
-        "aiChatIcon": None,
-        "heroImage": None,
-        "saveWordImage": None,
-        "updatedAt": datetime.now().isoformat()
-    }
-    
-    if not config:
-        config = {"_id": "site_config_id", **default_config}
-        await db.site_configs.insert_one(default_config)
-    else:
-        # Đảm bảo tất cả các trường có mặt
-        for key, value in default_config.items():
-            if key not in config:
-                config[key] = value
-    return config
-
 # Cập nhật config
 @router.patch("/", response_model=SiteConfig)
 async def update_config(
@@ -53,93 +40,9 @@ async def update_config(
     aiIcon: UploadFile = File(None),
     hero: UploadFile = File(None),
     saveWord: UploadFile = File(None),
-    current_user: UserInDB = Depends(get_current_user)
+    current_user: UserInDB = Depends(get_auth_service().get_current_user),
+    config_service: ConfigService = Depends(get_config_service)
 ):
-    # Kiểm tra quyền admin
-    if not current_user.isAdmin:
-        raise HTTPException(status_code=403, detail="Permission denied")
-    
-    # Lấy config hiện tại
-    config = await db.site_configs.find_one({"_id": "site_config_id"})
-    if not config:
-        config = {
-            "_id": "site_config_id",
-            "backgroundImage": None,
-            "logoImage": None,
-            "aiChatIcon": None,
-            "heroImage": None,
-            "saveWordImage": None,
-            "updatedAt": datetime.now().isoformat()
-        }
-        
-    update_data = {}
-    
-    # Xử lý upload từng file
-    allowed_extensions = {".png", ".jpg", ".jpeg", ".gif"}
-    for file, field in [(background, "backgroundImage"), (logo, "logoImage"), (aiIcon, "aiChatIcon"), (hero, "heroImage"), (saveWord, "saveWordImage")]:
-        if file:
-            # Validate file type
-            file_extension = os.path.splitext(file.filename)[1].lower()
-            if file_extension not in allowed_extensions:
-                raise HTTPException(status_code=400, detail=f"Only image files (jpg, jpeg, png, gif) are allowed for {field}")
-            
-            # Validate file size (2MB)
-            content = await file.read()
-            if len(content) > 2 * 1024 * 1024:
-                raise HTTPException(status_code=400, detail=f"File size must be less than 2MB for {field}")
-            
-            # Tạo tên file duy nhất
-            file_name = f"{field}-{uuid.uuid4()}{file_extension}"
-            try:
-                file_like = io.BytesIO(content)
-                minio_client.put_object(
-                    IMAGE_BUCKET,
-                    file_name,
-                    data=file_like,
-                    length=len(content),
-                    content_type=file.content_type
-                )
-                
-                # Tạo presigned URL
-                # url = minio_client.presigned_get_object(
-                #     IMAGE_BUCKET,
-                #     file_name,
-                #     expires=timedelta(days=7)
-                # )
-                
-                # Dùng policy public read, not write
-                url = f"http://{MINIO_ENDPOINT}/{IMAGE_BUCKET}/{file_name}"
-                
-                update_data[field] = url
-            except S3Error as e:
-                print(f"Error uploading to MinIO: {e}")
-                raise HTTPException(status_code=500, detail=f"Failed to upload {field} to MinIO")
-            finally:
-                await file.close()
-            
-            # Xóa file cũ nếu có
-            old_url = config.get(field)
-            if old_url:
-                try:
-                    old_file_name = old_url.split("/")[-1].split("?")[0]
-                    minio_client.remove_object(IMAGE_BUCKET, old_file_name)
-                except S3Error as e:
-                    print(f"Error deleting old file from MinIO: {e}")
-    
-    # Cập nhật updatedAt
-    update_data["updatedAt"] = datetime.now().isoformat()
-    
-    # Cập nhật config trong MongoDB
-    try:
-        await db.site_configs.update_one(
-            {"_id": "site_config_id"},
-            {"$set": update_data},
-            upsert=True # Tạo document mới nếu chưa có
-        )
-    except Exception as e:
-        print(f"Error updating config in DB: {e}")
-        raise HTTPException(status_code=500, detail="Failed to update config in database")
-        
-    # Lấy config đã cập nhật    
-    updated_config = await db.site_configs.find_one({"_id": "site_config_id"})
-    return updated_config
+    return await config_service.update_config(
+        background, logo, aiIcon, hero, saveWord, current_user
+    )
