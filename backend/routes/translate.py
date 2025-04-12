@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
-from services.translation.google_translation_client import GoogleTranslationClient
 from services.translation_service import TranslationService
+from ..dependencies import get_google_translation_client
 
 router = APIRouter()
 
@@ -10,8 +10,7 @@ class TranslateRequest(BaseModel):
     target_lang: str = "vi"
 
 # Khởi tạo TranslationService
-async def get_translation_service():
-    translation_client = GoogleTranslationClient()
+async def get_translation_service(translation_client = Depends(get_google_translation_client)):
     return TranslationService(translation_client)
 
 @router.post('')

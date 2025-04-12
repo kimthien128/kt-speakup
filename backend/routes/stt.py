@@ -1,16 +1,15 @@
 from fastapi import APIRouter, Request, Query, Depends
-from services.stt.vosk_stt_client import VoskSTTClient
-from services.stt.assemblyai_stt_client import AssemblyAISTTClient
-from services.audio.ffmpeg_audio_processor import FFmpegAudioProcessor
 from services.stt_service import STTService
+from ..dependencies import get_audio_processor, get_vosk_client, get_assemblyai_client
 
 router = APIRouter()
 
 # Khởi tạo STTService
-async def get_stt_service():
-    audio_processor = FFmpegAudioProcessor()
-    vosk_client = VoskSTTClient()
-    assemblyai_client = AssemblyAISTTClient()
+async def get_stt_service(
+    audio_processor = Depends(get_audio_processor),
+    vosk_client = Depends(get_vosk_client),
+    assemblyai_client = Depends(get_assemblyai_client)
+):
     return STTService(audio_processor, vosk_client, assemblyai_client)
 
 @router.post("")

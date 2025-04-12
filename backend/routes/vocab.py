@@ -1,18 +1,13 @@
 #routes/vocab.py
 from fastapi import APIRouter, Request, HTTPException, Depends
 from routes.auth import UserInDB, get_auth_service
-from database.database_factory import database
-from repositories.mongo_repository import MongoRepository
-from repositories.vocab_repository import VocabRepository
 from services.vocab_service import VocabService
+from ..dependencies import get_vocab_repository
 
 router = APIRouter()
 
 # Khởi tạo VocabService với repository tương ứng
-async def get_vocab_service():
-    db = await database.connect()
-    base_repository = MongoRepository(db) # Thay đổi ở đây nếu dùng database khác
-    vocab_repository = VocabRepository(base_repository)
+async def get_vocab_service(vocab_repository = Depends(get_vocab_repository)):
     return VocabService(vocab_repository)
 
 @router.post("")

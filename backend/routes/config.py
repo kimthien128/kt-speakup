@@ -1,12 +1,9 @@
 from fastapi import APIRouter, Depends, File, UploadFile
 from pydantic import BaseModel
-from ..database.database_factory import database
-from ..repositories.mongo_repository import MongoRepository
-from ..repositories.config_repository import ConfigRepository
 from ..services.auth_service import UserInDB
 from .auth import get_auth_service
 from ..services.config_service import ConfigService, SiteConfig
-from ..storage.minio_client import MinioClient
+from ..dependencies import get_config_repository, get_storage_client
 
 router = APIRouter()
 
@@ -20,11 +17,10 @@ class SiteConfig(BaseModel):
     updatedAt: str
 
 # Khởi tạo ConfigService
-async def get_config_service():
-    db = await database.connect()
-    base_repository = MongoRepository(db)
-    config_repository = ConfigRepository(base_repository)
-    storage_client = MinioClient()
+def get_config_service(
+    config_repository = Depends(get_config_repository),
+    storage_client = Depends(get_storage_client)
+):
     return ConfigService(config_repository, storage_client)
 
 # Lấy config hiện tại

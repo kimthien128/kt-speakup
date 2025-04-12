@@ -3,10 +3,8 @@
 from fastapi import APIRouter, Request, HTTPException, Depends
 from pydantic import BaseModel
 from routes.auth import UserInDB, get_auth_service
-from database.database_factory import database
-from repositories.mongo_repository import MongoRepository
-from repositories.chat_repository import ChatRepository
 from services.chat_service import ChatService
+from ..dependencies import get_chat_repository
 
 router = APIRouter()
 
@@ -17,10 +15,7 @@ class TranslateRequest(BaseModel):
     index: int
 
 #Khởi tạo ChatService với repository
-async def get_chat_service():
-    db = await database.connect()
-    base_repository = MongoRepository(db)
-    chat_repository = ChatRepository(base_repository)
+async def get_chat_service(chat_repository = Depends(get_chat_repository)):
     return ChatService(chat_repository)
 
 # Tạo một chat mới

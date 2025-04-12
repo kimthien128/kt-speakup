@@ -3,11 +3,8 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
-from database.database_factory import database
-from repositories.mongo_repository import MongoRepository
-from repositories.auth_repository import AuthRepository
 from services.auth_service import AuthService, UserInDB
-from ..storage.minio_client import MinioClient
+from ..dependencies import get_auth_repository, get_storage_client
 
 router = APIRouter()
 
@@ -31,11 +28,10 @@ class ChangePasswordRequest(BaseModel):
     newPassword: str
 
 # Khởi tạo AuthService
-async def get_auth_service():
-    db = await database.connect()
-    base_repository = MongoRepository(db)
-    auth_repository = AuthRepository(base_repository)
-    storage_client = MinioClient()
+async def get_auth_service(
+    auth_repository = Depends(get_auth_repository),
+    storage_client = Depends(get_storage_client)
+):
     return AuthService(auth_repository, storage_client)
 
 # Đăng ký user mới.

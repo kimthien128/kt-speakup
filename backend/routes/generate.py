@@ -1,25 +1,20 @@
 from fastapi import APIRouter, Request, Depends
 from ..services.auth_service import UserInDB
 from ..routes.auth import get_auth_service
-from ..database.database_factory import database
-from ..repositories.mongo_repository import MongoRepository
-from ..repositories.chat_repository import ChatRepository
-from ..services.ai.openai_client import OpenAIClient
-from ..services.ai.mistral_client import MistralClient
-from ..services.ai.gemini_client import GeminiClient
 from ..services.ai_service import AIService
+from ..dependencies import get_chat_repository, get_openai_client, get_mistral_client, get_gemini_client
 
 
 router = APIRouter()
 
 # Khởi tạo AIService
-async def get_ai_service():
-    db = await database.connect()
-    base_repository = MongoRepository(db)
-    chat_repository = ChatRepository(base_repository)
-    openai_client = OpenAIClient()
-    mistral_client = MistralClient()
-    gemini_client = GeminiClient()
+async def get_ai_service(
+    chat_repository = Depends(get_chat_repository),
+    openai_client = Depends(get_openai_client),
+    mistral_client = Depends(get_mistral_client),
+    gemini_client = Depends(get_gemini_client)
+):
+    
     return AIService(chat_repository, openai_client, mistral_client, gemini_client)
 
 @router.post('')

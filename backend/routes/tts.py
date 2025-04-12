@@ -1,18 +1,16 @@
 from fastapi import APIRouter, Request, Depends
-from services.tts.gtts_client import GTTSClient
-from services.tts.piper_client import PiperClient
-from services.audio.ffmpeg_audio_processor import FFmpegAudioProcessor
 from services.tts.tts_service import TTSService
-from ..storage.minio_client import MinioClient
+from ..dependencies import get_audio_processor, get_storage_client, get_gtts_client, get_piper_client
 
 router = APIRouter()
 
 # Khởi tạo TTSService
-async def get_tts_service():
-    audio_processor = FFmpegAudioProcessor()
-    storage_client = MinioClient()
-    gtts_client = GTTSClient()
-    piper_client = PiperClient()
+async def get_tts_service(
+    audio_processor = Depends(get_audio_processor),
+    storage_client = Depends(get_storage_client),
+    gtts_client = Depends(get_gtts_client),
+    piper_client = Depends(get_piper_client)
+):
     return TTSService(audio_processor, storage_client, gtts_client, piper_client)
 
 @router.post("")

@@ -1,17 +1,15 @@
 # routes/word_info.py
 from fastapi import APIRouter, Request, Depends
-from ..services.http.httpx_client import HttpxClient
-from ..services.dictionary.dictionaryapi_client import DictionaryAPIClient
-from ..services.dictionary.wordnik_client import WordnikClient
 from ..services.dictionary_service import DictionaryService
+from ..dependencies import get_dictionaryapi_client, get_wordnik_client
 
 router = APIRouter()
 
 # Khởi tạo DictionaryService
-async def get_dictionary_service():
-    http_client = HttpxClient()
-    dictionaryapi_client = DictionaryAPIClient(http_client)
-    wordnik_client = WordnikClient(http_client)
+async def get_dictionary_service(
+    dictionaryapi_client = Depends(get_dictionaryapi_client),
+    wordnik_client = Depends(get_wordnik_client)
+):
     return DictionaryService(dictionaryapi_client, wordnik_client)
 
 @router.post("")
