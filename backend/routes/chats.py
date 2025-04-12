@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Request, HTTPException, Depends
 from pydantic import BaseModel
-from routes.auth import UserInDB, get_current_user
+from routes.auth import UserInDB, get_auth_service
 from database.database_factory import database
 from repositories.mongo_repository import MongoRepository
 from repositories.chat_repository import ChatRepository
@@ -25,7 +25,7 @@ async def get_chat_service():
 
 # Tạo một chat mới
 @router.post("")
-async def create_chat( current_user: UserInDB = Depends(get_current_user), chat_service: ChatService = Depends(get_chat_service)):
+async def create_chat( current_user: UserInDB = Depends(get_auth_service().get_current_user), chat_service: ChatService = Depends(get_chat_service)):
     try:
         return await chat_service.create_chat(current_user.id)
     except Exception as e:
@@ -34,7 +34,7 @@ async def create_chat( current_user: UserInDB = Depends(get_current_user), chat_
 
 # Lấy danh sách lịch sử chat (topic)
 @router.get("")
-async def get_all_chats(current_user: UserInDB = Depends(get_current_user), chat_service: ChatService = Depends(get_chat_service)):
+async def get_all_chats(current_user: UserInDB = Depends(get_auth_service().get_current_user), chat_service: ChatService = Depends(get_chat_service)):
     try:
         return await chat_service.get_all_chats(current_user.id)
     except Exception as e:
@@ -43,7 +43,7 @@ async def get_all_chats(current_user: UserInDB = Depends(get_current_user), chat
 
 # Lấy thông tin chi tiết của một chat
 @router.get("/{chat_id}")
-async def get_chat(chat_id: str, current_user: UserInDB = Depends(get_current_user), chat_service: ChatService = Depends(get_chat_service)):
+async def get_chat(chat_id: str, current_user: UserInDB = Depends(get_auth_service().get_current_user), chat_service: ChatService = Depends(get_chat_service)):
     try:
         return await chat_service.get_chat(chat_id, current_user.id)
     except Exception as e:
@@ -52,7 +52,7 @@ async def get_chat(chat_id: str, current_user: UserInDB = Depends(get_current_us
 
 # Xóa một chat    
 @router.delete("/{chat_id}")
-async def delete_chat(chat_id: str, current_user: UserInDB = Depends(get_current_user), chat_service: ChatService = Depends(get_chat_service)):
+async def delete_chat(chat_id: str, current_user: UserInDB = Depends(get_auth_service().get_current_user), chat_service: ChatService = Depends(get_chat_service)):
     try:
         return await chat_service.delete_chat(chat_id, current_user.id)
     except Exception as e:
@@ -61,7 +61,7 @@ async def delete_chat(chat_id: str, current_user: UserInDB = Depends(get_current
     
 # Cập nhật title của chat
 @router.put("/{chat_id}")
-async def update_chat_title(chat_id: str, request: Request, current_user: UserInDB = Depends(get_current_user), chat_service: ChatService = Depends(get_chat_service)):
+async def update_chat_title(chat_id: str, request: Request, current_user: UserInDB = Depends(get_auth_service().get_current_user), chat_service: ChatService = Depends(get_chat_service)):
     try:
         data = await request.json()
         new_title = data.get("title")
@@ -72,7 +72,7 @@ async def update_chat_title(chat_id: str, request: Request, current_user: UserIn
 
 # Cập nhật các trường liên quan đến suggestion
 @router.put("/{chat_id}/suggestion")
-async def update_chat_suggestion(chat_id: str, request: Request, current_user: UserInDB = Depends(get_current_user), chat_service: ChatService = Depends(get_chat_service)):
+async def update_chat_suggestion(chat_id: str, request: Request, current_user: UserInDB = Depends(get_auth_service().get_current_user), chat_service: ChatService = Depends(get_chat_service)):
     try:
         data = await request.json()
         return await chat_service.update_chat_suggestion(chat_id, data, current_user.id)
@@ -84,7 +84,7 @@ async def update_chat_suggestion(chat_id: str, request: Request, current_user: U
 
 # Chỉ trả về phần lịch sử tin nhắn (history) của chat dựa trên chat_id
 @router.get("/{chat_id}/history")
-async def get_chat_history(chat_id: str, current_user: UserInDB = Depends(get_current_user), chat_service: ChatService = Depends(get_chat_service)):
+async def get_chat_history(chat_id: str, current_user: UserInDB = Depends(get_auth_service().get_current_user), chat_service: ChatService = Depends(get_chat_service)):
     try:
         return await chat_service.get_chat_history(chat_id, current_user.id)
     except Exception as e:
@@ -93,7 +93,7 @@ async def get_chat_history(chat_id: str, current_user: UserInDB = Depends(get_cu
 
 # Thêm một tin nhắn vào lịch sử chat
 @router.post("/{chat_id}/history")
-async def add_chat_history(chat_id: str, request: Request, current_user: UserInDB = Depends(get_current_user), chat_service: ChatService = Depends(get_chat_service)):
+async def add_chat_history(chat_id: str, request: Request, current_user: UserInDB = Depends(get_auth_service().get_current_user), chat_service: ChatService = Depends(get_chat_service)):
     try:
         data = await request.json()
         return await chat_service.add_chat_history(chat_id, data, current_user.id)
@@ -103,7 +103,7 @@ async def add_chat_history(chat_id: str, request: Request, current_user: UserInD
 
 # Cập nhật audioUrl trong history
 @router.patch("/{chat_id}/audioUrl")
-async def update_chat_history_audio(chat_id: str, request: Request, current_user: UserInDB = Depends(get_current_user), chat_service: ChatService = Depends(get_chat_service)):
+async def update_chat_history_audio(chat_id: str, request: Request, current_user: UserInDB = Depends(get_auth_service().get_current_user), chat_service: ChatService = Depends(get_chat_service)):
     try:
         data = await request.json()
         index = data.get("index")
@@ -115,7 +115,7 @@ async def update_chat_history_audio(chat_id: str, request: Request, current_user
 
 # Dịch đoạn chat của AI & cập nhật vào history
 @router.post("/{chat_id}/translate-ai")
-async def translate_chat_ai(chat_id: str, request: TranslateRequest, current_user: UserInDB = Depends(get_current_user), chat_service: ChatService = Depends(get_chat_service)):
+async def translate_chat_ai(chat_id: str, request: TranslateRequest, current_user: UserInDB = Depends(get_auth_service().get_current_user), chat_service: ChatService = Depends(get_chat_service)):
     try:
         return await chat_service.translate_chat_ai(chat_id, request.text, request.target_lang, request.index, current_user.id)
     except Exception as e:
@@ -124,7 +124,7 @@ async def translate_chat_ai(chat_id: str, request: TranslateRequest, current_use
 
 # Lấy danh sách từ vựng của chat
 @router.get("/{chat_id}/vocab")
-async def get_chat_vocab(chat_id: str, current_user: UserInDB = Depends(get_current_user), chat_service: ChatService = Depends(get_chat_service)):
+async def get_chat_vocab(chat_id: str, current_user: UserInDB = Depends(get_auth_service().get_current_user), chat_service: ChatService = Depends(get_chat_service)):
     try:
         return await chat_service.get_chat_vocab(chat_id, current_user.id)
     except Exception as e:
