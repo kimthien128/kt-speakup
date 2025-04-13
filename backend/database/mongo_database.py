@@ -29,5 +29,5 @@ class MongoDatabase(DatabaseInterface):
     async def get_db(self):
         # Return the database instance
         if not self.db:
-            raise RuntimeError("Database not connected. Call connect() first.")
+            await self.connect()  # Await connect để khởi tạo self.db
         return self.db

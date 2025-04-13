@@ -3,17 +3,31 @@
 # Gọi AuthRepository để thực hiện truy vấn dữ liệu.
 # Tuân thủ SRP: Chỉ xử lý logic nghiệp vụ, không xử lý API hay truy vấn trực tiếp.
 
-from fastapi import HTTPException, Response, UploadFile
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi import HTTPException, Response, UploadFile, Depends
+from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from datetime import datetime, timedelta
 import uuid
 import os
 import io
-from config.jwt_config import  (verify_password, get_password_hash, create_access_token, decode_token, ACCESS_TOKEN_EXPIRE_MINUTES)
+from jose import JWTError, jwt
+from ..config.jwt_config import verify_password, get_password_hash
 from ..logging_config import logger
 
+# OAuth2 scheme
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+
 class UserInDB:
-    def __init__(self, email: str, hashed_password: str, avatarPath: str | None = None, displayName: str | None = None, phoneNumber: str | None = None, gender: str | None = None, location: str | None = None, isAdmin: bool = False, id: str = None):
+    def __init__(
+        self, email: str,
+        hashed_password: str, 
+        avatarPath: str | None = None, 
+        displayName: str | None = None, 
+        phoneNumber: str | None = None, 
+        gender: str | None = None, 
+        location: str | None = None, 
+        isAdmin: bool = False, 
+        id: str = None
+        ):
         self.email = email
         self.hashed_password = hashed_password
         self.avatarPath = avatarPath
@@ -25,19 +39,26 @@ class UserInDB:
         self.id = id
         
 class AuthService:
-    def __init__(self, auth_repository, storage_client):
+    def __init__(self, auth_repository, storage_client, jwt_config):
         self.auth_repository = auth_repository
         self.storage_client = storage_client
+        self.jwt_config = jwt_config
         self.avatar_bucket = os.getenv("AVATAR_BUCKET")
         self.minio_endpoint = os.getenv("MINIO_ENDPOINT")
         
-    async def get_current_user(self, token: str, response: Response = None) -> UserInDB:
+    async def get_current_user(self, token: str = Depends(oauth2_scheme), response: Response = None) -> UserInDB:
         # Giải mã token và lấy thông tin người dùng
-        payload = decode_token(token)
-        email : str = payload.get("sub")
-        if email is None:
-            raise HTTPException(status_code=401, detail="Invalid token")
-        
+        try:
+            payload = jwt.decode(token, self.jwt_config.secret_key, algorithms=[self.jwt_config.algorithm])
+            email : str = payload.get("sub")
+            if email is None:
+                raise HTTPException(status_code=401, detail="Invalid token")
+        except JWTError:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid token",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
         user = await self.auth_repository.find_user_by_email(email)
         if user is None:
             raise HTTPException(status_code=401, detail="User not found")
@@ -61,9 +82,10 @@ class AuthService:
             expire_time = datetime.utcfromtimestamp(exp)
             remaining_time = (expire_time - datetime.utcnow()).total_seconds()
             if remaining_time < 300: # Còn dưới 5 phút = 300s
-                new_token = create_access_token(
-                    data={"sub": email},
-                    expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+                new_token = jwt.encode(
+                    {"sub": email, "exp": datetime.utcnow() + timedelta(minutes=self.jwt_config.access_token_expire_minutes)},
+                    self.jwt_config.secret_key,
+                    algorithm=self.jwt_config.algorithm,
                 )
                 logger.info(f"Renewed token for {email}: {new_token}")
                 if response: # Thêm new_token vào header nếu response có sẵn
@@ -97,10 +119,10 @@ class AuthService:
         if not user or not verify_password(form_data.password, user["hashed_password"]):
             raise HTTPException(status_code=401, detail="Invalid credentials")
 
-        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-        access_token = create_access_token(
-            data={"sub": user["email"]},
-            expires_delta=access_token_expires
+        access_token = jwt.encode(
+            {"sub": user["email"], "exp": datetime.utcnow() + timedelta(minutes=self.jwt_config.access_token_expire_minutes)},
+            self.jwt_config.secret_key,
+            algorithm=self.jwt_config.algorithm
         )
         return {"access_token": access_token, "token_type": "bearer"}
     

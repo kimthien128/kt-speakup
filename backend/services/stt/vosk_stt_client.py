@@ -5,7 +5,7 @@
 import wave
 import json
 from vosk import Model, KaldiRecognizer
-from utils import VOSK_MODEL_DIR
+from ...utils import VOSK_MODEL_DIR
 from .stt_client import STTClient
 from ...logging_config import logger
 

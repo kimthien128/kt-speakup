@@ -38,7 +38,7 @@ async def update_config(
     aiIcon: UploadFile = File(None),
     hero: UploadFile = File(None),
     saveWord: UploadFile = File(None),
-    current_user: UserInDB = Depends(get_auth_service().get_current_user),
+    current_user: UserInDB = Depends(get_auth_service),
     config_service: ConfigService = Depends(get_config_service)
 ):
     logger.info(f"User {current_user.id} is updating site config")

@@ -30,7 +30,7 @@ class DatabaseSingleton:
     @classmethod
     async def get_instance(cls):
         if cls._instance is None:
-            cls._instance = database.connect()
+            cls._instance = await database.connect()
         return cls._instance
     
 # Singleton instances cho các dependency

@@ -5,7 +5,7 @@
 import os
 import subprocess
 from fastapi import HTTPException
-from utils import BASE_DIR
+from ...utils import BASE_DIR
 from .tts_client import TTSClient
 from ...logging_config import logger
 

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request, Depends
-from services.tts.tts_service import TTSService
+from ..services.tts.tts_service import TTSService
 from ..dependencies import get_audio_processor, get_storage_client, get_gtts_client, get_piper_client
 
 router = APIRouter()

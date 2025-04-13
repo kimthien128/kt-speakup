@@ -3,7 +3,6 @@
 # Tuân thủ DIP: Các module cấp cao chỉ phụ thuộc vào abstraction này.
 
 from abc import ABC, abstractmethod
-from typing import Optional
 
 class StorageClient(ABC):
     @abstractmethod

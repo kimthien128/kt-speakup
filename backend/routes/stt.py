@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request, Query, Depends
-from services.stt_service import STTService
+from ..services.stt_service import STTService
 from ..dependencies import get_audio_processor, get_vosk_client, get_assemblyai_client
 
 router = APIRouter()

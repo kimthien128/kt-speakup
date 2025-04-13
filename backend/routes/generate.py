@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request, Depends
 from ..services.auth_service import UserInDB
-from ..routes.auth import get_auth_service
+from .auth import get_auth_service
 from ..services.ai_service import AIService
 from ..dependencies import get_chat_repository, get_openai_client, get_mistral_client, get_gemini_client
 
@@ -18,7 +18,7 @@ async def get_ai_service(
     return AIService(chat_repository, openai_client, mistral_client, gemini_client)
 
 @router.post('')
-async def generate(request: Request, current_user: UserInDB = Depends(get_auth_service().get_current_user), ai_service: AIService = Depends(get_ai_service)):
+async def generate(request: Request, current_user: UserInDB = Depends(get_auth_service), ai_service: AIService = Depends(get_ai_service)):
     data = await request.json()
     transcript = data.get('transcript', '')
     chat_id = data.get('chat_id', '') # Lấy chat_id từ request để truy xuất history

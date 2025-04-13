@@ -3,7 +3,7 @@
 # Tuân thủ SRP: Chỉ xử lý logic liên quan đến AssemblyAI.
 
 import assemblyai as aai
-from utils import ASSEMBLYAI_API_KEY
+from ...utils import ASSEMBLYAI_API_KEY
 from .stt_client import STTClient
 from ...logging_config import logger
 

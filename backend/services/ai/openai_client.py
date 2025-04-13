@@ -4,7 +4,7 @@
 
 import requests
 from fastapi import HTTPException
-from utils import OPENAI_API_KEY
+from ...utils import OPENAI_API_KEY
 from .ai_client import AIClient
 from ...logging_config import logger
 

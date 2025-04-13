@@ -8,7 +8,7 @@ from fastapi import HTTPException, Response
 from .tts_client import TTSClient
 from ..audio.audio_processor import AudioProcessor
 from ...storage.storage_client import StorageClient
-from utils import CACHE_DIR
+from ...utils import CACHE_DIR
 from ...logging_config import logger
 
 class TTSService:

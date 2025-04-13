@@ -5,7 +5,7 @@
 from fastapi import HTTPException
 from ..http.http_client import HTTPClient
 from .dictionary_client import DictionaryClient
-from utils import WORDNIK_API_KEY
+from ...utils import WORDNIK_API_KEY
 from ...logging_config import logger
 
 class WordnikClient(DictionaryClient):

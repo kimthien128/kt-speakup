@@ -28,20 +28,22 @@ sys.modules["cgi"] = fake_cgi  # Gắn module giả vào sys.modules
 
 '''Xóa khúc trên'''
 
-from fastapi import FastAPI
-import os
+# Load biến môi trường trước khi import các module khác
 from dotenv import load_dotenv
-from config.app_config import configure_app
+load_dotenv()
+
+from fastapi import FastAPI
+from typing import AsyncIterator
+from contextlib import asynccontextmanager
+import os
+from .config.app_config import configure_app
 from .logging_config import logger
-from storage.minio_client import MinioClient
-from services.cache_service import CacheService
-from scheduler.scheduler_config import configure_scheduler
-from utils import CACHE_DIR
+from .storage.minio_client import MinioClient
+from .services.cache_service import CacheService
+from .scheduler.scheduler_config import configure_scheduler
+from .utils import CACHE_DIR
 
 app = FastAPI()
-
-# Load biến môi trường
-load_dotenv()
 
 # Khởi tạo MinIO client và cache service
 storage_client = MinioClient()
@@ -57,18 +59,21 @@ configure_app(app)
 # Cấu hình scheduler
 scheduler = configure_scheduler(cache_service)
 
-# Sự kiện khởi động
-@app.on_event("startup")
-async def startup_event():
+# Lifespan event handler
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    """Lifespan event handler for FastAPI."""
+    # Startup logic
     logger.info("Application started")
     cache_service.clean_cache()  # Dọn cache khi khởi động
-
-@app.on_event("shutdown")
-def shutdown_scheduler():
+    yield
+    # Shutdown logic
     logger.info("Application shutdown")
     scheduler.shutdown()
+
+# Gán lifespan handler cho app
+app.router.lifespan_context = lifespan
     
 if __name__ == '__main__':
-    # Test in ra giá trị
     import uvicorn
     uvicorn.run(app, host='0.0.0.0', port=8000)

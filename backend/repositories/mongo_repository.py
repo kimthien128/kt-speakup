@@ -7,6 +7,9 @@ from typing import Any, List, Optional
 
 # Implementation cụ thể cho MongoDB
 class MongoRepository(BaseRepository):
+    def __init__(self, db):
+        self.db = db
+        
     async def find_one(self, resource: str, query: dict) -> Optional[Any]:
         return await self.db[resource].find_one(query)
     

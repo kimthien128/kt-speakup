@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
-from services.translation_service import TranslationService
+from ..services.translation_service import TranslationService
 from ..dependencies import get_google_translation_client
 
 router = APIRouter()

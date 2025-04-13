@@ -4,7 +4,7 @@
 
 import google.generativeai as genai
 from fastapi import HTTPException
-from utils import GOOGLE_API_KEY
+from ...utils import GOOGLE_API_KEY
 from .ai_client import AIClient
 from ...logging_config import logger
 

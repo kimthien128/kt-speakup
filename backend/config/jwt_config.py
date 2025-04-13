@@ -6,13 +6,19 @@ from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from fastapi import HTTPException
-from utils import JWT_SECRET_KEY
+from ..utils import JWT_SECRET_KEY
 from ..logging_config import logger
 
 # Cấu hình cho JWT
-SECRET_KEY = JWT_SECRET_KEY
-ALGORITHM = "HS256" # thuật toán mã hóa HMAC với SHA-256
-ACCESS_TOKEN_EXPIRE_MINUTES = 360 # Token hết hạn sau 360 phút (6 tiếng)
+class JWTConfig:
+    def __init__(self):
+        self.secret_key = JWT_SECRET_KEY
+        self.algorithm = "HS256"  # thuật toán mã hóa HMAC với SHA-256
+        self.access_token_expire_minutes = 360  # Token hết hạn sau 360 phút (6 tiếng)
+
+# Hàm để lấy cấu hình JWT
+def get_jwt_config():
+    return JWTConfig()
 
 # Hash mật khẩu
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -37,13 +43,13 @@ def create_access_token(data: dict, expires_delta: timedelta = None) -> str:
     else:
         expire = datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, get_jwt_config.secret_key, algorithm=get_jwt_config.algorithm)
     return encoded_jwt
 
 def decode_token(token: str) -> dict:
     """Giải mã token và trả về dữ liệu bên trong."""
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, get_jwt_config.secret_key, algorithms=get_jwt_config.algorithm)
         return payload
     except JWTError:
         raise HTTPException(
