@@ -24,3 +24,6 @@ class MongoRepository(BaseRepository):
         
     async def delete_one(self, resource: str, query: dict) -> Any:
         return await self.db[resource].delete_one(query)
+    
+    async def delete_many(self, resource: str, query: dict) -> Any:
+        return await self.db[resource].delete_many(query)

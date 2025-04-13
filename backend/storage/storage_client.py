@@ -34,3 +34,13 @@ class StorageClient(ABC):
     def remove_object(self, bucket_name: str, object_name: str):
         """Xóa một đối tượng cụ thể."""
         pass
+    
+    @abstractmethod
+    def put_object(self, bucket_name: str, object_name: str, file_path: str):
+        """Tải file lên bucket."""
+        pass
+    
+    @abstractmethod
+    def presigned_get_object(self, bucket_name: str, object_name: str) -> str:
+        """Tạo URL công khai để truy cập file"""
+        pass

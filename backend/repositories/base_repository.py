@@ -33,3 +33,8 @@ class BaseRepository(ABC):
     async def delete_one(self, resource: str, query: dict) -> Any:
         """Xóa một bản ghi trong resource dựa trên query"""
         pass
+    
+    @abstractmethod
+    async def delete_many(self, resource: str, query: dict) -> Any:
+        """Xóa nhiều bản ghi trong resource dựa trên query"""
+        pass

@@ -68,7 +68,7 @@ class TTSService:
             raise e
         except Exception as e:
             logger.error(f"Error: {e}")
-            raise HTTPException(status_code=500, detail=str(e))
+            raise HTTPException(status_code=500, detail=f"Failed to generate audio: {str(e)}")
         finally:
             # Xóa file tạm
             for file_path in [temp_path, wav_path]:

@@ -7,6 +7,7 @@ from ..http.http_client import HTTPClient
 from .dictionary_client import DictionaryClient
 from ...utils import WORDNIK_API_KEY
 from ...logging_config import logger
+import asyncio
 
 class WordnikClient(DictionaryClient):
     def __init__(self, http_client: HTTPClient):
@@ -17,120 +18,70 @@ class WordnikClient(DictionaryClient):
         self.headers = {"api_key": WORDNIK_API_KEY}
         
     async def get_word_info(self, word: str, limit: int) -> dict:
+        logger.info(f"Fetching word info for word: {word}, source: wordnik")
+        
+        # Khởi tạo giá trị mặc định
+        result = {
+            "definition": "No definition found",
+            "phonetic": "N/A",
+            "audio": [],
+            "examples": [],
+            "pronunciations": [],
+            "topExample": ""
+        }
         try:
-            definition = "No definition found"
-            phonetic = "N/A"
-            audio = []
-            examples = []
-            hyphenation = []
-            phrases = []
-            pronunciations = []
-            related_words = []
-            top_example = ""
-            
-            # 1. Lấy definitions
             definitions_url = f"{self.base_url}/{word}/definitions?limit={limit}&includeRelated=false&useCanonical=false&includeTags=false"
-            definitions = await self.http_client.get(definitions_url, headers=self.headers)
-            if isinstance(definitions, list):
-                for def_item in definitions:
-                    if isinstance(def_item, dict) and "text" in def_item:
-                        definition = def_item["text"]
-                        break
-            else:
-                logger.warning(f"No definitions found for word: {word}")
-
-            # 2. Lấy audio
             audio_url = f"{self.base_url}/{word}/audio?limit={limit}"
-            audio_data = await self.http_client.get(audio_url, headers=self.headers)
-            if isinstance(audio_data, list) and len(audio_data) > 0:
-                audio_files = [item["fileUrl"] for item in audio_data if isinstance(item, dict) and "fileUrl" in item][:2]
-                audio = audio_files
-                logger.info(f"Found {len(audio_files)} audio files for word: {word}")
-            else:
-                logger.warning(f"No audio found for word: {word}")
-
-            # 3. Lấy examples
             examples_url = f"{self.base_url}/{word}/examples?limit={limit}"
-            examples_data = await self.http_client.get(examples_url, headers=self.headers)
-            examples_list = examples_data.get("examples", [])
-            if isinstance(examples_list, list):
-                examples = [example["text"] for example in examples_list if isinstance(example, dict) and "text" in example][:limit]
-            else:
-                logger.warning(f"No examples found for word: {word}")
-
-            # 4. Lấy hyphenation
-            hyphenation_url = f"{self.base_url}/{word}/hyphenation?useCanonical=false"
-            hyphenation_data = await self.http_client.get(hyphenation_url, headers=self.headers)
-            if isinstance(hyphenation_data, list):
-                hyphenation = [part["text"] for part in hyphenation_data if isinstance(part, dict) and "text" in part][:limit]
-            else:
-                logger.warning(f"No hyphenation data found for word: {word}")
-
-            # 5. Lấy phrases
-            phrases_url = f"{self.base_url}/{word}/phrases?limit={limit}"
-            phrases_data = await self.http_client.get(phrases_url, headers=self.headers)
-            if isinstance(phrases_data, list):
-                phrases = [
-                    f"{phrase['gram1']} {phrase['gram2']}"
-                    for phrase in phrases_data
-                    if isinstance(phrase, dict) and "gram1" in phrase and "gram2" in phrase
-                ][:limit]
-            else:
-                logger.warning(f"No phrases found for word: {word}")
-
-            # 6. Lấy pronunciations
             pronunciations_url = f"{self.base_url}/{word}/pronunciations?limit={limit}&typeFormat=IPA"
-            pronunciations_data = await self.http_client.get(pronunciations_url, headers=self.headers)
-            if isinstance(pronunciations_data, list):
-                pronunciations = [pron["raw"] for pron in pronunciations_data if isinstance(pron, dict) and "raw" in pron][:limit]
-                phonetic = pronunciations[0] if pronunciations else "N/A"
-            else:
-                logger.warning(f"No pronunciations found for word: {word}")
+            
+            tasks = [
+                self.http_client.get(definitions_url, headers=self.headers),
+                self.http_client.get(audio_url, headers=self.headers),
+                self.http_client.get(examples_url, headers=self.headers),
+                self.http_client.get(pronunciations_url, headers=self.headers)
+            ]
+            
+            responses = await asyncio.gather(*tasks, return_exceptions=True)
+            
+            # Xử lý definitions
+            definitions_data = responses[0]
+            if isinstance(definitions_data, dict) and "status" in definitions_data and definitions_data["status"] != 200:
+                logger.warning(f"Failed to fetch definitions: {definitions_data.get('message', 'Unknown error')}")
+            elif isinstance(definitions_data, list) and definitions_data:
+                result["definition"] = definitions_data[0].get("text", "No definition found")
+                # Nếu có ví dụ trong định nghĩa, dùng làm topExample
+                if definitions_data[0].get("exampleUses"):
+                    result["topExample"] = definitions_data[0]["exampleUses"][0].get("text", "")
 
-            # 7. Lấy related words
-            related_words_url = f"{self.base_url}/{word}/relatedWords?limitPerRelationshipType={limit}"
-            related_words_data = await self.http_client.get(related_words_url, headers=self.headers)
-            if isinstance(related_words_data, list):
-                related_words = [
-                    {
-                        "relationshipType": rel.get("relationshipType", "Unknown"),
-                        "words": rel.get("words", [])[:limit]
-                    }
-                    for rel in related_words_data
-                    if isinstance(rel, dict) and "relationshipType" in rel and "words" in rel
-                ]
-            else:
-                logger.warning(f"No related words found for word: {word}")
+            # Xử lý audio
+            audio_data = responses[1]
+            if isinstance(audio_data, dict) and "status" in audio_data and audio_data["status"] != 200:
+                logger.warning(f"Failed to fetch audio: {audio_data.get('message', 'Unknown error')}")
+            elif isinstance(audio_data, list) and audio_data:
+                result["audio"] = [item.get("fileUrl", "") for item in audio_data if isinstance(item, dict) and "fileUrl" in item][:limit]
+                logger.info(f"Found {len(result['audio'])} audio files for word: {word}")
 
-            # 8. Lấy top example
-            top_example_url = f"{self.base_url}/{word}/topExample"
-            top_example_data = await self.http_client.get(top_example_url, headers=self.headers)
-            if isinstance(top_example_data, dict):
-                top_example = top_example_data.get("text", "")
-            else:
-                logger.warning(f"No top example found for word: {word}")
+            # Xử lý examples
+            examples_data = responses[2]
+            if isinstance(examples_data, dict) and "status" in examples_data and examples_data["status"] != 200:
+                logger.warning(f"Failed to fetch examples: {examples_data.get('message', 'Unknown error')}")
+            elif isinstance(examples_data, dict) and "examples" in examples_data:
+                result["examples"] = [example.get("text", "") for example in examples_data["examples"] if isinstance(example, dict) and "text" in example][:limit]
+                # Nếu không có topExample từ definitions, lấy từ examples
+                if not result["topExample"] and result["examples"]:
+                    result["topExample"] = result["examples"][0]
 
-            return {
-                "definition": definition,
-                "phonetic": phonetic,
-                "audio": audio,
-                "examples": examples,
-                "hyphenation": hyphenation,
-                "phrases": phrases,
-                "pronunciations": pronunciations,
-                "relatedWords": related_words,
-                "topExample": top_example
-            }
+            # Xử lý pronunciations
+            pronunciations_data = responses[3]
+            if isinstance(pronunciations_data, dict) and "status" in pronunciations_data and pronunciations_data["status"] != 200:
+                logger.warning(f"Failed to fetch pronunciations: {pronunciations_data.get('message', 'Unknown error')}")
+            elif isinstance(pronunciations_data, list) and pronunciations_data:
+                result["pronunciations"] = [pron.get("raw", "") for pron in pronunciations_data if isinstance(pron, dict) and "raw" in pron][:limit]
+                result["phonetic"] = result["pronunciations"][0] if result["pronunciations"] else "N/A"
+
+            return result
+
         except Exception as e:
-            logger.warning(f"Wordnik error: {str(e)}")
-            return {
-                "definition": "No definition found",
-                "phonetic": "N/A",
-                "audio": [],
-                "examples": [],
-                "hyphenation": [],
-                "phrases": [],
-                "pronunciations": [],
-                "relatedWords": [],
-                "topExample": ""
-            }
+            logger.error(f"Error fetching word info for {word}: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Failed to fetch word info: {str(e)}")

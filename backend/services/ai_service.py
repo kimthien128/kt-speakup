@@ -25,7 +25,7 @@ class AIService:
             raise HTTPException(status_code=400, detail=f"Unsupported generate method: {method}")
         
         # Lấy lịch sử chat
-        chat = await self.chat_repository.find_chat_by_id(chat_id, user_id)
+        chat = await self.chat_repository.find_chat_by_id_and_user(chat_id, user_id)
         if not chat:
             raise HTTPException(status_code=404, detail="Chat not found or not owned by user")
         

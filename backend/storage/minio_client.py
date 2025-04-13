@@ -25,33 +25,45 @@ class MinioClient(StorageClient):
             secure=False  # Đặt True nếu dùng HTTPS
         )
         
-        self.bucket_policy = {
+        self._initialize_buckets()
+    
+    def _generate_public_read_policy(self, bucket_name: str) -> str:
+        """Tạo policy cho phép đọc công khai cho bucket."""
+        policy = {
             "Version": "2012-10-17",
             "Statement": [
                 {
                     "Effect": "Allow",
                     "Principal": "*",
                     "Action": ["s3:GetObject"],
-                    "Resource": [f"arn:aws:s3:::{self.image_bucket}/*"]
+                    "Resource": [f"arn:aws:s3:::{bucket_name}/*"]
                 }
             ]
         }
-        
-        self._initialize_buckets()
+        return json.dumps(policy)
     
+    def _setup_bucket(self, bucket_name: str):
+        """Khởi tạo bucket và thiết lập policy."""
+        try:
+            # Kiểm tra và tạo bucket nếu chưa tồn tại
+            if not self.bucket_exists(bucket_name):
+                self.make_bucket(bucket_name)
+                logger.info(f"Created bucket: {bucket_name}")
+            else:
+                logger.info(f"Bucket already exists: {bucket_name}")
+
+            # Áp dụng policy
+            policy = self._generate_public_read_policy(bucket_name)
+            self.set_bucket_policy(bucket_name, policy)
+            logger.info(f"Public read policy set for bucket: {bucket_name}")
+        except S3Error as e:
+            logger.error(f"Error configuring MinIO bucket {bucket_name}: {e}")
+            raise
+        
     def _initialize_buckets(self):
         """Khởi tạo các bucket và thiết lập policy."""
-        try:
-            # Kiểm tra nếu bucket đã tồn tại
-            if not self.bucket_exists(self.image_bucket):
-                self.make_bucket(self.image_bucket)
-                logger.info(f"Created bucket: {self.image_bucket}")
-            
-            # Áp dụng policy
-            self.set_bucket_policy(self.image_bucket, json.dumps(self.bucket_policy))
-            logger.info(f"Public read policy set for bucket: {self.image_bucket}")
-        except S3Error as e:
-            logger.error(f"Error configuring MinIO bucket: {e}")
+        self._setup_bucket(self.image_bucket)
+        self._setup_bucket(self.audio_bucket)
             
     def bucket_exists(self, bucket_name: str) -> bool:
         """Kiểm tra xem bucket có tồn tại hay không."""
@@ -73,3 +85,20 @@ class MinioClient(StorageClient):
 
     def remove_object(self, bucket_name: str, object_name: str):
         self.client.remove_object(bucket_name, object_name)
+        
+    def put_object(self, bucket_name: str, object_name: str, file_path: str):
+        """Tải file lên bucket."""
+        try:
+            self.client.fput_object(bucket_name, object_name, file_path)
+            logger.info(f"Uploaded file to MinIO: {bucket_name}/{object_name}")
+        except S3Error as e:
+            logger.error(f"Failed to upload file to MinIO: {e}")
+            raise
+        
+    def presigned_get_object(self, bucket_name: str, object_name: str) -> str:
+        """Tạo URL công khai để truy cập file."""
+        try:
+            return self.client.presigned_get_object(bucket_name, object_name)
+        except S3Error as e:
+            logger.error(f"Failed to generate presigned URL: {e}")
+            raise
