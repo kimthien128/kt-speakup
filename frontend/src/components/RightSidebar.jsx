@@ -138,12 +138,10 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                 audio: '',
                 etymologies: [],
                 examples: [],
-                frequency: 0,
                 hyphenation: [],
                 phrases: [],
                 pronunciations: [],
                 relatedWords: [],
-                scrabbleScore: 0,
                 topExample: '',
             });
         } finally {
@@ -214,7 +212,7 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
         >
             {/* Đóng mở sidebar */}
             {isOpen ? (
-                <div>
+                <Box sx={{height: '100%', display: 'flex', flexDirection: 'column'}}>
                     {/* Phần 1: Thông tin user + Account Menu */}
                     {userEmail && userInfo && (
                         <Box sx={{display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 2, mb: 2}}>
@@ -263,9 +261,8 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
 
                     <Box
                         sx={{
-                            maxHeight: wordDetails ? '40%' : '100%',
+                            maxHeight: wordDetails ? '37%' : '100%',
                             overflowY: 'auto',
-                            mb: 2,
                             textAlign: 'center',
                             flexShrink: 0,
                             scrollbarWidth: 'thin',
@@ -349,229 +346,231 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
 
                     {/* Phần 3: Chi tiết từ vựng */}
                     {vocabList.length > 0 && (
-                        <>
-                            <Box sx={{flexGrow: 1, overflow: 'hidden', borderRadius: 1}}>
-                                <Box
-                                    sx={{
-                                        overflowY: 'auto',
-                                        overflowX: 'hidden',
-                                        height: '100%',
-                                        scrollbarWidth: 'thin',
-                                        scrollbarColor: 'rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.1)',
-                                        // Target cho Accordion root
-                                        '& .MuiAccordion-root': {
-                                            m: '0 !important',
-                                            borderBottom: '1px solid rgba(0, 0, 0, 0.1) !important',
-                                        },
-                                        '& .MuiAccordion-root:last-child': {
-                                            borderBottom: 'none !important',
-                                        },
-                                        // Target cho AccordionSummary
-                                        '& .MuiAccordionSummary-root': {
-                                            py: 0,
-                                            px: 1,
-                                            minHeight: '36px !important',
-                                            '& .MuiAccordionSummary-content': {my: 0.5},
-                                        },
-                                        '& .MuiAccordionSummary-content .MuiTypography-root': {
-                                            fontWeight: '500 !important', // Đậm toàn bộ tiêu đề
-                                        },
-                                        // Target cho MuiBox
-                                        '& .MuiBox-root': {
-                                            m: 0,
-                                        },
-                                        // Target cho AccordionDetails, ListItem
-                                        '& .MuiAccordionDetails-root, & .MuiListItem-root': {
-                                            px: 1,
-                                            py: 0,
-                                        },
-                                        // Target cho List, ListItemText
-                                        '& .MuiList-root, & .MuiListItemText-root': {
-                                            py: 0,
-                                            my: 0,
-                                        },
-                                        // Target cho MuiTypographyRoot
-                                        '& .MuiTypography-root.MuiTypography-subtitle1': {
-                                            fontWeight: '500',
-                                        },
-                                        '& .MuiListItemText-root': {},
-                                    }}
-                                >
-                                    {loadingDetails ? (
-                                        <CircularProgress />
-                                    ) : (
-                                        wordDetails && (
-                                            <>
+                        <Box
+                            sx={{
+                                flexGrow: 1,
+                                minHeight: 0,
+                                overflow: 'hidden',
+                                borderRadius: 2,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                mt: 2,
+                            }}
+                        >
+                            <Box
+                                sx={{
+                                    flexGrow: 1,
+                                    minHeight: 0,
+                                    overflowY: 'auto',
+                                    overflowX: 'hidden',
+                                    scrollbarWidth: 'thin',
+                                    scrollbarColor: 'rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.1)', // Màu thứ 2 là màu khi hover
+                                    // Target cho Accordion root
+                                    '& .MuiAccordion-root': {
+                                        m: '0 !important',
+                                        borderBottom: '1px solid rgba(0, 0, 0, 0.1) !important',
+                                    },
+                                    '& .MuiAccordion-root:last-child': {
+                                        borderBottom: 'none !important',
+                                    },
+                                    // Target cho AccordionSummary
+                                    '& .MuiAccordionSummary-root': {
+                                        py: 0,
+                                        px: 1,
+                                        minHeight: '36px !important',
+                                        '& .MuiAccordionSummary-content': {my: 0.5},
+                                    },
+                                    '& .MuiAccordionSummary-content .MuiTypography-root': {
+                                        fontWeight: '500 !important', // Đậm toàn bộ tiêu đề
+                                    },
+                                    // Target cho MuiBox
+                                    '& .MuiBox-root': {
+                                        m: 0,
+                                    },
+                                    // Target cho AccordionDetails, ListItem
+                                    '& .MuiAccordionDetails-root, & .MuiListItem-root': {
+                                        px: 1,
+                                        py: 0,
+                                    },
+                                    // Target cho List, ListItemText
+                                    '& .MuiList-root, & .MuiListItemText-root': {
+                                        py: 0,
+                                        my: 0,
+                                    },
+                                    // Target cho MuiTypographyRoot
+                                    '& .MuiTypography-root.MuiTypography-subtitle1': {
+                                        fontWeight: '500',
+                                    },
+                                    '& .MuiListItemText-root': {},
+                                }}
+                            >
+                                {loadingDetails ? (
+                                    <CircularProgress />
+                                ) : (
+                                    wordDetails && (
+                                        <>
+                                            <Accordion>
+                                                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                                    <Typography>Definition</Typography>
+                                                </AccordionSummary>
+                                                <AccordionDetails>
+                                                    <Typography>{wordDetails.definition || 'Not available'}</Typography>
+                                                </AccordionDetails>
+                                            </Accordion>
+
+                                            <Accordion>
+                                                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                                    <Typography>Phonetic</Typography>
+                                                </AccordionSummary>
+                                                <AccordionDetails>
+                                                    <Typography>{wordDetails.phonetic || 'Not available'}</Typography>
+                                                </AccordionDetails>
+                                            </Accordion>
+
+                                            {wordDetails.audio && wordDetails.audio.length > 0 && (
                                                 <Accordion>
                                                     <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                                        <Typography>Definition</Typography>
+                                                        <Typography>Audio</Typography>
                                                     </AccordionSummary>
                                                     <AccordionDetails>
-                                                        <Typography>
-                                                            {wordDetails.definition || 'Not available'}
-                                                        </Typography>
+                                                        {wordDetails.audio.map((audioUrl, index) => (
+                                                            <Box key={index} sx={{width: '100%'}}>
+                                                                <audio
+                                                                    controls
+                                                                    style={{
+                                                                        width: '100%',
+                                                                        height: '40px',
+                                                                    }}
+                                                                >
+                                                                    <source src={audioUrl} type="audio/mpeg" />
+                                                                    Your browser does not support the audio element.
+                                                                </audio>
+                                                            </Box>
+                                                        ))}
                                                     </AccordionDetails>
                                                 </Accordion>
+                                            )}
 
+                                            {wordDetails.examples && wordDetails.examples.length > 0 && (
                                                 <Accordion>
                                                     <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                                        <Typography>Phonetic</Typography>
+                                                        <Typography>Examples</Typography>
                                                     </AccordionSummary>
                                                     <AccordionDetails>
-                                                        <Typography>
-                                                            {wordDetails.phonetic || 'Not available'}
-                                                        </Typography>
-                                                    </AccordionDetails>
-                                                </Accordion>
-
-                                                {wordDetails.audio && wordDetails.audio.length > 0 && (
-                                                    <Accordion>
-                                                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                                            <Typography>Audio</Typography>
-                                                        </AccordionSummary>
-                                                        <AccordionDetails>
-                                                            {wordDetails.audio.map((audioUrl, index) => (
-                                                                <Box key={index} sx={{width: '100%'}}>
-                                                                    <audio
-                                                                        controls
-                                                                        style={{
-                                                                            width: '100%',
-                                                                            height: '40px',
-                                                                        }}
-                                                                    >
-                                                                        <source src={audioUrl} type="audio/mpeg" />
-                                                                        Your browser does not support the audio element.
-                                                                    </audio>
-                                                                </Box>
+                                                        <List>
+                                                            {wordDetails.examples.map((example, index) => (
+                                                                <ListItem key={index}>
+                                                                    <ListItemText primary={example} />
+                                                                </ListItem>
                                                             ))}
-                                                        </AccordionDetails>
-                                                    </Accordion>
-                                                )}
+                                                        </List>
+                                                    </AccordionDetails>
+                                                </Accordion>
+                                            )}
 
-                                                {wordDetails.examples && wordDetails.examples.length > 0 && (
-                                                    <Accordion>
-                                                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                                            <Typography>Examples</Typography>
-                                                        </AccordionSummary>
-                                                        <AccordionDetails>
-                                                            <List>
-                                                                {wordDetails.examples.map((example, index) => (
-                                                                    <ListItem key={index}>
-                                                                        <ListItemText primary={example} />
-                                                                    </ListItem>
-                                                                ))}
-                                                            </List>
-                                                        </AccordionDetails>
-                                                    </Accordion>
-                                                )}
+                                            {wordDetails.hyphenation && wordDetails.hyphenation.length > 0 && (
+                                                <Accordion>
+                                                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                                        <Typography>Hyphenation</Typography>
+                                                    </AccordionSummary>
+                                                    <AccordionDetails>
+                                                        <List>
+                                                            {wordDetails.hyphenation.map((part, index) => (
+                                                                <ListItem key={index}>
+                                                                    <ListItemText primary={part} />
+                                                                </ListItem>
+                                                            ))}
+                                                        </List>
+                                                    </AccordionDetails>
+                                                </Accordion>
+                                            )}
 
-                                                {wordDetails.hyphenation && wordDetails.hyphenation.length > 0 && (
-                                                    <Accordion>
-                                                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                                            <Typography>Hyphenation</Typography>
-                                                        </AccordionSummary>
-                                                        <AccordionDetails>
-                                                            <List>
-                                                                {wordDetails.hyphenation.map((part, index) => (
-                                                                    <ListItem key={index}>
-                                                                        <ListItemText primary={part} />
-                                                                    </ListItem>
-                                                                ))}
-                                                            </List>
-                                                        </AccordionDetails>
-                                                    </Accordion>
-                                                )}
+                                            {wordDetails.phrases && wordDetails.phrases.length > 0 && (
+                                                <Accordion>
+                                                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                                        <Typography>Phrases</Typography>
+                                                    </AccordionSummary>
+                                                    <AccordionDetails>
+                                                        <List sx={{p: 0}}>
+                                                            {wordDetails.phrases.map((phrase, index) => (
+                                                                <ListItem
+                                                                    key={index}
+                                                                    sx={{
+                                                                        p: 0,
+                                                                    }}
+                                                                >
+                                                                    <ListItemText primary={phrase} />
+                                                                </ListItem>
+                                                            ))}
+                                                        </List>
+                                                    </AccordionDetails>
+                                                </Accordion>
+                                            )}
 
-                                                {wordDetails.phrases && wordDetails.phrases.length > 0 && (
-                                                    <Accordion>
-                                                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                                            <Typography>Phrases</Typography>
-                                                        </AccordionSummary>
-                                                        <AccordionDetails>
-                                                            <List sx={{p: 0}}>
-                                                                {wordDetails.phrases.map((phrase, index) => (
-                                                                    <ListItem
-                                                                        key={index}
+                                            {wordDetails.pronunciations && wordDetails.pronunciations.length > 0 && (
+                                                <Accordion>
+                                                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                                        <Typography>Pronunciations</Typography>
+                                                    </AccordionSummary>
+                                                    <AccordionDetails>
+                                                        <List>
+                                                            {wordDetails.pronunciations.map((pron, index) => (
+                                                                <ListItem key={index}>
+                                                                    <ListItemText primary={pron} />
+                                                                </ListItem>
+                                                            ))}
+                                                        </List>
+                                                    </AccordionDetails>
+                                                </Accordion>
+                                            )}
+
+                                            {wordDetails.relatedWords && wordDetails.relatedWords.length > 0 && (
+                                                <Accordion>
+                                                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                                        <Typography>Related Words</Typography>
+                                                    </AccordionSummary>
+                                                    <AccordionDetails>
+                                                        <List>
+                                                            {wordDetails.relatedWords.map((group, groupIndex) => (
+                                                                <Box key={groupIndex} sx={{mb: 2}}>
+                                                                    <Typography
+                                                                        variant="subtitle1"
                                                                         sx={{
-                                                                            p: 0,
+                                                                            fontWeight: 'bold',
+                                                                            textTransform: 'capitalize',
                                                                         }}
                                                                     >
-                                                                        <ListItemText primary={phrase} />
-                                                                    </ListItem>
-                                                                ))}
-                                                            </List>
-                                                        </AccordionDetails>
-                                                    </Accordion>
-                                                )}
-
-                                                {wordDetails.pronunciations &&
-                                                    wordDetails.pronunciations.length > 0 && (
-                                                        <Accordion>
-                                                            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                                                <Typography>Pronunciations</Typography>
-                                                            </AccordionSummary>
-                                                            <AccordionDetails>
-                                                                <List>
-                                                                    {wordDetails.pronunciations.map((pron, index) => (
-                                                                        <ListItem key={index}>
-                                                                            <ListItemText primary={pron} />
+                                                                        {group.relationshipType}
+                                                                    </Typography>
+                                                                    {group.words.map((word, wordIndex) => (
+                                                                        <ListItem key={`${groupIndex}-${wordIndex}`}>
+                                                                            <ListItemText primary={word} />
                                                                         </ListItem>
                                                                     ))}
-                                                                </List>
-                                                            </AccordionDetails>
-                                                        </Accordion>
-                                                    )}
+                                                                </Box>
+                                                            ))}
+                                                        </List>
+                                                    </AccordionDetails>
+                                                </Accordion>
+                                            )}
 
-                                                {wordDetails.relatedWords && wordDetails.relatedWords.length > 0 && (
-                                                    <Accordion>
-                                                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                                            <Typography>Related Words</Typography>
-                                                        </AccordionSummary>
-                                                        <AccordionDetails>
-                                                            <List>
-                                                                {wordDetails.relatedWords.map((group, groupIndex) => (
-                                                                    <Box key={groupIndex} sx={{mb: 2}}>
-                                                                        <Typography
-                                                                            variant="subtitle1"
-                                                                            sx={{
-                                                                                fontWeight: 'bold',
-                                                                                textTransform: 'capitalize',
-                                                                            }}
-                                                                        >
-                                                                            {group.relationshipType}
-                                                                        </Typography>
-                                                                        {group.words.map((word, wordIndex) => (
-                                                                            <ListItem
-                                                                                key={`${groupIndex}-${wordIndex}`}
-                                                                            >
-                                                                                <ListItemText primary={word} />
-                                                                            </ListItem>
-                                                                        ))}
-                                                                    </Box>
-                                                                ))}
-                                                            </List>
-                                                        </AccordionDetails>
-                                                    </Accordion>
-                                                )}
-
-                                                {wordDetails.topExample && (
-                                                    <Accordion>
-                                                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                                            <Typography>Top Example</Typography>
-                                                        </AccordionSummary>
-                                                        <AccordionDetails>
-                                                            <Typography>{wordDetails.topExample}</Typography>
-                                                        </AccordionDetails>
-                                                    </Accordion>
-                                                )}
-                                            </>
-                                        )
-                                    )}
-                                </Box>
+                                            {wordDetails.topExample && (
+                                                <Accordion>
+                                                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                                        <Typography>Top Example</Typography>
+                                                    </AccordionSummary>
+                                                    <AccordionDetails>
+                                                        <Typography>{wordDetails.topExample}</Typography>
+                                                    </AccordionDetails>
+                                                </Accordion>
+                                            )}
+                                        </>
+                                    )
+                                )}
                             </Box>
-                        </>
+                        </Box>
                     )}
-                </div>
+                </Box>
             ) : (
                 <Box
                     sx={{
