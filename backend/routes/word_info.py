@@ -14,7 +14,10 @@ async def get_dictionary_service(
     return DictionaryService(dictionaryapi_client, wordnik_client)
 
 @router.post("")
-async def word_info(request: Request, dictionary_service: DictionaryService = Depends(get_dictionary_service)):
+async def word_info(
+    request: Request, 
+    dictionary_service: DictionaryService = Depends(get_dictionary_service)
+):
     data = await request.json()
     word = data.get("word", "").strip().lower()
     source = data.get("source", "dictionaryapi").strip().lower()

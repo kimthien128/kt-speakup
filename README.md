@@ -62,3 +62,7 @@ python -m pip install llama-cpp-python
 ## Extension "File Tree Generator"
 
 -   tạo cây thư mục dưới dạng Markdown : shinotatwu-ds.file-tree-generator
+
+## Chạy server
+
+-   python -m backend.server

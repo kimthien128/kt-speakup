@@ -122,7 +122,7 @@ class WordnikClient(DictionaryClient):
                 "topExample": top_example
             }
         except Exception as e:
-            logger.error(f"Wordnik error: {str(e)}")
+            logger.warning(f"Wordnik error: {str(e)}")
             return {
                 "definition": "No definition found",
                 "phonetic": "N/A",

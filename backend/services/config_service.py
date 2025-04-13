@@ -9,7 +9,7 @@ import os
 import io
 from ..repositories.config_repository import ConfigRepository
 from ..storage.storage_client import StorageClient
-from ..services.auth_service import UserInDB
+from ..security import UserInDB
 from ..logging_config import logger
 
 class SiteConfig:

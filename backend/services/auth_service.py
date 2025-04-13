@@ -4,7 +4,7 @@
 # Tuân thủ SRP: Chỉ xử lý logic nghiệp vụ, không xử lý API hay truy vấn trực tiếp.
 
 from fastapi import HTTPException, Response, UploadFile, Depends
-from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordRequestForm
 from datetime import datetime, timedelta
 import uuid
 import os
@@ -12,31 +12,7 @@ import io
 from jose import JWTError, jwt
 from ..config.jwt_config import verify_password, get_password_hash
 from ..logging_config import logger
-
-# OAuth2 scheme
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
-
-class UserInDB:
-    def __init__(
-        self, email: str,
-        hashed_password: str, 
-        avatarPath: str | None = None, 
-        displayName: str | None = None, 
-        phoneNumber: str | None = None, 
-        gender: str | None = None, 
-        location: str | None = None, 
-        isAdmin: bool = False, 
-        id: str = None
-        ):
-        self.email = email
-        self.hashed_password = hashed_password
-        self.avatarPath = avatarPath
-        self.displayName = displayName
-        self.phoneNumber = phoneNumber
-        self.gender = gender
-        self.location = location
-        self.isAdmin = isAdmin
-        self.id = id
+from ..security import oauth2_scheme, UserInDB
         
 class AuthService:
     def __init__(self, auth_repository, storage_client, jwt_config):
