@@ -36,34 +36,38 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import DeleteIcon from '@mui/icons-material/Delete';
 import MenuOpenIcon from '@mui/icons-material/MenuOpen';
 import MenuIcon from '@mui/icons-material/Menu';
-import HomeIcon from '@mui/icons-material/Home'; // sau này thay logo
 
 import useSiteConfig from '../hooks/useSiteConfig';
 import ConfirmDialog from './ConfirmDialog';
 import useConfirmDialog from '../hooks/useConfirmDialog';
 import useUserInfo from '../hooks/useUserInfo';
 import {getAvatarInitial} from '../utils/avatarUtils';
-import {fetchWordInfo} from '../services/dictionaryService';
-import axios from '../axiosInstance';
+import {useVocab} from '../hooks/useVocab';
 
 function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // Kiểm tra nếu là thiết bị di động
     const [isOpen, setIsOpen] = useState(!isMobile); // Mở rộng trên desktop, thu nhỏ trên mobile
+    const [anchorEl, setAnchorEl] = useState(null); //state cho menu user
 
     const navigate = useNavigate();
-    const [vocabList, setVocabList] = useState([]); //state cho danh sách từ vựng
-    const [searchTerm, setSearchTerm] = useState(''); //state cho từ khóa tìm kiếm vocab
-    const [anchorEl, setAnchorEl] = useState(null); //state cho menu user
     const {userInfo, loading: userLoading, error: userError} = useUserInfo(userEmail); // Hook lấy thông tin user
     const {dialog, showDialog, hideDialog} = useConfirmDialog(); // Hook sử dụng ConfirmDialog
     const {config, loading: configLoading, error: configError} = useSiteConfig();
-
-    // state xử lý từ vựng
-    const [selectedWord, setSelectedWord] = useState(null);
-    const [wordDetails, setWordDetails] = useState(null);
-    const [loadingDetails, setLoadingDetails] = useState(false);
-    const [isDeleteMode, setIsDeleteMode] = useState(false); // state cho chế độ xóa từ vựng
+    const {
+        vocabList,
+        searchTerm,
+        setSearchTerm,
+        selectedWord,
+        wordDetails,
+        loadingDetails,
+        isDeleteMode,
+        setIsDeleteMode,
+        error,
+        fetchWordDetails,
+        deleteVocab,
+        filteredVocab,
+    } = useVocab(chatId, onVocabAdded); // Hook xử lý từ vựng
 
     // Hàm mở và đóng Menu
     const handleMenuOpen = (e) => setAnchorEl(e.currentTarget);
@@ -82,106 +86,24 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
         });
     };
 
-    // tự động cập nhật isOpen khi kích thước màn hình thay đổi
-    useEffect(() => {
-        setIsOpen(!isMobile);
-    }, [isMobile]);
-
-    // Hàm fetch từ vựng
-    const fetchVocab = async () => {
-        // Bỏ qua nếu chatId không hợp lệ
-        if (!chatId || chatId === 'null' || chatId === 'undefined') {
-            setVocabList([]);
-            return;
-        }
-
-        try {
-            const res = await axios.get(`/vocab/${chatId}`);
-            setVocabList(res.data.vocab || []);
-        } catch (err) {
-            console.error('Error fetching vocab list:', err.response?.data || err.message);
-            setVocabList([]); // Đặt rỗng nếu lỗi
-        }
-    };
-
-    // Hàm toggle chế độ xóa
-    const toggleDeleteMode = () => {
-        setIsDeleteMode((prev) => !prev);
-    };
-
-    // Fetch từ vựng khi chatId thay đổi
-    useEffect(() => {
-        fetchVocab();
-        setWordDetails(null);
-    }, [chatId]);
-
-    // Hàm để parent gọi khi cần refresh
-    useEffect(() => {
-        if (onVocabAdded) {
-            onVocabAdded.current = fetchVocab; // Truyền hàm refresh ra ngoài
-        }
-    }, [onVocabAdded, chatId]); // Chạy lại khi chatId thay đổi
-
-    // Hàm gọi API Wordnik khi click vào chip
-    const handleChipClick = async (word) => {
-        setSelectedWord(word);
-        setLoadingDetails(true);
-        setWordDetails(null); // Reset wordDetails trước khi gọi API
-        try {
-            const data = await fetchWordInfo(word, 'wordnik', 2); // Gọi API Wordnik
-            setWordDetails(data);
-        } catch (err) {
-            console.error('Error fetching word details from Wordnik:', err);
-            setWordDetails({
-                definition: 'Error fetching data',
-                phonetic: 'N/A',
-                audio: '',
-                etymologies: [],
-                examples: [],
-                hyphenation: [],
-                phrases: [],
-                pronunciations: [],
-                relatedWords: [],
-                topExample: '',
-            });
-        } finally {
-            setLoadingDetails(false);
-        }
-    };
-
-    // Hàm lọc từ vựng dựa trên từ khóa tìm kiếm
-    const filteredVocab = vocabList.filter((vocab) => vocab.word.toLowerCase().includes(searchTerm.toLowerCase()));
-
     // Xóa từ vựng
     const handleDeleteVocab = (vocabId, word) => {
         showDialog({
             title: 'Delete Vocabulary',
             content: `Are you sure to delete "${word}"?`,
             onConfirm: () => {
-                deleteVocab();
+                deleteVocab(vocabId, word);
                 hideDialog();
             },
             confirmText: 'Delete',
             confirmColor: 'error',
         });
-
-        const deleteVocab = async () => {
-            try {
-                // Gọi API xóa
-                await axios.delete(`/vocab/${chatId}/${vocabId}`);
-                // Cập nhật danh sách từ vựng sau khi xóa
-                await fetchVocab();
-                // Nếu từ đang được chọn bị xóa, reset chi tiết từ vựng
-                if (selectedWord === word) {
-                    setSelectedWord(null);
-                    setWordDetails(null);
-                }
-            } catch (err) {
-                console.error('Error deleting vocab:', err.response?.data || err.message);
-                hideDialog();
-            }
-        };
     };
+
+    // tự động cập nhật isOpen khi kích thước màn hình thay đổi
+    useEffect(() => {
+        setIsOpen(!isMobile);
+    }, [isMobile]);
 
     // Xử lý config, đặt trước return
     if (configLoading) {
@@ -304,7 +226,7 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                                     />
                                 </FormControl>
                                 <Tooltip title={isDeleteMode ? 'Exit delete mode' : 'Delete vocabulary'}>
-                                    <IconButton onClick={toggleDeleteMode} sx={{ml: 1}}>
+                                    <IconButton onClick={() => setIsDeleteMode(!isDeleteMode)} sx={{ml: 1}}>
                                         {isDeleteMode ? <CancelIcon color="error" /> : <DeleteIcon />}
                                     </IconButton>
                                 </Tooltip>
@@ -316,7 +238,7 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                                     <Chip
                                         key={vocab._id}
                                         label={vocab.word}
-                                        onClick={() => handleChipClick(vocab.word)}
+                                        onClick={() => fetchWordDetails(vocab.word)}
                                         onDelete={
                                             isDeleteMode ? () => handleDeleteVocab(vocab._id, vocab.word) : undefined
                                         }
@@ -468,45 +390,6 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                                                 </Accordion>
                                             )}
 
-                                            {wordDetails.hyphenation && wordDetails.hyphenation.length > 0 && (
-                                                <Accordion>
-                                                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                                        <Typography>Hyphenation</Typography>
-                                                    </AccordionSummary>
-                                                    <AccordionDetails>
-                                                        <List>
-                                                            {wordDetails.hyphenation.map((part, index) => (
-                                                                <ListItem key={index}>
-                                                                    <ListItemText primary={part} />
-                                                                </ListItem>
-                                                            ))}
-                                                        </List>
-                                                    </AccordionDetails>
-                                                </Accordion>
-                                            )}
-
-                                            {wordDetails.phrases && wordDetails.phrases.length > 0 && (
-                                                <Accordion>
-                                                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                                        <Typography>Phrases</Typography>
-                                                    </AccordionSummary>
-                                                    <AccordionDetails>
-                                                        <List sx={{p: 0}}>
-                                                            {wordDetails.phrases.map((phrase, index) => (
-                                                                <ListItem
-                                                                    key={index}
-                                                                    sx={{
-                                                                        p: 0,
-                                                                    }}
-                                                                >
-                                                                    <ListItemText primary={phrase} />
-                                                                </ListItem>
-                                                            ))}
-                                                        </List>
-                                                    </AccordionDetails>
-                                                </Accordion>
-                                            )}
-
                                             {wordDetails.pronunciations && wordDetails.pronunciations.length > 0 && (
                                                 <Accordion>
                                                     <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -518,36 +401,6 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                                                                 <ListItem key={index}>
                                                                     <ListItemText primary={pron} />
                                                                 </ListItem>
-                                                            ))}
-                                                        </List>
-                                                    </AccordionDetails>
-                                                </Accordion>
-                                            )}
-
-                                            {wordDetails.relatedWords && wordDetails.relatedWords.length > 0 && (
-                                                <Accordion>
-                                                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                                        <Typography>Related Words</Typography>
-                                                    </AccordionSummary>
-                                                    <AccordionDetails>
-                                                        <List>
-                                                            {wordDetails.relatedWords.map((group, groupIndex) => (
-                                                                <Box key={groupIndex} sx={{mb: 2}}>
-                                                                    <Typography
-                                                                        variant="subtitle1"
-                                                                        sx={{
-                                                                            fontWeight: 'bold',
-                                                                            textTransform: 'capitalize',
-                                                                        }}
-                                                                    >
-                                                                        {group.relationshipType}
-                                                                    </Typography>
-                                                                    {group.words.map((word, wordIndex) => (
-                                                                        <ListItem key={`${groupIndex}-${wordIndex}`}>
-                                                                            <ListItemText primary={word} />
-                                                                        </ListItem>
-                                                                    ))}
-                                                                </Box>
                                                             ))}
                                                         </List>
                                                     </AccordionDetails>

@@ -1,14 +1,5 @@
 // components/ChatArea.jsx
 import React, {useState, useEffect, useRef} from 'react';
-import axios from '../axiosInstance';
-import useAudioPlayer from '../hooks/useAudioPlayer';
-import useSiteConfig from '../hooks/useSiteConfig';
-import useUserInfo from '../hooks/useUserInfo';
-import useKTTooltip from '../hooks/useKTTooltip.js';
-import {getAvatarInitial} from '../utils/avatarUtils';
-import {toast, ToastContainer} from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css'; // Import CSS của thư viện toastify
-
 import {Tooltip as MuiTooltip} from '@mui/material';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -22,25 +13,41 @@ import TranslateIcon from '@mui/icons-material/Translate';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import BookmarkAddIcon from '@mui/icons-material/BookmarkAdd';
 
+import useAudioPlayer from '../hooks/useAudioPlayer';
+import useSiteConfig from '../hooks/useSiteConfig';
+import useUserInfo from '../hooks/useUserInfo';
+import {useWordTooltip} from '../hooks/useWordTooltip';
+import {useTranslateTooltip} from '../hooks/useTranslateTooltip';
+import {useClickOutside} from '../hooks/useClickOutside';
+import {getAvatarInitial} from '../utils/avatarUtils';
+import {toast, ToastContainer} from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css'; // Import CSS của thư viện toastify
+
+import {useChat} from '../hooks/useChat';
+
 function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded}) {
     const {config, loading: configLoading, error: configError} = useSiteConfig(); // Lấy config từ backend
     const {userInfo, loading: userLoading, error: userError} = useUserInfo(userEmail); // Hook lấy thông tin user
-    const [chatHistory, setChatHistory] = useState([]);
-    const [isPlaying, setIsPlaying] = useState(false);
     const {playSound, audioRef} = useAudioPlayer(); // Ref để quản lý audio element
+
     const {
         wordTooltip,
+        setWordTooltip,
         wordTooltipRef,
-        translateTooltip,
-        translateTooltipRef,
         handleWordClick,
         handlePlay,
         handleAddToVocab,
-        handleTranslate,
-    } = useKTTooltip({
-        chatId,
-        onVocabAdded,
-        dictionarySource: 'dictionaryapi',
+        isPlaying: isPlayingWord,
+    } = useWordTooltip({chatId, onVocabAdded}); // Hook quản lý tooltip từ vựng
+
+    const {translateTooltip, setTranslateTooltip, translateTooltipRef, handleTranslate} = useTranslateTooltip({chatId}); // Hook quản lý tooltip dịch
+
+    const {chatHistory, isPlaying: isPlayingChat, error: chatError, playMessage} = useChat(chatId, onSendMessage); // Hook quản lý lịch sử chat
+
+    // Hook để đóng tooltip khi click bên ngoài
+    useClickOutside([wordTooltipRef, translateTooltipRef], () => {
+        setWordTooltip(null);
+        setTranslateTooltip(null);
     });
 
     // Thêm ref để tham chiếu đến container chứa danh sách tin nhắn, để cuộn xuống khi có tin nhắn mới
@@ -53,64 +60,6 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
             });
         }
     }, [chatHistory]);
-
-    // Lấy lịch sử chat từ backend khi chatId thay đổi
-    useEffect(() => {
-        const fetchHistory = async () => {
-            if (!chatId) {
-                setChatHistory([]);
-                return;
-            }
-            try {
-                const res = await axios.get(`/chats/${chatId}/history`);
-                setChatHistory(res.data.history || []);
-            } catch (err) {
-                console.error('Error fetching history:', err);
-                setChatHistory([]); // Xóa lịch sử khi không có chatId
-            }
-        };
-        fetchHistory();
-    }, [chatId]);
-
-    // Cập nhật chatHistory khi có tin nhắn mới từ InputArea
-    useEffect(() => {
-        if (onSendMessage) {
-            onSendMessage.current = (message) => {
-                setChatHistory((prev) => {
-                    // Thay thế tin nhắn tạm cuối cùng (ai: '...')
-                    const lastIndex = prev.length - 1;
-                    if (lastIndex >= 0 && prev[lastIndex].ai === '...') {
-                        return [...prev.slice(0, lastIndex), message];
-                    }
-                    // Nếu không, thêm mới (trường hợp tin nhắn đầu tiên)
-                    return [...prev, message];
-                });
-            };
-        }
-    }, [onSendMessage]);
-
-    // Phát âm thanh
-    const handlePlayMessage = async (audioUrl, text, index) => {
-        if (isPlaying) return;
-        setIsPlaying(true);
-        try {
-            if (audioUrl) {
-                await playSound({audioUrl});
-            } else if (text) {
-                console.log('No audio URL/path, generating from text:', text);
-                console.log('chatId before playSound:', chatId);
-                if (!chatId) {
-                    console.warn('chatId is undefined, skipping database update');
-                }
-                await playSound({word: text, chatId: chatId || '', index});
-            }
-        } catch (err) {
-            console.error('Error playing audio:', err);
-            toast.error('Failed to play audio');
-        } finally {
-            setIsPlaying(false);
-        }
-    };
 
     // Xử lý config
     if (configLoading || userLoading) {
@@ -271,7 +220,9 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                                             >
                                                 <IconButton
                                                     size="small"
-                                                    onClick={() => handlePlayMessage(msg.audioUrl, msg.ai, index)}
+                                                    onClick={() =>
+                                                        playMessage(msg.audioUrl, msg.ai, index, playSound, chatId)
+                                                    }
                                                     sx={{
                                                         bgcolor: 'rgba(66, 165, 245, .95)',
                                                         color: 'white',
@@ -346,6 +297,11 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                         </Box>
                     </Box>
                 )}
+                {chatError && (
+                    <Alert severity="error" sx={{mt: 2}}>
+                        {chatError}
+                    </Alert>
+                )}
             </Box>
 
             {/* Tooltip cho từ vựng*/}
@@ -400,8 +356,9 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                                                 borderColor: 'text.secondary',
                                             },
                                         }}
+                                        disabled={isPlayingWord}
                                     >
-                                        Pronounce
+                                        {isPlayingWord ? 'Fetching...' : 'Pronounce'}
                                     </Button>
                                     <Button
                                         variant="outlined"

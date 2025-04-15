@@ -114,7 +114,7 @@ function ChatPage({userEmail, onLogout, onSendMessageRef}) {
                         userEmail={userEmail}
                         chatId={selectedChatId}
                         onWordClick={handleWordClick}
-                        onSendMessage={onSendMessageRef}
+                        onSendMessage={onSendMessageRef.current}
                         onVocabAdded={refreshVocabRef}
                     />
                 </Box>
