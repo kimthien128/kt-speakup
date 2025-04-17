@@ -1,9 +1,10 @@
-# services/tts_service.py
+# services/tts/tts_service.py
 # Xử lý logic nghiệp vụ liên quan đến TTS: xử lý file âm thanh, gọi dịch vụ TTS, upload lên MinIO.
 # Tuân thủ SRP: Chỉ xử lý logic nghiệp vụ, không xử lý API.
 
 import os
 import time
+import re
 from fastapi import HTTPException, Response
 from .tts_client import TTSClient
 from ..audio.audio_processor import AudioProcessor
@@ -21,6 +22,16 @@ class TTSService:
         }
         self.audio_bucket = os.getenv("AUDIO_BUCKET")
 
+    def santize_filename(self, filename: str) -> str:
+        """
+        Loại bỏ hoặc thay thế các ký tự không hợp lệ trong tên file.
+        """
+        # Thay thế các ký tự không hợp lệ bằng '_'
+        sanitized = re.sub(r'[^\w\s.-]', '_', filename)
+        # Loại bỏ khoảng trắng thừa và thay bằng '_'
+        sanitized = sanitized.strip().replace(' ', '_')
+        return sanitized
+    
     async def generate_audio(self, text: str, method: str) -> Response:
         if not text:
             raise HTTPException(status_code=400, detail="No text provided")
@@ -31,7 +42,9 @@ class TTSService:
         # Phân biệt từ đơn và đoạn chat
         is_single_word = ' ' not in text
         timestamp = int(time.time() * 1000)
-        audio_filename = f"{text}.mp3" if is_single_word else f"output_{timestamp}.mp3"
+        # Làm sạch tên file nếu là từ đơn
+        sanitized_text = self.santize_filename(text) if is_single_word else f"output_{timestamp}"
+        audio_filename = f"{sanitized_text}.mp3"
         temp_path = f"temp_{timestamp}.mp3"
         wav_path = os.path.join(CACHE_DIR, f"output_{timestamp}.wav") if method == "piper" else None
 

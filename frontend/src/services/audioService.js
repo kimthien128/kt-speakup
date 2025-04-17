@@ -1,17 +1,21 @@
 import axios from '../axiosInstance';
 
-export const fetchAudio = async (filename) => {
+// Chỉ lấy url audio từ bucket, không lấy blob, điều kiện là phải biết tên file (áp dụng cho từ vựng vì đã biết tên file)
+export const fetchAudioUrl = async (filename) => {
     try {
         const res = await axios.get(`/audio/${filename}`, {
-            responseType: 'blob',
+            headers: {
+                'Content-Type': 'application/json',
+            },
         });
-        return res.data;
+        return res.data.audio_url;
     } catch (error) {
         throw error;
     }
 };
 
-export const generateTts = async (text, ttsMethod = 'gtts') => {
+// Tự generate audio từ text, trả về url đã upload lên bucket
+export const generateUrlByTts = async (text, ttsMethod = 'gtts') => {
     try {
         const res = await axios.post(
             `/tts?method=${ttsMethod}`,
@@ -26,14 +30,12 @@ export const generateTts = async (text, ttsMethod = 'gtts') => {
         if (!audioUrl) {
             throw new Error('No audio URL returned from TTS');
         }
-        const audioRespone = await fetch(audioUrl);
-        const audioBlob = await audioRespone.blob();
+
         return {
             audioUrl,
-            audioBlob,
             filename: res.headers['x-audio-filename'],
         };
-    } catch (error) {
+    } catch (err) {
         throw new Error(err.response?.data?.detail || 'Failed to generate TTS');
     }
 };

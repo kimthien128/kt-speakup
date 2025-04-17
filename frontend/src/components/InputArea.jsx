@@ -1,8 +1,13 @@
 // components/InputArea.jsx
 import React, {useState, useRef} from 'react';
-import axios from '../axiosInstance';
+import {useSpeechToText} from '../hooks/useSpeechToText';
+import {useMessageHandler} from '../hooks/useMessageHandler';
+import {useSuggestions} from '../hooks/useSuggestions';
+import {useWordTooltip} from '../hooks/useWordTooltip';
+import {useClickOutside} from '../hooks/useClickOutside';
+import {methodsConfig} from '../config/methodsConfig';
+import {logger} from '../utils/logger';
 import useAudioPlayer from '../hooks/useAudioPlayer';
-import useKTTooltip from '../hooks/useKTTooltip';
 
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
@@ -21,9 +26,6 @@ import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import MicIcon from '@mui/icons-material/Mic';
 import StopIcon from '@mui/icons-material/Stop';
 import SendIcon from '@mui/icons-material/Send';
-import SpeechToTextIcon from '@mui/icons-material/RecordVoiceOver';
-import ModelTrainingIcon from '@mui/icons-material/ModelTraining';
-import TextToSpeechIcon from '@mui/icons-material/VoiceOverOff';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import TranslateIcon from '@mui/icons-material/Translate';
 import BookmarkAddIcon from '@mui/icons-material/BookmarkAdd';
@@ -37,29 +39,65 @@ function InputArea({
     updateSuggestionData,
     onVocabAdded,
 }) {
-    const [transcript, setTranscript] = useState('');
-    const [isRecording, setIsRecording] = useState(false);
     const [sttMethod, setSttMethod] = useState('vosk');
     const [ttsMethod, setTtsMethod] = useState('gtts');
     const [generateMethod, setGenerateMethod] = useState('mistral');
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const mediaRecorderRef = useRef(null);
-    const {playSound, audioRef} = useAudioPlayer();
-    const {wordTooltip, wordTooltipRef, handleWordClick, handlePlay, handleAddToVocab} = useKTTooltip({
-        chatId,
-        onVocabAdded,
-        dictionarySource: 'dictionaryapi',
-    });
 
     // State cho SpeedDial (Settings)
     const [speedDialOpen, setSpeedDialOpen] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
     const [menuType, setMenuType] = useState(null);
 
-    // State cho khu vực Suggestions
-    const [suggestionsOpen, setSuggestionsOpen] = useState(false);
-    const [showTranslation, setShowTranslation] = useState(false);
+    // State khi send
+    const [isSending, setIsSending] = useState(false);
+
+    // Sử dụng useAudioPlayer
+    const {playSound, audioRef} = useAudioPlayer();
+
+    // Hook để quản lý speech-to-text
+    const {transcript, setTranscript, isRecording, startRecording, stopRecording} = useSpeechToText(sttMethod);
+
+    // Hook để quản lý gửi tin nhắn
+    const {handleSend} = useMessageHandler(
+        chatId,
+        setChatId,
+        onSendMessage,
+        refreshChats,
+        generateMethod,
+        ttsMethod,
+        playSound
+    );
+
+    // Hook để quản lý gợi ý
+    const {
+        suggestionsOpen,
+        setSuggestionsOpen,
+        showTranslation,
+        loading,
+        isPlaying,
+        fetchSuggestions,
+        generateSuggestionsAudio,
+        translateSuggestion,
+    } = useSuggestions(chatId, updateSuggestionData, generateMethod, ttsMethod, playSound);
+
+    // Hook để quản lý tra từ
+    const {
+        wordTooltip,
+        setWordTooltip,
+        wordTooltipRef,
+        handleWordClick,
+        handlePlay,
+        handleAddToVocab,
+        isPlaying: isPlayingWord,
+    } = useWordTooltip({
+        chatId,
+        onVocabAdded,
+    });
+
+    // Hook để đóng tooltip khi click bên ngoài
+    useClickOutside([wordTooltipRef], () => {
+        setWordTooltip(null);
+    });
 
     // Xử lý mở/đóng SpeedDial
     const handleSpeedDialOpen = () => setSpeedDialOpen(true);
@@ -80,295 +118,103 @@ function InputArea({
         if (menuType === 'stt') setSttMethod(method);
         if (menuType === 'generate') setGenerateMethod(method);
         if (menuType === 'tts') setTtsMethod(method);
-        console.log(`Selected ${menuType} method: ${method}`);
+        logger.info(`Selected ${menuType} method: ${method}`);
         handleMenuClose();
     };
 
-    // Actions cho SpeedDial
-    const actions = [
-        {icon: <SpeechToTextIcon />, name: 'Speech-to-Text', type: 'stt'},
-        {icon: <ModelTrainingIcon />, name: 'Generate Model', type: 'generate'},
-        {icon: <TextToSpeechIcon />, name: 'Text-to-Speech', type: 'tts'},
-    ];
-
-    // Ghi âm
-    const startRecording = async () => {
+    // Xử lý gửi tin nhắn
+    const onSend = async () => {
+        setIsSending(true);
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({audio: true});
-            mediaRecorderRef.current = new MediaRecorder(stream);
-            mediaRecorderRef.current.start();
-            setIsRecording(true);
-
-            mediaRecorderRef.current.ondataavailable = async (e) => {
-                const audioBlob = e.data; // Lấy trực tiếp từ event
-                // Gửi audioBlob tới /stt
-                try {
-                    const sttResponse = await axios.post(`/stt?method=${sttMethod}`, audioBlob, {
-                        headers: {
-                            'Content-Type': 'audio/webm',
-                        },
-                    });
-                    setTranscript(sttResponse.data.transcript || '');
-                } catch (err) {
-                    console.log('Fetch error:', err.response?.data || err.message);
-                    setTranscript('Failed to process audio');
-                }
-            };
-
-            mediaRecorderRef.current.onstop = () => {
-                stream.getTracks().forEach((track) => track.stop());
-                setIsRecording(false);
-            };
-        } catch (err) {
-            console.log('Error:', err);
-        }
-    };
-
-    const stopRecording = () => {
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-            mediaRecorderRef.current.stop();
-        }
-    };
-
-    // Lấy gợi ý từ AI
-    const fetchSuggestions = async (baseText, currentChatId) => {
-        const suggestionPrompts = [
-            `Provide ONLY ONE direct follow-up question or response (without any introductory phrase) for this sentence: "${baseText}"`,
-            // `Short next question after: "${baseText}"` // Tạm thời chỉ lấy 1 gợi ý
-        ];
-        const newSuggestions = [];
-        for (const prompt of suggestionPrompts) {
-            try {
-                const res = await axios.post(
-                    `/generate?method=${generateMethod}`,
-                    {transcript: prompt, chat_id: currentChatId},
-                    {
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                    }
-                );
-                if (!res.data.error) {
-                    newSuggestions.push(res.data.response);
-
-                    // Lưu suggestion mới nhất vào database
-                    if (newSuggestions.length > 0) {
-                        const latestSuggestion = newSuggestions[0];
-                        await axios.put(
-                            `/chats/${currentChatId}/suggestion`,
-                            {
-                                latest_suggestion: latestSuggestion,
-                                translate_suggestion: '',
-                                suggestion_audio_url: '',
-                            },
-                            {
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
-                            }
-                        );
-                        updateSuggestionData({
-                            latest_suggestion: latestSuggestion,
-                            translate_suggestion: '',
-                            suggestion_audio_url: '',
-                        });
-                    }
-                }
-            } catch (err) {
-                console.error('Suggestion error:', err);
+            const result = await handleSend(transcript);
+            if (result && result.aiResponse && result.currentChatId) {
+                await fetchSuggestions(result.aiResponse, result.currentChatId);
             }
-        }
-    };
-
-    // Hàm tạo âm thanh cho suggestion và cập nhật suggestion_audio_url
-    const generateSuggestionsAudio = async (suggestion, currentChatId) => {
-        if (isPlaying) return; // Ngăn chặn phát nhiều audio cùng lúc
-        setIsPlaying(true);
-
-        try {
-            // Kiểm tra có audio trên database chưa
-            const chatResponse = await axios.get(`/chats/${currentChatId}`, {
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
-            const chatData = chatResponse.data;
-            let audioUrl = chatData.suggestion_audio_url;
-
-            //Nếu đã có suggestion_audio_url, phát âm thanh trực tiếp
-            if (audioUrl) {
-                console.log('Using existing suggestion audio URL:', audioUrl);
-                await playSound({audioUrl});
-                return;
-            }
-
-            //Nếu không có suggestion_audio_url, tạo mới bằng playSound
-            console.log('Generating new suggestion audio...');
-            const result = await playSound({
-                word: suggestion,
-                ttsMethod,
-                chatId: currentChatId,
-                updateSuggestionAudioUrl: true,
-            });
-            if (result && result.audioUrl) {
-                console.log('Generated and updated suggestion audio URL:', result.audioUrl);
-            }
-        } catch (err) {
-            console.error('Error generating suggestion audio:', err);
+            setTranscript('');
         } finally {
-            setIsPlaying(false);
+            setIsSending(false);
         }
     };
 
-    // Hàm dịch suggestion và cập nhật translation trong database
-    const translateSuggestion = async (suggestion, currentChatId) => {
-        setLoading(true);
-        try {
-            // Nếu translation đã tồn tại và giống với giá trị hiện tại, không gọi API
-            if (suggestionData.translate_suggestion && showTranslation) {
-                setShowTranslation(false);
-                setLoading(false);
-                return;
-            }
+    // Sử dụng React.memo hoặc memoize dữ liệu để tránh re-render không cần thiết
+    const SuggestionContent = React.memo(
+        ({
+            suggestionData,
+            showTranslation,
+            handleWordClick,
+            generateSuggestionsAudio,
+            translateSuggestion,
+            chatId,
+            isPlaying,
+        }) => (
+            <Box
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    mb: 1,
+                }}
+            >
+                <Box sx={{flexGrow: 1}}>
+                    <Typography sx={{fontSize: '0.9rem'}}>
+                        {suggestionData.latest_suggestion.split(' ').map((word, i) => (
+                            <Box
+                                component="span"
+                                key={i}
+                                onDoubleClick={(e) => handleWordClick(word, e)}
+                                sx={{
+                                    '&:hover': {
+                                        bgcolor: 'grey.300',
+                                    },
+                                }}
+                            >
+                                {word}{' '}
+                            </Box>
+                        ))}
+                    </Typography>
+                    {showTranslation && suggestionData.translate_suggestion && (
+                        <Typography
+                            sx={{
+                                fontSize: '0.8rem',
+                                color: 'text.secondary',
+                                mt: 0.5,
+                            }}
+                        >
+                            Translation: {suggestionData.translate_suggestion}
+                        </Typography>
+                    )}
+                </Box>
 
-            // Gọi endpoint /translate để dịch suggestion
-            const translateResponse = await axios.post(
-                `/translate`,
-                {text: suggestion, target_lang: 'vi'},
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
-            const translatedText = translateResponse.data.translatedText;
-
-            // Chir Cập nhật translation vào database neeus có thay đổi
-            if (suggestionData.translate_suggestion !== translatedText) {
-                await axios.put(
-                    `/chats/${currentChatId}/suggestion`,
-                    {
-                        translate_suggestion: translatedText,
-                    },
-                    {
-                        headers: {
-                            'Content-Type': 'application/json',
+                {/* Icon */}
+                <IconButton
+                    onClick={() => generateSuggestionsAudio(suggestionData.latest_suggestion, chatId)}
+                    disabled={isPlaying}
+                    sx={{
+                        bgcolor: 'primary.main',
+                        color: 'white',
+                        '&:hover': {
+                            bgcolor: 'primary.dark',
                         },
-                    }
-                );
-                // Cập nhật suggestionData qua callback từ ChatPage
-                updateSuggestionData({translate_suggestion: translatedText});
-            }
-            setShowTranslation(true); // Hiển thị translation
-            setLoading(false);
-            return translatedText;
-        } catch (err) {
-            console.error('Error translating suggestion:', err);
-            throw err;
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Gửi tin nhắn và xử lý phản hồi
-    const handleSend = async () => {
-        if (!transcript.trim()) return; // Ngăn gửi nếu transcript rỗng
-        console.log('Sending transcript:', transcript);
-
-        let currentChatId = chatId;
-        // Nếu chatId không hợp lệ, tạo chat mới trước
-        if (
-            !currentChatId ||
-            currentChatId === 'null' ||
-            currentChatId === 'undefined' ||
-            typeof currentChatId !== 'string'
-        ) {
-            try {
-                const res = await axios.post(`/chats`);
-                currentChatId = res.data.chat_id;
-                setChatId(currentChatId); // Cập nhật chatId và URL
-                if (refreshChats) await refreshChats(); // Cập nhật danh sách sau khi tạo chat
-            } catch (err) {
-                console.error('Error creating chat:', err.response?.data || err.message);
-                setTranscript('Error creating chat');
-                return;
-            }
-        }
-
-        // Hiển thị tin nhắn người dùng ngay lập tức
-        const userMessage = {user: transcript, ai: '...'};
-        if (onSendMessage) {
-            console.log('Send message:', userMessage);
-            onSendMessage(userMessage); // Gửi tin nhắn tạm ngay lập tức
-        }
-        const temp = transcript;
-        setTranscript(''); // Xóa textarea
-
-        try {
-            // Xử lý viết hoa chữ cái đầu
-            const userInput = temp.charAt(0).toUpperCase() + temp.slice(1);
-
-            // Gửi transcript đến /generate để lấy phản hồi từ AI
-            const generateResponse = await axios.post(
-                `/generate?method=${generateMethod}`,
-                {transcript: userInput, chat_id: currentChatId},
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
-            if (generateResponse.data.error) throw new Error(generateResponse.data.error);
-            const aiResponse = generateResponse.data.response;
-
-            // Lấy audioUrl từ /tts và truyền vào playSound
-            const ttsResponse = await axios.post(
-                `/tts?method=${ttsMethod}`,
-                {text: aiResponse},
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
-            const audioUrl = ttsResponse.headers['x-audio-url'];
-            await playSound({audioUrl}); // Phát âm thanh với audioUrl
-
-            // Lưu vào backend /chats/{chat_id}/history
-            await axios.post(
-                `/chats/${currentChatId}/history`,
-                {user: userInput, ai: aiResponse, audioUrl: audioUrl},
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
-
-            // Cập nhật ChatArea với phản hồi AI
-            const updatedMessage = {user: userInput, ai: aiResponse};
-            if (onSendMessage) {
-                onSendMessage(updatedMessage);
-            }
-
-            // Cập nhật danh sách sau khi gửi tin nhắn
-            if (refreshChats) await refreshChats();
-
-            // Lấy gợi ý dựa trên response
-            try {
-                await fetchSuggestions(aiResponse, currentChatId);
-            } catch (err) {
-                console.error('Error fetching suggestions:', err);
-            }
-        } catch (err) {
-            console.log('Error in handleSend:', err.response?.data || err.message);
-            const errorMessage = {user: userInput, ai: 'Error processing response'};
-            if (onSendMessage) {
-                console.log('Calling onSendMessage with error message:', errorMessage);
-                onSendMessage(errorMessage);
-            }
-        }
-    };
+                    }}
+                >
+                    {isPlaying ? <CircularProgress size={20} /> : <VolumeUpIcon fontSize="small" />}
+                </IconButton>
+                <IconButton
+                    onClick={() => translateSuggestion(suggestionData.latest_suggestion, chatId, suggestionData)}
+                    sx={{
+                        ml: 1,
+                        bgcolor: 'primary.main',
+                        color: 'white',
+                        '&:hover': {
+                            bgcolor: 'primary.dark',
+                        },
+                    }}
+                >
+                    {loading ? <CircularProgress size={20} /> : <TranslateIcon fontSize="small" />}
+                </IconButton>
+            </Box>
+        )
+    );
 
     return (
         <Box sx={{px: 2, pb: 2}}>
@@ -401,7 +247,7 @@ function InputArea({
                         open={speedDialOpen}
                         sx={{
                             zIndex: 1,
-                            borderRadius: 10,
+                            borderRadius: {md: 0, lg: 10},
                             bgcolor: 'rgba(0, 0, 0, 0.5)',
                         }}
                         onClick={handleSpeedDialClose}
@@ -434,7 +280,7 @@ function InputArea({
                             zIndex: 1,
                         }}
                     >
-                        {actions.map((action, index) => (
+                        {Object.values(methodsConfig).map((action) => (
                             <Box key={action.name} sx={{position: 'relative'}}>
                                 {/* Nút con */}
                                 <IconButton
@@ -449,7 +295,7 @@ function InputArea({
                                         },
                                     }}
                                 >
-                                    {action.icon}
+                                    <action.icon />
                                 </IconButton>
 
                                 {/* Tooltip cho nút con */}
@@ -473,68 +319,27 @@ function InputArea({
                         ))}
                     </Box>
 
-                    {/* Menu cho STT */}
-                    <Menu
-                        anchorEl={anchorEl}
-                        open={Boolean(anchorEl) && menuType === 'stt'}
-                        onClose={handleMenuClose}
-                        sx={{mt: 1}}
-                    >
-                        <MenuItem
-                            onClick={() => handleMethodSelect('assemblyai')}
-                            sx={{bgcolor: sttMethod === 'assemblyai' ? 'primary.light' : 'inherit'}}
-                        >
-                            AssemblyAI (API)
-                        </MenuItem>
-                        <MenuItem
-                            onClick={() => handleMethodSelect('vosk')}
-                            sx={{bgcolor: sttMethod === 'vosk' ? 'primary.light' : 'inherit'}}
-                        >
-                            Vosk (Local)
-                        </MenuItem>
-                    </Menu>
-
-                    {/* Menu cho Generate Model */}
-                    <Menu
-                        anchorEl={anchorEl}
-                        open={Boolean(anchorEl) && menuType === 'generate'}
-                        onClose={handleMenuClose}
-                        sx={{mt: 1}}
-                    >
-                        <MenuItem
-                            onClick={() => handleMethodSelect('mistral')}
-                            sx={{bgcolor: generateMethod === 'mistral' ? 'primary.light' : 'inherit'}}
-                        >
-                            Mistral
-                        </MenuItem>
-                        <MenuItem
-                            onClick={() => handleMethodSelect('gemini')}
-                            sx={{bgcolor: generateMethod === 'gemini' ? 'primary.light' : 'inherit'}}
-                        >
-                            Gemini
-                        </MenuItem>
-                    </Menu>
-
-                    {/* Menu cho TTS */}
-                    <Menu
-                        anchorEl={anchorEl}
-                        open={Boolean(anchorEl) && menuType === 'tts'}
-                        onClose={handleMenuClose}
-                        sx={{mt: 1}}
-                    >
-                        <MenuItem
-                            onClick={() => handleMethodSelect('gtts')}
-                            sx={{bgcolor: ttsMethod === 'gtts' ? 'primary.light' : 'inherit'}}
-                        >
-                            gTTS (Google)
-                        </MenuItem>
-                        <MenuItem
-                            onClick={() => handleMethodSelect('piper')}
-                            sx={{bgcolor: ttsMethod === 'piper' ? 'primary.light' : 'inherit'}}
-                        >
-                            Piper (Local)
-                        </MenuItem>
-                    </Menu>
+                    {/* Menu cho các phương thức */}
+                    {menuType && methodsConfig[menuType] && (
+                        <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose} sx={{mt: 1}}>
+                            {methodsConfig[menuType].options.map((option) => (
+                                <MenuItem
+                                    key={option.value}
+                                    onClick={() => handleMethodSelect(option.value)}
+                                    sx={{
+                                        bgcolor:
+                                            (menuType === 'stt' && sttMethod === option.value) ||
+                                            (menuType === 'generate' && generateMethod === option.value) ||
+                                            (menuType === 'tts' && ttsMethod === option.value)
+                                                ? 'primary.light'
+                                                : 'inherit',
+                                    }}
+                                >
+                                    {option.label}
+                                </MenuItem>
+                            ))}
+                        </Menu>
+                    )}
                 </Box>
 
                 {/* Khu vực 2: Suggestions (Lightbulb Icon) */}
@@ -599,73 +404,15 @@ function InputArea({
                             </Typography>
                             {/* suggestionData lấy từ props */}
                             {suggestionData.latest_suggestion ? (
-                                <Box
-                                    sx={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: 1,
-                                        mb: 1,
-                                    }}
-                                >
-                                    <Box sx={{flexGrow: 1}}>
-                                        <Typography sx={{fontSize: '0.9rem'}}>
-                                            {suggestionData.latest_suggestion.split(' ').map((word, i) => (
-                                                <Box
-                                                    component="span"
-                                                    key={i}
-                                                    onDoubleClick={(e) => handleWordClick(word, e)}
-                                                    sx={{
-                                                        '&:hover': {
-                                                            bgcolor: 'grey.300',
-                                                        },
-                                                    }}
-                                                >
-                                                    {word}{' '}
-                                                </Box>
-                                            ))}
-                                        </Typography>
-                                        {showTranslation && suggestionData.translate_suggestion && (
-                                            <Typography
-                                                sx={{
-                                                    fontSize: '0.8rem',
-                                                    color: 'text.secondary',
-                                                    mt: 0.5,
-                                                }}
-                                            >
-                                                Translation: {suggestionData.translate_suggestion}
-                                            </Typography>
-                                        )}
-                                    </Box>
-
-                                    {/* Icon */}
-                                    <IconButton
-                                        onClick={() =>
-                                            generateSuggestionsAudio(suggestionData.latest_suggestion, chatId)
-                                        }
-                                        sx={{
-                                            bgcolor: 'primary.main',
-                                            color: 'white',
-                                            '&:hover': {
-                                                bgcolor: 'primary.dark',
-                                            },
-                                        }}
-                                    >
-                                        <VolumeUpIcon fontSize="small" />
-                                    </IconButton>
-                                    <IconButton
-                                        onClick={() => translateSuggestion(suggestionData.latest_suggestion, chatId)}
-                                        sx={{
-                                            ml: 1,
-                                            bgcolor: 'primary.main',
-                                            color: 'white',
-                                            '&:hover': {
-                                                bgcolor: 'primary.dark',
-                                            },
-                                        }}
-                                    >
-                                        {loading ? <CircularProgress size={20} /> : <TranslateIcon fontSize="small" />}
-                                    </IconButton>
-                                </Box>
+                                <SuggestionContent
+                                    suggestionData={suggestionData}
+                                    showTranslation={showTranslation}
+                                    handleWordClick={handleWordClick}
+                                    generateSuggestionsAudio={generateSuggestionsAudio}
+                                    translateSuggestion={translateSuggestion}
+                                    chatId={chatId}
+                                    isPlaying={isPlaying}
+                                />
                             ) : (
                                 <Typography>No suggestions available</Typography>
                             )}
@@ -722,8 +469,8 @@ function InputArea({
 
                     {/* Icon Send */}
                     <IconButton
-                        onClick={handleSend}
-                        disabled={!transcript.trim()}
+                        onClick={onSend}
+                        disabled={!transcript.trim() || isSending}
                         sx={{
                             bgcolor: transcript.trim() ? 'primary.main' : 'grey.300',
                             color: transcript.trim() ? 'white' : 'grey.500',
@@ -732,7 +479,7 @@ function InputArea({
                             },
                         }}
                     >
-                        <SendIcon />
+                        {isSending ? <CircularProgress size={20} /> : <SendIcon />}
                     </IconButton>
                 </Box>
 
@@ -761,6 +508,7 @@ function InputArea({
                                             size="small"
                                             startIcon={<VolumeUpIcon fontSize="small" />}
                                             onClick={() => handlePlay(wordTooltip.audio, wordTooltip.word)}
+                                            disabled={isPlayingWord}
                                             sx={{
                                                 textTransform: 'none',
                                                 color: 'text.secondary',
@@ -771,7 +519,7 @@ function InputArea({
                                                 },
                                             }}
                                         >
-                                            Pronounce
+                                            {isPlayingWord ? 'Playing...' : 'Pronounce'}
                                         </Button>
                                         <Button
                                             variant="outlined"

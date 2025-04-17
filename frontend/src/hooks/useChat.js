@@ -16,8 +16,8 @@ export const useChat = (chatId, onSendMessage) => {
         // Kiểm tra chatId có hợp lệ không
         if (!chatId || typeof chatId !== 'string') {
             setChatHistory([]);
-            setError('Invalid chat ID');
-            logger.warn('Invalid chatId provided:', chatId);
+            // setError('Invalid chat ID'); // không thông báo ở đây vì lúc mới login chưa chọn chatId
+            // logger.warn('Invalid chatId provided:', chatId);
             return;
         }
 
@@ -71,7 +71,7 @@ export const useChat = (chatId, onSendMessage) => {
                 if (!chatId) {
                     logger.warn('chatId is undefined, skipping database update');
                 }
-                await playSound({word: text, chatId: chatId || '', index});
+                await playSound({text: text, chatId: chatId || '', index});
             }
             setError(null);
         } catch (err) {

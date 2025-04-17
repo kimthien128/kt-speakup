@@ -1,12 +1,14 @@
 import {useRef} from 'react';
-import {fetchAudio, generateTts} from '../services/audioService';
+import {fetchAudioUrl, generateUrlByTts} from '../services/audioService';
+import {sanitizeFilename} from '../utils/sanitizeFileName';
 
 const useAudioPlayer = () => {
     const audioRef = useRef(null);
 
     // Nếu có audioUrl (từ API): Phát trực tiếp.
-    // Nếu không có cả hai, kiểm tra và tạo TTS với word.
-    const playSound = async ({audioUrl = '', word = '', ttsMethod = 'gtts'} = {}) => {
+    // Nếu không có cả hai, kiểm tra và tạo TTS với text.
+    const playSound = async ({audioUrl = '', text = '', ttsMethod = 'gtts'} = {}) => {
+        // Phát âm thanh từ blob, source là ghi chú để biết nguồn phát âm thanh
         const playAudioBlob = async (blob, source) => {
             if (!blob || blob.size === 0) {
                 throw new Error('Empty or invalid audio blob'); // Ném lỗi nếu blob rỗng
@@ -15,53 +17,63 @@ const useAudioPlayer = () => {
             console.log(`Playing audio from ${source}:`, url);
             const audio = new Audio(url);
             await audio.play();
-            return url;
         };
 
         if (audioUrl && typeof audioUrl === 'string') {
-            console.log('Playing audio from API URL:', audioUrl);
             const audioResponse = await fetch(audioUrl);
             const audioBlob = await audioResponse.blob();
-            await playAudioBlob(audioBlob, 'minio audio');
-            return null;
+            await playAudioBlob(audioBlob, 'audioUrl');
+            return audioUrl;
         }
 
-        if (word) {
+        if (text) {
             // Kiểm tra và phát TTS từ backend
-            const isSingleWord = !word.includes(' '); // Kiểm tra có khoảng trắng không
+            const isSingleWord = !text.includes(' '); // Kiểm tra có khoảng trắng không
             if (isSingleWord) {
-                const filename = `${word}.mp3`;
+                const sanitizedWord = sanitizeFilename(text);
+                const filename = `${sanitizedWord}.mp3`;
+                // nếu fetch có filename
                 try {
-                    const audioBlob = await fetchAudio(filename);
+                    const urlFromFilename = await fetchAudioUrl(filename);
+                    const audioResponse = await fetch(urlFromFilename);
+                    const audioBlob = await audioResponse.blob();
                     if (!audioBlob || audioBlob.size === 0) {
                         console.log(`Audio file ${filename} returned empty, generating TTS`);
-                        const {audioBlob: newAudioBlob} = await generateTts(word, ttsMethod);
+                        const {audioUrl: urlGenerate} = await generateUrlByTts(sanitizedWord, ttsMethod);
+                        const newAudioResponse = await fetch(urlGenerate);
+                        const newAudioBlob = await newAudioResponse.blob();
                         await playAudioBlob(newAudioBlob, `TTS (${ttsMethod})`);
-                        return filename;
+                        return urlGenerate;
                     }
 
-                    await playAudioBlob(audioBlob, 'cached TTS');
-                    return filename;
+                    await playAudioBlob(audioBlob, 'Filename');
+                    return urlFromFilename;
                 } catch (err) {
+                    // nếu không fetch được từ filename
                     if (err.response && (err.response.status === 400 || err.response.status === 404)) {
                         console.log(`Audio file ${filename} not found, generating TTS`);
-                        const {audioBlob} = await generateTts(word, ttsMethod);
+                        const {audioUrl: urlGenerate} = await generateUrlByTts(sanitizedWord, ttsMethod);
+                        const audioResponse = await fetch(urlGenerate);
+                        const audioBlob = await audioResponse.blob();
                         await playAudioBlob(audioBlob, `TTS (${ttsMethod})`);
-                        return filename;
+                        return urlGenerate;
                     } else {
                         console.error('Error fetching cached TTS:', err);
                         throw err;
                     }
                 }
             } else {
-                const {audioBlob} = await generateTts(word, ttsMethod);
+                // nếu là đoạn text dài thì generate TTS luôn
+                const {audioUrl: urlGenerate} = await generateUrlByTts(text, ttsMethod);
+                const audioResponse = await fetch(urlGenerate);
+                const audioBlob = await audioResponse.blob();
                 await playAudioBlob(audioBlob, `TTS (${ttsMethod})`);
-                return null;
+                return urlGenerate;
             }
         }
 
-        console.log('No audio source provided (audioUrl or word)');
-        return null;
+        console.log('No audio source provided (audioUrl or text)');
+        return '';
     };
     return {playSound, audioRef};
 };

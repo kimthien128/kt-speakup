@@ -66,7 +66,7 @@ export const useWordTooltip = ({chatId, onVocabAdded, dictionarySource = 'dictio
     const handlePlay = async (audioUrl, word) => {
         setIsPlaying(true);
         try {
-            await playSound({audioUrl, word, ttsMethod: 'gtts'});
+            await playSound({audioUrl, text: word, ttsMethod: 'gtts'});
         } catch (error) {
             logger.error('Error playing sound:', error);
             toast.error('Failed to play audio');

@@ -10,7 +10,7 @@ from ...logging_config import logger
 class AssemblyAISTTClient(STTClient):
     def __init__(self):
         aai.settings.api_key = ASSEMBLYAI_API_KEY
-        self.transcribe = aai.Transcriber()
+        self.transcriber = aai.Transcriber()
         
     def transcribe(self, wav_path : str) -> str:
         logger.info('Starting AssemblyAI transcription...')
@@ -21,9 +21,11 @@ class AssemblyAISTTClient(STTClient):
         elif transcript_obj.status == aai.TranscriptStatus.error:
             logger.error(f"AssemblyAI error: {transcript_obj.error}")
             transcript = ''
+            raise RuntimeError(f"AssemblyAI transcription failed: {transcript_obj.error}")
         else:
             logger.info(f"AssemblyAI status: {transcript_obj.status}")
             transcript = ''
+            raise RuntimeError(f"AssemblyAI transcription failed with status: {transcript_obj.status}")
         if not transcript:
             logger.warning("Warning: AssemblyAI returned empty transcript")
         return transcript
