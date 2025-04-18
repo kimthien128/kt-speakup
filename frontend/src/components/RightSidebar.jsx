@@ -4,31 +4,25 @@ import {Link as RouterLink, useNavigate} from 'react-router-dom';
 import {useTheme} from '@mui/material/styles';
 import {useMediaQuery} from '@mui/material';
 
-import {
-    Box,
-    Typography,
-    Button,
-    Avatar,
-    Chip,
-    Divider,
-    Menu,
-    MenuItem,
-    IconButton,
-    Accordion,
-    AccordionSummary,
-    AccordionDetails,
-    List,
-    ListItem,
-    ListItemIcon,
-    ListItemText,
-    Tooltip,
-    FormControl,
-    OutlinedInput,
-    InputAdornment,
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Avatar from '@mui/material/Avatar';
+import Chip from '@mui/material/Chip';
+import Divider from '@mui/material/Divider';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import IconButton from '@mui/material/IconButton';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import Tooltip from '@mui/material/Tooltip';
+import FormControl from '@mui/material/FormControl';
+import OutlinedInput from '@mui/material/OutlinedInput';
+import InputAdornment from '@mui/material/InputAdornment';
 import Alert from '@mui/material/Alert';
 import CircularProgress from '@mui/material/CircularProgress';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import LogoutIcon from '@mui/icons-material/Logout';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';

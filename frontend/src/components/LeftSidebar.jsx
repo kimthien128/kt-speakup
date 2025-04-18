@@ -1,11 +1,11 @@
 import React, {useState, useEffect, useRef} from 'react';
 import {Link as RouterLink, useNavigate} from 'react-router-dom';
 import useSiteConfig from '../hooks/useSiteConfig';
+import {useChatList} from '../hooks/useChatList';
 import useConfirmDialog from '../hooks/useConfirmDialog';
 import ConfirmDialog from './ConfirmDialog';
 import {toast, ToastContainer} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; // Import CSS của thư viện toastify
-import axios from '../axiosInstance';
 
 import {useTheme} from '@mui/material/styles';
 import {useMediaQuery} from '@mui/material';
@@ -37,117 +37,28 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
     const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // Kiểm tra nếu là thiết bị di động
     const [isOpen, setIsOpen] = useState(!isMobile); // Mở rộng trên desktop, thu nhỏ trên mobile
 
-    const {config, loading, error} = useSiteConfig();
-    const [chats, setChats] = useState([]);
-    const [editingChatId, setEditingChatId] = useState(null); // Theo dõi chat đang sửa
-    const [editTitle, setEditTitle] = useState(''); // Lưu title đang chỉnh sửa
-    const [searchChatTitle, setSearchChatTitle] = useState(''); // State cho ô tìm kiếm
+    const {config, loading: configLoading, error: configError} = useSiteConfig();
     const navigate = useNavigate();
     const editRef = useRef(null); // Ref để kiểm tra click ngoài
     const {dialog, showDialog, hideDialog} = useConfirmDialog(); // Hook sử dụng ConfirmDialog
 
-    // Lấy danh sách chat từ backend
-    const fetchChats = async () => {
-        try {
-            const res = await axios('/chats');
-            setChats(res.data.chats || res.data); // Thêm fallback nếu backend trả trực tiếp mảng
-        } catch (err) {
-            console.error('Error fetching chats:', err.response?.data || err.message);
-            setChats([]); // Đặt rỗng nếu lỗi
-        }
-    };
-
-    // Hàm này được truyền ra ngoài để các component khác gọi
-    const refreshChats = async () => {
-        await fetchChats();
-    };
-
-    // Tạo chat mới
-    const handleNewChat = async () => {
-        try {
-            const res = await axios.post('/chats');
-            const newChatId = res.data.chat_id;
-            await fetchChats(); // Cập nhật danh sách chat
-            onSelectChat(newChatId); // Chọn chat mới ngay
-            navigate(`/chat/${newChatId}`); // Chuyển URL
-            if (refreshChatsCallback) refreshChatsCallback(); // Gọi callback nếu có
-        } catch (err) {
-            console.error('Error creating chat:', err.response?.data || err.message);
-        }
-    };
-
-    // Xóa chat
-    const handleDeleteChat = async (chatId) => {
-        showDialog({
-            title: 'Confirm Delete Chat',
-            content: 'Are you sure you want to delete chat?',
-            onConfirm: () => {
-                deleteChat(chatId);
-                hideDialog();
-            },
-            confirmText: 'Delete',
-            confirmColor: 'error',
-        });
-
-        const deleteChat = async (chatId) => {
-            try {
-                await axios.delete(`/chats/${chatId}`);
-                // Cập nhật danh sách chat sau khi xóa
-                setChats((prevChats) => prevChats.filter((chat) => chat._id !== chatId));
-                if (chatId === editingChatId) setEditingChatId(null);
-                // Nếu chat đang chọn bị xóa, reset onSelectChat
-                onSelectChat(null);
-                navigate('/chat'); // Quay về trang mặc định
-                if (refreshChatsCallback) refreshChatsCallback();
-            } catch (err) {
-                console.error('Error deleting chat:', err.response?.data || err.message);
-                toast.error('Failed to delete chat');
-            }
-        };
-    };
-
-    // Bắt đầu chỉnh sửa title
-    const handleEditChat = (chatId, currentTitle) => {
-        setEditingChatId(chatId);
-        setEditTitle(currentTitle);
-    };
-
-    // Lưu title mới
-    const handleSaveTitle = async (chatId) => {
-        if (!editTitle.trim()) {
-            toast.error('Title cannot be empty');
-            return;
-        }
-
-        showDialog({
-            title: 'Confirm update chat title',
-            content: 'Are you sure you want to delete chat?',
-            onConfirm: () => {
-                updateChatTitle(chatId);
-                hideDialog();
-            },
-            confirmText: 'Update',
-            confirmColor: 'primary',
-        });
-
-        const updateChatTitle = async (chatId) => {
-            try {
-                await axios.put(
-                    `/chats/${chatId}`,
-                    {title: editTitle},
-                    {headers: {'Content-Type': 'application/json'}}
-                );
-                setChats((prevChats) =>
-                    prevChats.map((chat) => (chat._id === chatId ? {...chat, title: editTitle} : chat))
-                );
-                setEditingChatId(null); // Thoát chế độ sửa
-                if (refreshChatsCallback) refreshChatsCallback();
-            } catch (err) {
-                console.error('Error updating title:', err.response?.data || err.message);
-                toast.error('Failed to update title');
-            }
-        };
-    };
+    // Sử dụng hook useChatList
+    const {
+        chats,
+        filteredChats,
+        loading,
+        error,
+        searchChatTitle,
+        setSearchChatTitle,
+        editingChatId,
+        setEditingChatId,
+        editTitle,
+        setEditTitle,
+        createChat,
+        deleteChat,
+        startEditChat,
+        saveChatTitle,
+    } = useChatList(onSelectChat, refreshChatsCallback);
 
     // tự động cập nhật isOpen khi kích thước màn hình thay đổi
     useEffect(() => {
@@ -169,21 +80,38 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
         };
     }, [editingChatId]);
 
-    useEffect(() => {
-        fetchChats();
-    }, []);
+    // Xóa chat
+    const handleDeleteChat = async (chatId) => {
+        showDialog({
+            title: 'Confirm Delete Chat',
+            content: 'Are you sure you want to delete chat?',
+            onConfirm: () => {
+                deleteChat(chatId);
+                hideDialog();
+            },
+            confirmText: 'Delete',
+            confirmColor: 'error',
+        });
+    };
 
-    // Gọi refreshChatsCallback chỉ một lần khi mount
-    useEffect(() => {
-        if (refreshChatsCallback) {
-            refreshChatsCallback(refreshChats);
+    // Lưu title mới
+    const handleSaveTitle = async (chatId) => {
+        if (!editTitle.trim()) {
+            toast.error('Title cannot be empty');
+            return;
         }
-    }, [refreshChatsCallback]);
 
-    // Lọc danh sách chat dựa trên ô tìm kiếm
-    const filteredChats = chats.filter((chat) =>
-        (chat.title || 'Untitled Chat').toLowerCase().includes(searchChatTitle.toLowerCase())
-    );
+        showDialog({
+            title: 'Confirm update chat title',
+            content: 'Are you sure you want to delete chat?',
+            onConfirm: () => {
+                saveChatTitle(chatId);
+                hideDialog();
+            },
+            confirmText: 'Update',
+            confirmColor: 'primary',
+        });
+    };
 
     // Xử lý config
     if (loading) {
@@ -260,7 +188,7 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                         <Tooltip title="Create new chat">
                             <IconButton
                                 color="primary"
-                                onClick={() => navigate('/')}
+                                onClick={createChat} // Chuyển đến trang tạo chat mới, vì nó cùng logic để tạo chat mới () => navigate('/')
                                 sx={{
                                     p: 1, // Sửa: Tăng padding để vùng click lớn hơn
                                     fontSize: '1.8rem', // Sửa: Tăng kích thước tổng thể của IconButton
@@ -353,7 +281,7 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                                                     edge="end"
                                                     onClick={(e) => {
                                                         e.stopPropagation(); // Ngăn chọn chat khi nhấn Edit
-                                                        handleEditChat(chat._id, chat.title);
+                                                        startEditChat(chat._id, chat.title);
                                                     }}
                                                     sx={{mr: 1}}
                                                 >
