@@ -114,7 +114,7 @@ function ChatPage({userEmail, onLogout, onSendMessageRef}) {
                         userEmail={userEmail}
                         chatId={selectedChatId}
                         onWordClick={handleWordClick}
-                        onSendMessage={onSendMessageRef.current}
+                        onSendMessage={onSendMessageRef}
                         onVocabAdded={refreshVocabRef}
                     />
                 </Box>
@@ -126,7 +126,7 @@ function ChatPage({userEmail, onLogout, onSendMessageRef}) {
                         setSelectedChatId(newChatId);
                         navigate(`/chat/${newChatId}`);
                     }}
-                    onSendMessage={onSendMessageRef.current}
+                    onSendMessage={onSendMessageRef}
                     refreshChats={refreshChatsRef.current} // Truyền refreshChats vào InputArea
                     suggestionData={suggestionData}
                     updateSuggestionData={updateSuggestionData} // Truyền callback

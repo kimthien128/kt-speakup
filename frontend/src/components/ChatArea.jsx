@@ -473,7 +473,7 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                             position: 'absolute',
                             top: translateTooltip.y + 20,
                             left: translateTooltip.x,
-                            zIndex: 99,
+                            zIndex: 999,
                         }}
                     ></Box>
                 </MuiTooltip>

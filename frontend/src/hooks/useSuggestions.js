@@ -130,14 +130,15 @@ export const useSuggestions = (chatId, updateSuggestionData, generateMethod, tts
 
     // Hàm dịch suggestion và cập nhật translation trong database
     const translateSuggestion = async (suggestion, currentChatId, suggestionData) => {
+        // Nếu đã có bản dịch, chỉ toggle hiển thị/ẩn
+        if (suggestionData.translate_suggestion) {
+            setShowTranslation(!showTranslation);
+            return;
+        }
+
+        // Nếu chưa có bản dịch, gọi API để dịch
         setLoading(true);
         try {
-            // Nếu translation đã tồn tại và giống với giá trị hiện tại, không gọi API
-            if (suggestionData.translate_suggestion && showTranslation) {
-                setShowTranslation(false);
-                return;
-            }
-
             // Gọi endpoint /translate để dịch suggestion
             const translateResponse = await axios.post(
                 `/translate`,
@@ -150,7 +151,7 @@ export const useSuggestions = (chatId, updateSuggestionData, generateMethod, tts
             );
             const translatedText = translateResponse.data.translatedText;
 
-            // Chir Cập nhật translation vào database neeus có thay đổi
+            // Lưu bản dịch vào database
             if (suggestionData.translate_suggestion !== translatedText) {
                 await axios.put(
                     `/chats/${currentChatId}/suggestion`,

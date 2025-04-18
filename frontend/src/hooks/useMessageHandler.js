@@ -7,7 +7,7 @@ import {logger} from '../utils/logger';
 export const useMessageHandler = (
     chatId,
     setChatId,
-    onSendMessage,
+    onSendMessage, // Nhận Ref
     refreshChats,
     generateMethod,
     ttsMethod,
@@ -38,9 +38,9 @@ export const useMessageHandler = (
 
         // Hiển thị tin nhắn người dùng ngay lập tức
         const userMessage = {user: transcript, ai: '...'};
-        if (onSendMessage) {
+        if (onSendMessage && onSendMessage.current) {
             logger.info('Send message:', userMessage);
-            onSendMessage(userMessage); // Gửi tin nhắn tạm ngay lập tức
+            onSendMessage.current(userMessage); // Gửi tin nhắn tạm ngay lập tức
         }
         // const temp = transcript;
         // setTranscript(''); // Xóa textarea
@@ -88,24 +88,18 @@ export const useMessageHandler = (
 
             // Cập nhật ChatArea với phản hồi AI
             const updatedMessage = {user: userInput, ai: aiResponse};
-            if (onSendMessage) {
-                onSendMessage(updatedMessage);
+            if (onSendMessage && onSendMessage.current) {
+                onSendMessage.current(updatedMessage);
             }
 
             // Cập nhật danh sách sau khi gửi tin nhắn
             if (refreshChats) await refreshChats();
             return {aiResponse, currentChatId};
-            // Lấy gợi ý dựa trên response
-            // try {
-            //     await fetchSuggestions(aiResponse, currentChatId);
-            // } catch (err) {
-            //     console.error('Error fetching suggestions:', err);
-            // }
         } catch (err) {
             logger.error('Error in handleSend:', err);
             const errorMessage = {user: userInput, ai: 'Error processing response'};
-            if (onSendMessage) {
-                onSendMessage(errorMessage);
+            if (onSendMessage && onSendMessage.current) {
+                onSendMessage.current(errorMessage);
             }
             return {error: err.message};
         }
