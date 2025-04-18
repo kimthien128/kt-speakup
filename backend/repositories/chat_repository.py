@@ -66,7 +66,7 @@ class ChatRepository:
             "chats",
             {"_id": ObjectId(chat_id),
              f"history.{index}.ai": original_ai_text},
-            {"$set": {f"history.{index}.translateAI": translated_text}}
+            {"$set": {f"history.{index}.translateAi": translated_text}}
         )
         
     async def find_vocab_by_chat(self, chat_id: str, user_id: str):
