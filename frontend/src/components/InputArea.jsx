@@ -125,12 +125,12 @@ function InputArea({
     // Xử lý gửi tin nhắn
     const onSend = async () => {
         setIsSending(true);
+        setTranscript(''); // Xóa textarea ngay khi nhấn Send
         try {
             const result = await handleSend(transcript);
             if (result && result.aiResponse && result.currentChatId) {
                 await fetchSuggestions(result.aiResponse, result.currentChatId);
             }
-            setTranscript('');
         } finally {
             setIsSending(false);
         }
@@ -440,6 +440,7 @@ function InputArea({
                                 bgcolor: isRecording ? 'error.dark' : 'primary.dark',
                             },
                         }}
+                        disabled={isSending || isPlayingWord} // Disable khi đang gửi hoặc phát âm
                     >
                         {isRecording ? <StopIcon /> : <MicIcon />}
                     </IconButton>

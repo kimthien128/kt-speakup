@@ -19,6 +19,7 @@ import {
     AccordionDetails,
     List,
     ListItem,
+    ListItemIcon,
     ListItemText,
     Tooltip,
     FormControl,
@@ -36,6 +37,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import DeleteIcon from '@mui/icons-material/Delete';
 import MenuOpenIcon from '@mui/icons-material/MenuOpen';
 import MenuIcon from '@mui/icons-material/Menu';
+import CircleIcon from '@mui/icons-material/Circle';
 
 import useSiteConfig from '../hooks/useSiteConfig';
 import ConfirmDialog from './ConfirmDialog';
@@ -327,97 +329,146 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                                 }}
                             >
                                 {loadingDetails ? (
-                                    <CircularProgress />
+                                    <Box
+                                        sx={{
+                                            display: 'flex',
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            height: '100%',
+                                        }}
+                                    >
+                                        <CircularProgress />
+                                    </Box>
                                 ) : (
                                     wordDetails && (
-                                        <>
-                                            <Accordion>
-                                                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                                    <Typography>Definition</Typography>
-                                                </AccordionSummary>
-                                                <AccordionDetails>
-                                                    <Typography>{wordDetails.definition || 'Not available'}</Typography>
-                                                </AccordionDetails>
-                                            </Accordion>
+                                        <Box sx={{display: 'flex', flexDirection: 'column', gap: 2}}>
+                                            {/* Definition */}
+                                            <Box>
+                                                <Typography variant="h6" sx={{fontWeight: 'medium', mb: 1}}>
+                                                    Definition
+                                                </Typography>
+                                                <Typography variant="body2" sx={{ml: 2}}>
+                                                    {wordDetails.definition || 'Not available'}
+                                                </Typography>
+                                            </Box>
+                                            <Divider sx={{my: 1}} />
 
-                                            <Accordion>
-                                                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                                    <Typography>Phonetic</Typography>
-                                                </AccordionSummary>
-                                                <AccordionDetails>
-                                                    <Typography>{wordDetails.phonetic || 'Not available'}</Typography>
-                                                </AccordionDetails>
-                                            </Accordion>
+                                            {/* Phonetic */}
+                                            <Box>
+                                                <Typography variant="h6" sx={{fontWeight: 'medium', mb: 1}}>
+                                                    Phonetic
+                                                </Typography>
+                                                <Typography variant="body2" sx={{ml: 2}}>
+                                                    {wordDetails.phonetic || 'Not available'}
+                                                </Typography>
+                                            </Box>
+                                            <Divider sx={{my: 1}} />
 
+                                            {/* Audio */}
                                             {wordDetails.audio && wordDetails.audio.length > 0 && (
-                                                <Accordion>
-                                                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                                        <Typography>Audio</Typography>
-                                                    </AccordionSummary>
-                                                    <AccordionDetails>
-                                                        {wordDetails.audio.map((audioUrl, index) => (
-                                                            <Box key={index} sx={{width: '100%'}}>
-                                                                <audio
-                                                                    controls
-                                                                    style={{
-                                                                        width: '100%',
-                                                                        height: '40px',
+                                                <>
+                                                    <Box>
+                                                        <Typography variant="h6" sx={{fontWeight: 'medium', mb: 1}}>
+                                                            Audio
+                                                        </Typography>
+                                                        <Box
+                                                            sx={{
+                                                                ml: 2,
+                                                                display: 'flex',
+                                                                flexDirection: 'column',
+                                                                gap: 1,
+                                                            }}
+                                                        >
+                                                            {wordDetails.audio.map((audioUrl, index) => (
+                                                                <Box key={index} sx={{width: '100%', maxWidth: 300}}>
+                                                                    <audio
+                                                                        controls
+                                                                        style={{
+                                                                            width: '100%',
+                                                                            height: '40px',
+                                                                        }}
+                                                                    >
+                                                                        <source src={audioUrl} type="audio/mpeg" />
+                                                                        Your browser does not support the audio element.
+                                                                    </audio>
+                                                                </Box>
+                                                            ))}
+                                                        </Box>
+                                                    </Box>
+                                                    <Divider sx={{my: 1}} />
+                                                </>
+                                            )}
+
+                                            {/* Examples */}
+                                            {wordDetails.examples && wordDetails.examples.length > 0 && (
+                                                <>
+                                                    <Box>
+                                                        <Typography variant="h6" sx={{fontWeight: 'medium', mb: 1}}>
+                                                            Examples
+                                                        </Typography>
+                                                        <List dense sx={{ml: 2, py: 0}}>
+                                                            {wordDetails.examples.map((example, index) => (
+                                                                <ListItem
+                                                                    key={index}
+                                                                    sx={{
+                                                                        alignItems: 'flex-start',
+                                                                        '&:not(:first-of-type)': {
+                                                                            pt: '8px !important',
+                                                                        },
                                                                     }}
                                                                 >
-                                                                    <source src={audioUrl} type="audio/mpeg" />
-                                                                    Your browser does not support the audio element.
-                                                                </audio>
-                                                            </Box>
-                                                        ))}
-                                                    </AccordionDetails>
-                                                </Accordion>
-                                            )}
-
-                                            {wordDetails.examples && wordDetails.examples.length > 0 && (
-                                                <Accordion>
-                                                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                                        <Typography>Examples</Typography>
-                                                    </AccordionSummary>
-                                                    <AccordionDetails>
-                                                        <List>
-                                                            {wordDetails.examples.map((example, index) => (
-                                                                <ListItem key={index}>
-                                                                    <ListItemText primary={example} />
+                                                                    <ListItemIcon sx={{minWidth: 24, pt: 0.5}}>
+                                                                        <CircleIcon sx={{fontSize: 8}} />
+                                                                    </ListItemIcon>
+                                                                    <ListItemText
+                                                                        primary={example}
+                                                                        primaryTypographyProps={{variant: 'body2'}}
+                                                                    />
                                                                 </ListItem>
                                                             ))}
                                                         </List>
-                                                    </AccordionDetails>
-                                                </Accordion>
+                                                    </Box>
+                                                    <Divider sx={{my: 1}} />
+                                                </>
                                             )}
 
+                                            {/* Pronunciations */}
                                             {wordDetails.pronunciations && wordDetails.pronunciations.length > 0 && (
-                                                <Accordion>
-                                                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                                        <Typography>Pronunciations</Typography>
-                                                    </AccordionSummary>
-                                                    <AccordionDetails>
-                                                        <List>
+                                                <>
+                                                    <Box>
+                                                        <Typography variant="h6" sx={{fontWeight: 'medium', mb: 1}}>
+                                                            Pronunciations
+                                                        </Typography>
+                                                        <List dense sx={{ml: 2, py: 0}}>
                                                             {wordDetails.pronunciations.map((pron, index) => (
-                                                                <ListItem key={index}>
-                                                                    <ListItemText primary={pron} />
+                                                                <ListItem key={index} sx={{py: 0.5}}>
+                                                                    <ListItemIcon sx={{minWidth: 24}}>
+                                                                        <CircleIcon sx={{fontSize: 8}} />
+                                                                    </ListItemIcon>
+                                                                    <ListItemText
+                                                                        primary={pron}
+                                                                        primaryTypographyProps={{variant: 'body2'}}
+                                                                    />
                                                                 </ListItem>
                                                             ))}
                                                         </List>
-                                                    </AccordionDetails>
-                                                </Accordion>
+                                                    </Box>
+                                                    <Divider sx={{my: 1}} />
+                                                </>
                                             )}
 
+                                            {/* Top Example */}
                                             {wordDetails.topExample && (
-                                                <Accordion>
-                                                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                                        <Typography>Top Example</Typography>
-                                                    </AccordionSummary>
-                                                    <AccordionDetails>
-                                                        <Typography>{wordDetails.topExample}</Typography>
-                                                    </AccordionDetails>
-                                                </Accordion>
+                                                <Box>
+                                                    <Typography variant="h6" sx={{fontWeight: 'medium', mb: 1}}>
+                                                        Top Example
+                                                    </Typography>
+                                                    <Typography variant="body2" sx={{ml: 2}}>
+                                                        {wordDetails.topExample}
+                                                    </Typography>
+                                                </Box>
                                             )}
-                                        </>
+                                        </Box>
                                     )
                                 )}
                             </Box>
