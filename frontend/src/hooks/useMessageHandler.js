@@ -29,7 +29,7 @@ export const useMessageHandler = (
                 const res = await axios.post(`/chats`);
                 currentChatId = res.data.chat_id;
                 setChatId(currentChatId); // Cập nhật chatId và URL
-                if (refreshChats) await refreshChats(); // Cập nhật danh sách sau khi tạo chat
+                if (refreshChats) await refreshChats(); // Cập nhật chatList sau khi tạo chat
             } catch (err) {
                 logger.error('Error creating chat:', err.response?.data || err.message);
                 return {error: 'Error creating chat'};
@@ -40,7 +40,7 @@ export const useMessageHandler = (
         const userMessage = {user: transcript, ai: '...'};
         if (onSendMessage && onSendMessage.current) {
             logger.info('Send message:', userMessage);
-            onSendMessage.current(userMessage); // Gửi tin nhắn tạm ngay lập tức
+            onSendMessage.current(userMessage, true); // Đặt isSending = true khi gửi tin nhắn tạm
         }
         // const temp = transcript;
         // setTranscript(''); // Xóa textarea
@@ -89,7 +89,7 @@ export const useMessageHandler = (
             // Cập nhật ChatArea với phản hồi AI
             const updatedMessage = {user: userInput, ai: aiResponse};
             if (onSendMessage && onSendMessage.current) {
-                onSendMessage.current(updatedMessage);
+                onSendMessage.current(updatedMessage, false); // Đặt isSending = false khi hoàn tất
             }
 
             // Cập nhật danh sách sau khi gửi tin nhắn

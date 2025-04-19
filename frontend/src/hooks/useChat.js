@@ -9,21 +9,26 @@ import {logger} from '../utils/logger';
 export const useChat = (chatId, onSendMessage) => {
     const [chatHistory, setChatHistory] = useState([]);
     const [isPlaying, setIsPlaying] = useState(false);
+    const [isSending, setIsSending] = useState(false); // Trạng thái gửi tin nhắn
     const [error, setError] = useState(null);
 
     // Hàm fetch lịch sử chat
     const fetchHistory = useCallback(async () => {
-        // Kiểm tra chatId có hợp lệ không
         if (!chatId || typeof chatId !== 'string') {
-            setChatHistory([]);
-            // setError('Invalid chat ID'); // không thông báo ở đây vì lúc mới login chưa chọn chatId
-            // logger.warn('Invalid chatId provided:', chatId);
             return;
         }
 
         try {
             const history = await chatService.fetchHistory(chatId);
-            setChatHistory(history);
+            // So sánh history từ server với chatHistory hiện tại
+            setChatHistory((prev) => {
+                // Đảm bảo history là mảng trước khi cập nhật
+                const newHistory = Array.isArray(history) ? history : [];
+                if (JSON.stringify(prev) === JSON.stringify(newHistory)) {
+                    return prev; // Không cập nhật nếu không có thay đổi
+                }
+                return [...newHistory]; // Luôn tạo mảng mới
+            });
             setError(null);
         } catch (err) {
             setChatHistory([]);
@@ -31,35 +36,32 @@ export const useChat = (chatId, onSendMessage) => {
         }
     }, [chatId]);
 
-    // Fetch lịch sử khi chatId thay đổi
+    // Fetch lịch sử khi chatId thay đổi, và fetch lịch sử khi chatId hợp lệ
     useEffect(() => {
-        fetchHistory();
-    }, [fetchHistory]);
+        if (!chatId || typeof chatId !== 'string') {
+            setChatHistory([]); // Reset chatHistory khi chatId không hợp lệ (tại / hoặc /chat)
+            return;
+        }
+        fetchHistory(); // Gọi fetchHistory khi chatId hợp lệ
+    }, [fetchHistory, chatId]);
 
     // Cập nhật chatHistory khi có tin nhắn mới
     useEffect(() => {
         if (onSendMessage) {
-            onSendMessage.current = (message) => {
+            onSendMessage.current = (message, sending = false) => {
+                setIsSending(sending); // Cập nhật isSending từ onSendMessage
                 setChatHistory((prev) => {
                     // Thay thế tin nhắn tạm cuối cùng (ai: '...')
                     const lastIndex = prev.length - 1;
                     if (lastIndex >= 0 && prev[lastIndex].ai === '...') {
-                        return [...prev.slice(0, lastIndex), message];
+                        return [...prev.slice(0, lastIndex), {...message}]; // Tạo object mới
                     }
-                    return [...prev, message];
+                    return [...prev, {...message}]; // Tạo object mới để chatHistory nhận biết có thay đổi để cuộn xuống cuối
                 });
             };
         }
     }, [onSendMessage]);
 
-    /**
-     * Phát âm thanh cho tin nhắn
-     * @param {string} audioUrl - URL của file âm thanh
-     * @param {string} text - Văn bản của tin nhắn
-     * @param {number} index - Chỉ số của tin nhắn trong lịch sử chat
-     * @param {Function} playSound - Hàm phát âm thanh từ useAudioPlayer
-     * @param {string} chatId - ID của chat
-     */
     const playMessage = async (audioUrl, text, index, playSound, chatId) => {
         if (isPlaying) return;
         setIsPlaying(true);
@@ -86,6 +88,7 @@ export const useChat = (chatId, onSendMessage) => {
     return {
         chatHistory,
         isPlaying,
+        isSending, // Trả về isSending để sử dụng trong ChatArea
         error,
         playMessage,
     };

@@ -1,5 +1,5 @@
 // components/ChatArea.jsx
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect, useRef, useCallback, useMemo} from 'react';
 import {Tooltip as MuiTooltip} from '@mui/material';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -24,6 +24,172 @@ import {toast, ToastContainer} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; // Import CSS của thư viện toastify
 
 import {useChat} from '../hooks/useChat';
+// Component con để render từng tin nhắn, được memoize để tránh re-render không cần thiết
+const MessageItem = React.memo(
+    ({msg, index, userInfo, config, handleWordClick, playMessage, chatId, handleTranslate}) => {
+        const handlePlayMessage = useCallback(() => {
+            playMessage(msg.audioUrl, msg.ai, index);
+        }, [msg.audioUrl, msg.ai, index, playMessage]);
+
+        const handleTranslateMessage = useCallback(
+            (e) => {
+                handleTranslate(msg.ai, index, e);
+            },
+            [msg.ai, index, handleTranslate]
+        );
+
+        return (
+            <Box sx={{mt: 3, display: 'flex', flexDirection: 'column', gap: 2}}>
+                {msg.user && (
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            justifyContent: 'flex-end',
+                            alignItems: 'center',
+                            gap: 1,
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                px: 1.5,
+                                py: 2.5,
+                                bgcolor: 'rgba(0, 0, 0, 0.08)',
+                                borderRadius: 2,
+                                borderBottomRightRadius: 0,
+                                maxWidth: '70%',
+                                wordBreak: 'break-word',
+                            }}
+                        >
+                            {(msg.user || '').split(' ').map((word, i) => (
+                                <Typography
+                                    key={i}
+                                    variant="body1"
+                                    component="span"
+                                    noWrap
+                                    onDoubleClick={(e) => handleWordClick(word, e)}
+                                    sx={{
+                                        '&:hover': {
+                                            bgcolor: 'white',
+                                        },
+                                    }}
+                                >
+                                    {word}&nbsp;
+                                </Typography>
+                            ))}
+                        </Box>
+
+                        {/* Hiển thị chữ cái đầu nếu không có avatarPath */}
+                        <Avatar
+                            alt="User Avatar"
+                            src={userInfo?.avatarPath || ''}
+                            sx={{bgcolor: 'primary.main', width: 40, height: 40}}
+                        >
+                            {userInfo && !userInfo.avatarPath ? getAvatarInitial(userInfo) : null}
+                        </Avatar>
+                    </Box>
+                )}
+
+                {/* Tin nhắn AI */}
+                {msg.ai && (
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            justifyContent: 'flex-start',
+                            alignItems: 'center',
+                            gap: 1,
+                        }}
+                    >
+                        <Avatar
+                            src={config?.aiChatIcon || null}
+                            alt="AI Icon"
+                            sx={{
+                                width: 40,
+                                height: 40,
+                            }}
+                        />
+
+                        <Box
+                            sx={{
+                                px: 1.5,
+                                py: 2.5,
+                                bgcolor: 'rgba(66, 165, 245, .5)',
+                                borderRadius: 2,
+                                borderBottomLeftRadius: 0,
+                                width: 'fit-content',
+                                maxWidth: '70%',
+                                wordBreak: 'break-word',
+                                position: 'relative',
+                            }}
+                        >
+                            {/* \s: Khoảng trắng (space, tab)
+                                            \n: Ký tự xuống dòng
+                                            +: Match 1 hoặc nhiều lần */}
+                            {(msg.ai || '').split(/[\s\n]+/).map((word, i) => (
+                                <Typography
+                                    key={i}
+                                    variant="body1"
+                                    component="span"
+                                    noWrap
+                                    onDoubleClick={(e) => handleWordClick(word, e)}
+                                    sx={{
+                                        '&:hover': {
+                                            bgcolor: 'grey.300',
+                                        },
+                                    }}
+                                >
+                                    {word}&nbsp;
+                                </Typography>
+                            ))}
+
+                            {/* Nút phát âm thanh và dịch */}
+                            {msg.ai && msg.ai != '...' && (
+                                <Box
+                                    sx={{
+                                        position: 'absolute',
+                                        bottom: 0,
+                                        left: 4,
+                                        transform: 'translateY(50%)',
+                                        display: 'flex',
+                                        gap: 1,
+                                        p: 1,
+                                    }}
+                                >
+                                    <IconButton
+                                        size="small"
+                                        onClick={handlePlayMessage}
+                                        sx={{
+                                            bgcolor: 'rgba(66, 165, 245, .95)',
+                                            color: 'white',
+                                            '&: hover': {
+                                                bgcolor: 'primary.dark',
+                                            },
+                                        }}
+                                    >
+                                        <VolumeUpIcon fontSize="small" />
+                                    </IconButton>
+
+                                    <IconButton
+                                        size="small"
+                                        onClick={handleTranslateMessage}
+                                        sx={{
+                                            bgcolor: 'rgba(66, 165, 245, .95)',
+                                            color: 'white',
+                                            '&: hover': {
+                                                bgcolor: 'primary.dark',
+                                            },
+                                        }}
+                                    >
+                                        <TranslateIcon fontSize="small" />
+                                    </IconButton>
+                                </Box>
+                            )}
+                        </Box>
+                    </Box>
+                )}
+            </Box>
+        );
+    }
+);
 
 function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded}) {
     const {config, loading: configLoading, error: configError} = useSiteConfig(); // Lấy config từ backend
@@ -42,7 +208,23 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
 
     const {translateTooltip, setTranslateTooltip, translateTooltipRef, handleTranslate} = useTranslateTooltip({chatId}); // Hook quản lý tooltip dịch
 
-    const {chatHistory, isPlaying: isPlayingChat, error: chatError, playMessage} = useChat(chatId, onSendMessage); // Hook quản lý lịch sử chat
+    const {
+        chatHistory,
+        isPlaying: isPlayingChat,
+        isSending,
+        error: chatError,
+        playMessage,
+    } = useChat(chatId, onSendMessage); // Hook quản lý lịch sử chat
+
+    // Thêm trạng thái để theo dõi xem người dùng đã gửi tin nhắn đầu tiên hay chưa
+    const [hasSentFirstMessage, setHasSentFirstMessage] = useState(false);
+
+    // Cập nhật hasSentFirstMessage khi chatHistory thay đổi
+    useEffect(() => {
+        if (chatHistory && chatHistory.length > 0) {
+            setHasSentFirstMessage(true);
+        }
+    }, [chatHistory]);
 
     // Hook để đóng tooltip khi click bên ngoài
     useClickOutside([wordTooltipRef, translateTooltipRef], () => {
@@ -54,12 +236,51 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
     const chatContainerRef = useRef(null);
     useEffect(() => {
         if (chatContainerRef.current) {
-            chatContainerRef.current.scrollTo({
-                top: chatContainerRef.current.scrollHeight,
-                behavior: 'smooth', // Cuộn mượt
-            });
+            // Trì hoãn cuộn để đảm bảo DOM được render xong
+            setTimeout(() => {
+                chatContainerRef.current.scrollTo({
+                    top: chatContainerRef.current.scrollHeight,
+                    behavior: 'smooth',
+                });
+            }, 100);
         }
-    }, [chatHistory]);
+    }, [chatHistory, isSending]);
+
+    // Memoize các hàm callback để tránh tạo lại không cần thiết
+    const memoizedHandleWordClick = useCallback(
+        (word, e) => {
+            handleWordClick(word, e);
+        },
+        [handleWordClick]
+    );
+
+    const memoizedPlayMessage = useCallback(
+        (audioUrl, text, index) => {
+            playMessage(audioUrl, text, index, playSound, chatId);
+        },
+        [playMessage, chatId, playSound]
+    );
+
+    // Memoize danh sách tin nhắn để tránh re-render nếu chatHistory không đổi
+    const renderedMessages = useMemo(() => {
+        // Kiểm tra chatHistory trước khi gọi map
+        if (!Array.isArray(chatHistory)) {
+            return [];
+        }
+        return chatHistory.map((msg, index) => (
+            <MessageItem
+                key={index}
+                msg={msg}
+                index={index}
+                userInfo={userInfo}
+                config={config}
+                handleWordClick={memoizedHandleWordClick}
+                playMessage={memoizedPlayMessage}
+                chatId={chatId}
+                handleTranslate={handleTranslate}
+            />
+        ));
+    }, [chatHistory, userInfo, memoizedHandleWordClick, memoizedPlayMessage, chatId, handleTranslate, config]);
 
     // Xử lý config
     if (configLoading || userLoading) {
@@ -92,169 +313,7 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                     scrollbarColor: 'rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.1)', // Màu thứ 2 là màu khi hover
                 }}
             >
-                {chatHistory.length > 0 ? (
-                    chatHistory.map((msg, index) => (
-                        <Box
-                            key={index}
-                            sx={{
-                                mt: 3,
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: 2,
-                            }}
-                        >
-                            {/* Tin nhắn người dùng */}
-                            {msg.user && (
-                                <Box
-                                    sx={{
-                                        display: 'flex',
-                                        justifyContent: 'flex-end',
-                                        alignItems: 'center',
-                                        gap: 1,
-                                    }}
-                                >
-                                    <Box
-                                        sx={{
-                                            px: 1.5,
-                                            py: 2.5,
-                                            bgcolor: 'rgba(0, 0, 0, 0.08)',
-                                            borderRadius: 2,
-                                            borderBottomRightRadius: 0,
-                                            maxWidth: '70%',
-                                            wordBreak: 'break-word',
-                                        }}
-                                    >
-                                        {(msg.user || '').split(' ').map((word, i) => (
-                                            <Typography
-                                                key={i}
-                                                variant="body1"
-                                                component="span"
-                                                noWrap
-                                                onDoubleClick={(e) => handleWordClick(word, e)}
-                                                sx={{
-                                                    '&:hover': {
-                                                        bgcolor: 'white',
-                                                    },
-                                                }}
-                                            >
-                                                {word}&nbsp;
-                                            </Typography>
-                                        ))}
-                                    </Box>
-
-                                    {/* Hiển thị chữ cái đầu nếu không có avatarPath */}
-                                    <Avatar
-                                        alt="User Avatar"
-                                        src={userInfo?.avatarPath || ''}
-                                        sx={{bgcolor: 'primary.main', width: 40, height: 40}}
-                                    >
-                                        {userInfo && !userInfo.avatarPath ? getAvatarInitial(userInfo) : null}
-                                    </Avatar>
-                                </Box>
-                            )}
-
-                            {/* Tin nhắn AI */}
-                            {msg.ai && (
-                                <Box
-                                    sx={{
-                                        display: 'flex',
-                                        justifyContent: 'flex-start',
-                                        alignItems: 'center',
-                                        gap: 1,
-                                    }}
-                                >
-                                    <Avatar
-                                        src={config?.aiChatIcon || null}
-                                        alt="AI Icon"
-                                        sx={{
-                                            width: 40,
-                                            height: 40,
-                                        }}
-                                    />
-
-                                    <Box
-                                        sx={{
-                                            px: 1.5,
-                                            py: 2.5,
-                                            bgcolor: 'rgba(66, 165, 245, .5)',
-                                            borderRadius: 2,
-                                            borderBottomLeftRadius: 0,
-                                            width: 'fit-content',
-                                            maxWidth: '70%',
-                                            wordBreak: 'break-word',
-                                            position: 'relative',
-                                        }}
-                                    >
-                                        {/* \s: Khoảng trắng (space, tab)
-                                            \n: Ký tự xuống dòng
-                                            +: Match 1 hoặc nhiều lần */}
-                                        {(msg.ai || '').split(/[\s\n]+/).map((word, i) => (
-                                            <Typography
-                                                key={i}
-                                                variant="body1"
-                                                component="span"
-                                                noWrap
-                                                onDoubleClick={(e) => handleWordClick(word, e)}
-                                                sx={{
-                                                    '&:hover': {
-                                                        bgcolor: 'grey.300',
-                                                    },
-                                                }}
-                                            >
-                                                {word}&nbsp;
-                                            </Typography>
-                                        ))}
-
-                                        {/* Nút phát âm thanh và dịch */}
-                                        {msg.ai && msg.ai != '...' && (
-                                            <Box
-                                                sx={{
-                                                    position: 'absolute',
-                                                    bottom: 0,
-                                                    left: 4,
-                                                    transform: 'translateY(50%)',
-                                                    display: 'flex',
-                                                    gap: 1,
-                                                    p: 1,
-                                                }}
-                                            >
-                                                <IconButton
-                                                    size="small"
-                                                    onClick={() =>
-                                                        playMessage(msg.audioUrl, msg.ai, index, playSound, chatId)
-                                                    }
-                                                    sx={{
-                                                        bgcolor: 'rgba(66, 165, 245, .95)',
-                                                        color: 'white',
-                                                        '&: hover': {
-                                                            bgcolor: 'primary.dark',
-                                                        },
-                                                    }}
-                                                >
-                                                    <VolumeUpIcon fontSize="small" />
-                                                </IconButton>
-
-                                                <IconButton
-                                                    size="small"
-                                                    onClick={(e) => handleTranslate(msg.ai, index, e)}
-                                                    sx={{
-                                                        bgcolor: 'rgba(66, 165, 245, .95)',
-                                                        color: 'white',
-                                                        '&: hover': {
-                                                            bgcolor: 'primary.dark',
-                                                        },
-                                                    }}
-                                                >
-                                                    <TranslateIcon fontSize="small" />
-                                                </IconButton>
-                                            </Box>
-                                        )}
-                                    </Box>
-                                </Box>
-                            )}
-                        </Box>
-                    ))
-                ) : (
+                {!hasSentFirstMessage && (!chatHistory || chatHistory.length === 0) ? (
                     <Box
                         sx={{
                             width: '100%',
@@ -296,6 +355,8 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                             <Typography variant="h6">What are we talking about today?</Typography>
                         </Box>
                     </Box>
+                ) : (
+                    renderedMessages
                 )}
                 {chatError && (
                     <Alert severity="error" sx={{mt: 2}}>

@@ -14,7 +14,7 @@ const useAudioPlayer = () => {
                 throw new Error('Empty or invalid audio blob'); // Ném lỗi nếu blob rỗng
             }
             const url = URL.createObjectURL(blob);
-            console.log(`Playing audio from ${source}:`, url);
+            // console.log(`Playing audio from ${source}:`, url);
             const audio = new Audio(url);
             await audio.play();
         };

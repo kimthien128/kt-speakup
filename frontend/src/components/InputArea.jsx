@@ -402,19 +402,25 @@ function InputArea({
                             >
                                 Suggestions:
                             </Typography>
-                            {/* suggestionData lấy từ props */}
-                            {suggestionData.latest_suggestion ? (
-                                <SuggestionContent
-                                    suggestionData={suggestionData}
-                                    showTranslation={showTranslation}
-                                    handleWordClick={handleWordClick}
-                                    generateSuggestionsAudio={generateSuggestionsAudio}
-                                    translateSuggestion={translateSuggestion}
-                                    chatId={chatId}
-                                    isPlaying={isPlaying}
-                                />
+                            {isSending ? (
+                                <CircularProgress size={18} />
                             ) : (
-                                <Typography>No suggestions available</Typography>
+                                <>
+                                    {/* suggestionData lấy từ props */}
+                                    {suggestionData.latest_suggestion ? (
+                                        <SuggestionContent
+                                            suggestionData={suggestionData}
+                                            showTranslation={showTranslation}
+                                            handleWordClick={handleWordClick}
+                                            generateSuggestionsAudio={generateSuggestionsAudio}
+                                            translateSuggestion={translateSuggestion}
+                                            chatId={chatId}
+                                            isPlaying={isPlaying}
+                                        />
+                                    ) : (
+                                        <Typography>No suggestions available</Typography>
+                                    )}
+                                </>
                             )}
                         </Box>
                     </Collapse>
@@ -480,7 +486,7 @@ function InputArea({
                             },
                         }}
                     >
-                        {isSending ? <CircularProgress size={20} /> : <SendIcon />}
+                        <SendIcon />
                     </IconButton>
                 </Box>
 
