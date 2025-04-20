@@ -1,22 +1,21 @@
-fastapi
-uvicorn  # Server ASGI để chạy FastAPI
-httpx
-pymongo==3.6
-motor #client MongoDB bất đồng bộ
-python-jose[cryptography]
-passlib
-bcrypt==4.0.1
-python-multipart # Xử lý file upload
-vosk
-ffmpeg-python
-requests #Dùng để gọi API Hugging Face (blenderbot)
-python-dotenv
-assemblyai
+fastapi==0.115.12
+uvicorn==0.34.0
 httpx==0.23.0
-gtts
-huggingface_hub
-google-generativeai
-llama-cpp-python
-minio # Lưu file âm thanh
-deep-translator
-apscheduler # Lập lịch
+pymongo==4.11.2
+motor==3.7.0 #client MongoDB bất đồng bộ
+python-jose[cryptography]==3.4.0
+passlib==1.7.4
+bcrypt==4.0.1
+python-multipart==0.0.20 # Xử lý file upload
+vosk==0.3.45
+ffmpeg-python==0.2.0
+python-dotenv==1.0.1
+assemblyai==0.37.0
+google-cloud-speech==2.32.0
+httpx==0.23.0
+gtts==2.5.4
+google-generativeai==0.8.4
+minio==7.2.15 # Lưu file âm thanh
+deep-translator==1.11.4
+apscheduler==3.11.0 # Lập lịch
+#llama_cpp_python==0.3.8 #bỏ nếu không dùng model Mistral

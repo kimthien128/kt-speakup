@@ -21,6 +21,7 @@ from .services.tts.gtts_client import GTTSClient
 from .services.tts.piper_client import PiperClient
 from .services.stt.vosk_stt_client import VoskSTTClient
 from .services.stt.assemblyai_stt_client import AssemblyAISTTClient
+from .services.stt.google_stt_client import GoogleSTTClient
 from .services.translation.google_translation_client import GoogleTranslationClient
 
 # Singleton instance cho database
@@ -52,6 +53,7 @@ class DependencyContainer:
     _piper_client = None
     _vosk_client = None
     _assemblyai_client = None
+    _google_stt_client = None
     _google_translation_client = None
     
     @classmethod
@@ -162,6 +164,12 @@ class DependencyContainer:
         if cls._assemblyai_client is None:
             cls._assemblyai_client = AssemblyAISTTClient()
         return cls._assemblyai_client
+    
+    @classmethod
+    def get_google_stt_client(cls):
+        if cls._google_stt_client is None:
+            cls._google_stt_client = GoogleSTTClient()
+        return cls._google_stt_client
 
     @classmethod
     def get_google_translation_client(cls):
@@ -217,6 +225,9 @@ def get_vosk_client():
 
 def get_assemblyai_client():
     return DependencyContainer.get_assemblyai_client()
+
+def get_google_stt_client():
+    return DependencyContainer.get_google_stt_client()
 
 def get_google_translation_client():
     return DependencyContainer.get_google_translation_client()

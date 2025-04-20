@@ -10,11 +10,12 @@ from .audio.audio_processor import AudioProcessor
 from ..logging_config import logger
 
 class STTService:
-    def __init__(self, audio_processor: AudioProcessor, vosk_client: STTClient, assemblyai_client: STTClient):
+    def __init__(self, audio_processor: AudioProcessor, vosk_client: STTClient, assemblyai_client: STTClient, google_stt_client: STTClient):
         self.audio_processor = audio_processor
         self.clients = {
             "vosk": vosk_client,
-            "assemblyai": assemblyai_client
+            "assemblyai": assemblyai_client,
+            "google": google_stt_client
         }
         
     async def transcribe(self, audio_blob: bytes, method: str) -> dict:

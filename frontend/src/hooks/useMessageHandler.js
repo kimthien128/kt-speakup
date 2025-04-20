@@ -39,7 +39,6 @@ export const useMessageHandler = (
         // Hiển thị tin nhắn người dùng ngay lập tức
         const userMessage = {user: transcript, ai: '...'};
         if (onSendMessage && onSendMessage.current) {
-            logger.info('Send message:', userMessage);
             onSendMessage.current(userMessage, true); // Đặt isSending = true khi gửi tin nhắn tạm
         }
         // const temp = transcript;

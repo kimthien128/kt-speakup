@@ -1,32 +1,35 @@
-'''Xử lý lỗi cgi do httpx, sau này thử hạ xuống py 3.12 rồi bỏ đi test lại'''
 import sys
-import types
+import os
+'''Xử lý lỗi cgi do httpx, sau này thử hạ xuống py 3.12 rồi bỏ đi test lại'''
+# import types
 
 # Tạo module cgi giả
-fake_cgi = types.ModuleType("cgi")
-def parse_header(line):
-    if not isinstance(line, str):
-        line = line.decode('utf-8')
-    if ':' not in line:
-        return line, {}
-    main_value, rest = line.split(':', 1)
-    main_value = main_value.strip()
-    rest = rest.strip()
-    if ';' not in rest:
-        return main_value, {}
-    params = {}
-    for param in rest.split(';')[1:]:
-        if '=' in param:
-            key, value = param.split('=', 1)
-            params[key.strip()] = value.strip()
-        else:
-            params[param.strip()] = ''
-    return main_value, params
+# fake_cgi = types.ModuleType("cgi")
+# def parse_header(line):
+#     if not isinstance(line, str):
+#         line = line.decode('utf-8')
+#     if ':' not in line:
+#         return line, {}
+#     main_value, rest = line.split(':', 1)
+#     main_value = main_value.strip()
+#     rest = rest.strip()
+#     if ';' not in rest:
+#         return main_value, {}
+#     params = {}
+#     for param in rest.split(';')[1:]:
+#         if '=' in param:
+#             key, value = param.split('=', 1)
+#             params[key.strip()] = value.strip()
+#         else:
+#             params[param.strip()] = ''
+#     return main_value, params
 
-fake_cgi.parse_header = parse_header
-sys.modules["cgi"] = fake_cgi  # Gắn module giả vào sys.modules
+# fake_cgi.parse_header = parse_header
+# sys.modules["cgi"] = fake_cgi  # Gắn module giả vào sys.modules
 
 '''Xóa khúc trên'''
+# Thêm thư mục backend vào sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Load biến môi trường trước khi import các module khác
 from dotenv import load_dotenv
@@ -35,7 +38,7 @@ load_dotenv()
 from fastapi import FastAPI
 from typing import AsyncIterator
 from contextlib import asynccontextmanager
-import os
+
 from .config.app_config import configure_app
 from .logging_config import logger
 from .storage.minio_client import MinioClient

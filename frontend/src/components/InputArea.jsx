@@ -39,7 +39,7 @@ function InputArea({
     updateSuggestionData,
     onVocabAdded,
 }) {
-    const [sttMethod, setSttMethod] = useState('vosk');
+    const [sttMethod, setSttMethod] = useState('assemblyai');
     const [ttsMethod, setTtsMethod] = useState('gtts');
     const [generateMethod, setGenerateMethod] = useState('mistral');
 

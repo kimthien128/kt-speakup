@@ -11,8 +11,8 @@ from ...logging_config import logger
 
 class PiperClient(TTSClient):
     def __init__(self):
-        self.piper_exe = os.path.join(BASE_DIR, "piper", "piper.exe")
-        self.model_path = os.path.join(BASE_DIR, "piper", os.getenv("PIPER_VOICE"))
+        self.piper_exe = os.path.join(BASE_DIR, "models/piper", "piper.exe")
+        self.model_path = os.path.join(BASE_DIR, "models/piper", os.getenv("PIPER_VOICE"))
 
     def generate_audio(self, text: str, output_path: str) -> str:
         cmd = [self.piper_exe, "--model", self.model_path, "--output_file", output_path]

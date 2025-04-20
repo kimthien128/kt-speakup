@@ -13,6 +13,7 @@ export const methodsConfig = {
         options: [
             {value: 'assemblyai', label: 'AssemblyAI (API)'},
             {value: 'vosk', label: 'Vosk (Local)'},
+            {value: 'google', label: 'Google Text to Speech (API)'},
         ],
     },
 

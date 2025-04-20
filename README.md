@@ -66,3 +66,13 @@ python -m pip install llama-cpp-python
 ## Chạy server
 
 -   python -m backend.server
+
+## Docker
+
+-   docker volume rm ai-models
+-   docker volume create ai-models
+-   Copy models vào volume:
+-   docker run --rm -v ai-models:/models -v D:\Code\kt-speakup\backend\models:/source busybox sh -c "cp -r /source/\* /models/"
+-   Tạo image: docker-compose build
+-   Chạy: docker-compose up -d
+-   Dùng và xóa: docker-compose down

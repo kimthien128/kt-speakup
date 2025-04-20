@@ -33,7 +33,6 @@ import MenuIcon from '@mui/icons-material/Menu';
 import HomeIcon from '@mui/icons-material/Home'; // sau này thay logo
 
 function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
-    console.log('Render LeftSidebar');
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // Kiểm tra nếu là thiết bị di động
     const [isOpen, setIsOpen] = useState(!isMobile); // Mở rộng trên desktop, thu nhỏ trên mobile
