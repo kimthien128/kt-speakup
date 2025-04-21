@@ -231,7 +231,7 @@ function InputArea({
                     alignItems: 'center',
                     position: 'relative',
                     bgcolor: 'background.paper',
-                    boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.1)',
+                    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
                 }}
             >
                 {/* Khu vực 1: Icon Settings (SpeedDial) */}

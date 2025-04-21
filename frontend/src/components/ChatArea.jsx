@@ -1,5 +1,5 @@
 // components/ChatArea.jsx
-import React, {useState, useEffect, useRef, useCallback, useMemo} from 'react';
+import React, {useEffect, useRef} from 'react';
 import {Tooltip as MuiTooltip} from '@mui/material';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -282,16 +282,16 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                                 }}
                             >
                                 {/* Logo */}
-                                <Box
-                                    sx={{
-                                        backgroundImage: config?.logoImage ? `url("${config.logoImage}")` : null,
-                                        backgroundSize: 'cover',
-                                        backgroundPosition: 'center',
-                                        width: '80px',
-                                        height: '80px',
-                                        mr: 2,
+                                <img
+                                    src={config?.logoImage || null}
+                                    alt="Logo"
+                                    style={{
+                                        width: '100px',
+                                        height: 'auto',
+                                        marginRight: '8px',
+                                        objectFit: 'contain',
                                     }}
-                                ></Box>
+                                />
                                 <Typography variant="h4">Hi, I'm KT SpeakUp.</Typography>
                             </Box>
                             <Typography variant="h6">What are we talking about today?</Typography>

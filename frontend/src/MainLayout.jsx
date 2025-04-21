@@ -35,9 +35,9 @@ function MainLayout({children}) {
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    background: 'rgba(0, 0, 0, 0.05)', // Overlay để làm nổi bật text
+                    background: 'rgba(0, 0, 0, 0.02)', // Overlay để làm nổi bật text
                     zIndex: 1,
-                    backdropFilter: 'blur(5px)',
+                    // backdropFilter: 'blur(5px)',
                 },
             }}
         >
@@ -52,7 +52,7 @@ function MainLayout({children}) {
                     boxShadow: '0 0 25px rgba(0, 0, 0, 0.15)',
                     boxSizing: 'border-box',
                     backdropFilter: 'blur(20px)',
-                    bgcolor: 'rgba(255, 255, 255, 0.7)',
+                    bgcolor: 'rgba(255, 255, 255, 0.5)',
                     width: '100%',
                     zIndex: 2,
                     height: '100%',

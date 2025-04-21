@@ -86,10 +86,16 @@ class MinioClient(StorageClient):
     def remove_object(self, bucket_name: str, object_name: str):
         self.client.remove_object(bucket_name, object_name)
         
-    def put_object(self, bucket_name: str, object_name: str, file_path: str):
+    def put_object(self, bucket_name: str, object_name: str, data, length: int, content_type: str):
         """Tải file lên bucket."""
         try:
-            self.client.fput_object(bucket_name, object_name, file_path)
+            self.client.put_object(
+                bucket_name=bucket_name,
+                object_name=object_name,
+                data=data,
+                length=length,
+                content_type=content_type
+            )
             logger.info(f"Uploaded file to MinIO: {bucket_name}/{object_name}")
         except S3Error as e:
             logger.error(f"Failed to upload file to MinIO: {e}")

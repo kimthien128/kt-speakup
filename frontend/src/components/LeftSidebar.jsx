@@ -117,8 +117,13 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
     if (configLoading) {
         return <CircularProgress />;
     }
-    if (configError) {
-        return <Alert severity="error">{configError}</Alert>;
+    if (configError || chatError) {
+        return (
+            <Alert severity="error">
+                {configError}
+                {chatError}
+            </Alert>
+        );
     }
 
     return (
@@ -149,7 +154,13 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                             mb: 2,
                         }}
                     >
-                        <Box onClick={() => navigate('/')} sx={{width: '100px', height: '100px', cursor: 'pointer'}}>
+                        <Box
+                            onClick={() => navigate('/')}
+                            sx={{
+                                height: '100px',
+                                cursor: 'pointer',
+                            }}
+                        >
                             <img
                                 src={config?.logoImage || null}
                                 alt="KT SpeakUp Logo"

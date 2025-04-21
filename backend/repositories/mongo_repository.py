@@ -19,8 +19,8 @@ class MongoRepository(BaseRepository):
     async def insert_one(self, resource: str, document: dict) -> Any:
         return await self.db[resource].insert_one(document)
     
-    async def update_one(self, resource: str, query: dict, update: dict) -> Any:
-        return await self.db[resource].update_one(query, update)
+    async def update_one(self, resource: str, query: dict, update: dict, upsert: bool = False) -> Any:
+        return await self.db[resource].update_one(query, update, upsert=upsert)
         
     async def delete_one(self, resource: str, query: dict) -> Any:
         return await self.db[resource].delete_one(query)

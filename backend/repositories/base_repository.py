@@ -25,8 +25,9 @@ class BaseRepository(ABC):
         pass
     
     @abstractmethod
-    async def update_one(self, resource: str, query: dict, update: dict) -> Any:
-        """Cập nhật một bản ghi trong resource dựa trên query"""
+    async def update_one(self, resource: str, query: dict, update: dict, upsert: bool = False) -> Any:
+        """Cập nhật một bản ghi trong resource dựa trên query.
+        Nếu upsert=True, tạo mới nếu không tìm thấy."""
         pass
     
     @abstractmethod

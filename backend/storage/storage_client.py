@@ -36,7 +36,7 @@ class StorageClient(ABC):
         pass
     
     @abstractmethod
-    def put_object(self, bucket_name: str, object_name: str, file_path: str):
+    def put_object(self, bucket_name: str, object_name: str, data, length:int, content_type: str):
         """Tải file lên bucket."""
         pass
     
