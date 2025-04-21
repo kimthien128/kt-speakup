@@ -46,8 +46,8 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
     const {
         chats,
         filteredChats,
-        loading,
-        error,
+        loading: chatLoading,
+        error: chatError,
         searchChatTitle,
         setSearchChatTitle,
         editingChatId,
@@ -114,11 +114,11 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
     };
 
     // Xử lý config
-    if (loading) {
+    if (configLoading) {
         return <CircularProgress />;
     }
-    if (error) {
-        return <Alert severity="error">{error}</Alert>;
+    if (configError) {
+        return <Alert severity="error">{configError}</Alert>;
     }
 
     return (
@@ -188,7 +188,7 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                         <Tooltip title="Create new chat">
                             <IconButton
                                 color="primary"
-                                onClick={createChat} // Chuyển đến trang tạo chat mới, vì nó cùng logic để tạo chat mới () => navigate('/')
+                                onClick={() => navigate('/')} //có thể dùng createChat để tạo chat mới
                                 sx={{
                                     p: 1, // Sửa: Tăng padding để vùng click lớn hơn
                                     fontSize: '1.8rem', // Sửa: Tăng kích thước tổng thể của IconButton
