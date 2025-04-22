@@ -29,9 +29,8 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import SearchIcon from '@mui/icons-material/Search';
 import CancelIcon from '@mui/icons-material/Cancel';
 import DeleteIcon from '@mui/icons-material/Delete';
-import MenuOpenIcon from '@mui/icons-material/MenuOpen';
-import MenuIcon from '@mui/icons-material/Menu';
 import CircleIcon from '@mui/icons-material/Circle';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
 import useSiteConfig from '../hooks/useSiteConfig';
 import ConfirmDialog from './ConfirmDialog';
@@ -465,7 +464,14 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                     }}
                     onClick={() => setIsOpen(!isOpen)}
                 >
-                    {isOpen ? <MenuOpenIcon /> : <MenuIcon sx={{fontSize: '32px', color: 'primary.main'}} />}
+                    <ChevronRightIcon
+                        sx={{
+                            fontSize: '32px',
+                            color: 'primary.main',
+                            transform: isOpen ? 'rotate(0deg)' : 'rotate(180deg)',
+                            transition: 'transform 0.6s ease',
+                        }}
+                    />
                 </IconButton>
             </Tooltip>
 

@@ -367,6 +367,7 @@ function InputArea({
                     >
                         <MuiTooltip title={!suggestionsOpen ? 'Show Suggestion' : 'Hide Suggestion'} placement="top">
                             <IconButton
+                                // disabled={!suggestionData.latest_suggestion}
                                 onClick={() => setSuggestionsOpen(!suggestionsOpen)}
                                 sx={{
                                     position: 'absolute',

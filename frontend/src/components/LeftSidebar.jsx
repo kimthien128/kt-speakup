@@ -28,8 +28,7 @@ import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
 import SearchIcon from '@mui/icons-material/Search';
 import Tooltip from '@mui/material/Tooltip';
-import MenuOpenIcon from '@mui/icons-material/MenuOpen';
-import MenuIcon from '@mui/icons-material/Menu';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import HomeIcon from '@mui/icons-material/Home'; // sau này thay logo
 
 function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
@@ -370,7 +369,14 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                     }}
                     onClick={() => setIsOpen(!isOpen)}
                 >
-                    {isOpen ? <MenuOpenIcon /> : <MenuIcon sx={{fontSize: '32px', color: 'primary.main'}} />}
+                    <ChevronLeftIcon
+                        sx={{
+                            fontSize: '32px',
+                            color: 'primary.main',
+                            transform: isOpen ? 'rotate(0deg)' : 'rotate(-180deg)',
+                            transition: 'transform 0.6s ease',
+                        }}
+                    />
                 </IconButton>
             </Tooltip>
 
