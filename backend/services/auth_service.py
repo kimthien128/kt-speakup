@@ -19,7 +19,7 @@ class AuthService:
         self.auth_repository = auth_repository
         self.storage_client = storage_client
         self.jwt_config = jwt_config
-        self.avatar_bucket = os.getenv("AVATAR_BUCKET")
+        self.avatar_bucket = os.getenv("AVATARS_BUCKET")
         self.minio_endpoint = os.getenv("MINIO_ENDPOINT")
         
     async def get_current_user(self, token: str = Depends(oauth2_scheme), response: Response = None) -> UserInDB:

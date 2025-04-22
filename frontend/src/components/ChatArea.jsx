@@ -1,6 +1,6 @@
 // components/ChatArea.jsx
 import React, {useEffect, useRef} from 'react';
-import {Tooltip as MuiTooltip} from '@mui/material';
+import {Tooltip as MuiTooltip, Tooltip} from '@mui/material';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
@@ -219,35 +219,39 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                                                     p: 1,
                                                 }}
                                             >
-                                                <IconButton
-                                                    size="small"
-                                                    onClick={() =>
-                                                        playMessage(msg.audioUrl, msg.ai, index, playSound, chatId)
-                                                    }
-                                                    sx={{
-                                                        bgcolor: 'rgba(66, 165, 245, .95)',
-                                                        color: 'white',
-                                                        '&: hover': {
-                                                            bgcolor: 'primary.dark',
-                                                        },
-                                                    }}
-                                                >
-                                                    <VolumeUpIcon fontSize="small" />
-                                                </IconButton>
+                                                <Tooltip title="Play Audio" placement="bottom">
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={() =>
+                                                            playMessage(msg.audioUrl, msg.ai, index, playSound, chatId)
+                                                        }
+                                                        sx={{
+                                                            bgcolor: 'rgba(66, 165, 245, .95)',
+                                                            color: 'white',
+                                                            '&: hover': {
+                                                                bgcolor: 'primary.dark',
+                                                            },
+                                                        }}
+                                                    >
+                                                        <VolumeUpIcon fontSize="small" />
+                                                    </IconButton>
+                                                </Tooltip>
 
-                                                <IconButton
-                                                    size="small"
-                                                    onClick={(e) => handleTranslate(msg.ai, index, e)}
-                                                    sx={{
-                                                        bgcolor: 'rgba(66, 165, 245, .95)',
-                                                        color: 'white',
-                                                        '&: hover': {
-                                                            bgcolor: 'primary.dark',
-                                                        },
-                                                    }}
-                                                >
-                                                    <TranslateIcon fontSize="small" />
-                                                </IconButton>
+                                                <Tooltip title="Translate" placement="bottom">
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={(e) => handleTranslate(msg.ai, index, e)}
+                                                        sx={{
+                                                            bgcolor: 'rgba(66, 165, 245, .95)',
+                                                            color: 'white',
+                                                            '&: hover': {
+                                                                bgcolor: 'primary.dark',
+                                                            },
+                                                        }}
+                                                    >
+                                                        <TranslateIcon fontSize="small" />
+                                                    </IconButton>
+                                                </Tooltip>
                                             </Box>
                                         )}
                                     </Box>

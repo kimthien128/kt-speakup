@@ -59,7 +59,7 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
         loadingDetails,
         isDeleteMode,
         setIsDeleteMode,
-        error,
+        error: vocabError,
         fetchWordDetails,
         deleteVocab,
         filteredVocab,
@@ -123,7 +123,7 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                 flexDirection: 'column',
                 flexShrink: 0,
                 position: 'relative',
-                transition: 'width .3s ease',
+                transition: 'all .3s ease',
                 borderLeft: '1px solid',
                 borderColor: 'divider',
             }}
@@ -166,12 +166,14 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                             )}
 
                             {/* Account Menu */}
-                            <IconButton onClick={handleMenuOpen}>
-                                <Avatar src={userInfo.avatarPath} sx={{bgcolor: 'primary.main'}}>
-                                    {/* Hiển thị chữ cái đầu nếu không có avatarPath */}
-                                    {!userInfo.avatarPath && getAvatarInitial(userInfo)}
-                                </Avatar>
-                            </IconButton>
+                            <Tooltip title="Profile" placement="bottom">
+                                <IconButton onClick={handleMenuOpen}>
+                                    <Avatar src={userInfo.avatarPath} sx={{bgcolor: 'primary.main'}}>
+                                        {/* Hiển thị chữ cái đầu nếu không có avatarPath */}
+                                        {!userInfo.avatarPath && getAvatarInitial(userInfo)}
+                                    </Avatar>
+                                </IconButton>
+                            </Tooltip>
                         </Box>
                     )}
 
@@ -196,31 +198,22 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                                     mb: 1,
                                 }}
                             >
-                                {/* <TextField
-                            label="Search vocabulary"
-                            variant="outlined"
-                            size="small"
-                            fullWidth
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            error={searchTerm && filteredVocab.length === 0}
-                            helperText={searchTerm && filteredVocab.length === 0 ? 'No matches found' : ''}
-                            sx={{my: 1}}
-                        /> */}
-                                <FormControl sx={{flexGrow: 1, mr: 1}} variant="outlined">
-                                    <OutlinedInput
-                                        type="text"
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        placeholder="Search vocabulary"
-                                        size="small"
-                                        startAdornment={
-                                            <InputAdornment position="start">
-                                                <SearchIcon />
-                                            </InputAdornment>
-                                        }
-                                    />
-                                </FormControl>
+                                <Tooltip title="Search Vocabulary" placement="bottom">
+                                    <FormControl sx={{flexGrow: 1, mr: 1}} variant="outlined">
+                                        <OutlinedInput
+                                            type="text"
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                            placeholder="Search vocabulary"
+                                            size="small"
+                                            startAdornment={
+                                                <InputAdornment position="start">
+                                                    <SearchIcon />
+                                                </InputAdornment>
+                                            }
+                                        />
+                                    </FormControl>
+                                </Tooltip>
                                 <Tooltip title={isDeleteMode ? 'Exit delete mode' : 'Delete vocabulary'}>
                                     <IconButton onClick={() => setIsDeleteMode(!isDeleteMode)} sx={{ml: 1}}>
                                         {isDeleteMode ? <CancelIcon color="error" /> : <DeleteIcon />}
@@ -247,16 +240,16 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                                 ))}
                             </Box>
                         ) : chatId && chatId !== 'null' && chatId !== 'undefined' ? (
-                            <>
-                                <img
-                                    src={config?.saveWordImage || null}
-                                    alt="KT SpeakUp Logo"
-                                    style={{width: '80px', objectFit: 'cover', objectPosition: 'center'}}
-                                />
-                                <Typography variant="body1">
-                                    {vocabList.length === 0 ? 'Save your first word !!' : ''}
-                                </Typography>
-                            </>
+                            vocabList.length === 0 && (
+                                <>
+                                    <img
+                                        src={config?.saveWordImage || null}
+                                        alt="KT SpeakUp Logo"
+                                        style={{width: '70px', objectFit: 'cover', objectPosition: 'center'}}
+                                    />
+                                    <Typography variant="body1">Save your first word !!</Typography>
+                                </>
+                            )
                         ) : (
                             <></>
                         )}
@@ -269,7 +262,6 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                                 flexGrow: 1,
                                 minHeight: 0,
                                 overflow: 'hidden',
-                                borderRadius: 2,
                                 display: 'flex',
                                 flexDirection: 'column',
                                 mt: 2,
@@ -283,43 +275,6 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                                     overflowX: 'hidden',
                                     scrollbarWidth: 'thin',
                                     scrollbarColor: 'rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.1)', // Màu thứ 2 là màu khi hover
-                                    // Target cho Accordion root
-                                    '& .MuiAccordion-root': {
-                                        m: '0 !important',
-                                        borderBottom: '1px solid rgba(0, 0, 0, 0.1) !important',
-                                    },
-                                    '& .MuiAccordion-root:last-child': {
-                                        borderBottom: 'none !important',
-                                    },
-                                    // Target cho AccordionSummary
-                                    '& .MuiAccordionSummary-root': {
-                                        py: 0,
-                                        px: 1,
-                                        minHeight: '36px !important',
-                                        '& .MuiAccordionSummary-content': {my: 0.5},
-                                    },
-                                    '& .MuiAccordionSummary-content .MuiTypography-root': {
-                                        fontWeight: '500 !important', // Đậm toàn bộ tiêu đề
-                                    },
-                                    // Target cho MuiBox
-                                    '& .MuiBox-root': {
-                                        m: 0,
-                                    },
-                                    // Target cho AccordionDetails, ListItem
-                                    '& .MuiAccordionDetails-root, & .MuiListItem-root': {
-                                        px: 1,
-                                        py: 0,
-                                    },
-                                    // Target cho List, ListItemText
-                                    '& .MuiList-root, & .MuiListItemText-root': {
-                                        py: 0,
-                                        my: 0,
-                                    },
-                                    // Target cho MuiTypographyRoot
-                                    '& .MuiTypography-root.MuiTypography-subtitle1': {
-                                        fontWeight: '500',
-                                    },
-                                    '& .MuiListItemText-root': {},
                                 }}
                             >
                                 {loadingDetails ? (
@@ -478,16 +433,19 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                         height: '100%',
                         gap: 2,
                         py: 8,
+                        transition: 'all 0.3s ease',
                     }}
                 >
-                    <IconButton onClick={handleMenuOpen}>
-                        <Avatar src={userInfo.avatarPath} sx={{bgcolor: 'primary.main'}}>
-                            {/* Hiển thị chữ cái đầu nếu không có avatarPath */}
-                            {!userInfo.avatarPath && getAvatarInitial(userInfo)}
-                        </Avatar>
-                    </IconButton>
+                    <Tooltip title="Profile" placement="left">
+                        <IconButton onClick={handleMenuOpen}>
+                            <Avatar src={userInfo.avatarPath} sx={{bgcolor: 'primary.main'}}>
+                                {/* Hiển thị chữ cái đầu nếu không có avatarPath */}
+                                {!userInfo.avatarPath && getAvatarInitial(userInfo)}
+                            </Avatar>
+                        </IconButton>
+                    </Tooltip>
 
-                    <Tooltip title="Admin panel" placement="right">
+                    <Tooltip title="Admin panel" placement="left">
                         <IconButton onClick={() => navigate('/admin')} sx={{mb: 2}}>
                             <AdminPanelSettingsIcon sx={{fontSize: '2rem', color: 'primary.main'}} />
                         </IconButton>
@@ -496,18 +454,18 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
             )}
 
             {/* Nút toggle ẩn/hiện sidebar */}
-            <Tooltip title={isOpen ? 'Close Sidebar' : 'Open Sidebar'} placement="right">
+            <Tooltip title={isOpen ? 'Close Right Sidebar' : 'Open Right Sidebar'} placement="left">
                 <IconButton
                     sx={{
                         position: 'absolute',
                         top: 20,
                         right: isOpen ? 260 : 5,
-                        transition: 'right .3s ease',
+                        transition: 'right 0.3s ease',
                         zIndex: 1000,
                     }}
                     onClick={() => setIsOpen(!isOpen)}
                 >
-                    {isOpen ? <MenuOpenIcon /> : <MenuIcon sx={{fontSize: '2rem', color: 'primary.main'}} />}
+                    {isOpen ? <MenuOpenIcon /> : <MenuIcon sx={{fontSize: '32px', color: 'primary.main'}} />}
                 </IconButton>
             </Tooltip>
 

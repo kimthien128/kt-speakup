@@ -1,5 +1,5 @@
-import React, {useState, useEffect, useRef, useMemo} from 'react';
-import {Link as RouterLink, useNavigate} from 'react-router-dom';
+import React, {useState, useEffect, useRef} from 'react';
+import {useNavigate} from 'react-router-dom';
 import useSiteConfig from '../hooks/useSiteConfig';
 import {useChatList} from '../hooks/useChatList';
 import useConfirmDialog from '../hooks/useConfirmDialog';
@@ -113,19 +113,6 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
         });
     };
 
-    // Xử lý config
-    if (configLoading) {
-        return <CircularProgress />;
-    }
-    if (configError || chatError) {
-        return (
-            <Alert severity="error">
-                {configError}
-                {chatError}
-            </Alert>
-        );
-    }
-
     return (
         <Box
             sx={{
@@ -138,7 +125,7 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                 borderTopLeftRadius: 40,
                 borderBottomLeftRadius: 40,
                 position: 'relative',
-                transition: 'width .3s ease',
+                transition: 'all .3s ease',
                 borderRight: '1px solid',
                 borderColor: 'divider',
             }}
@@ -147,6 +134,7 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
             {isOpen ? (
                 <div>
                     {/* Logo */}
+
                     <Box
                         sx={{
                             display: 'flex',
@@ -161,14 +149,20 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                                 cursor: 'pointer',
                             }}
                         >
-                            <img
-                                src={config?.logoImage || null}
-                                alt="KT SpeakUp Logo"
-                                style={{width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center'}}
-                            />
+                            <Tooltip title="Home" placement="bottom">
+                                <img
+                                    src={config?.logoImage || null}
+                                    alt="KT SpeakUp Logo"
+                                    style={{
+                                        width: '100%',
+                                        height: '100%',
+                                        objectFit: 'cover',
+                                        objectPosition: 'center',
+                                    }}
+                                />
+                            </Tooltip>
                         </Box>
                     </Box>
-                    <Divider sx={{mb: 2}} />
 
                     {/* Control Chat */}
                     <Box
@@ -180,20 +174,22 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                         }}
                     >
                         {/* Search title chat */}
-                        <FormControl sx={{flexGrow: 1, mr: 1}} variant="outlined">
-                            <OutlinedInput
-                                type="text"
-                                value={searchChatTitle}
-                                onChange={(e) => setSearchChatTitle(e.target.value)}
-                                placeholder="Search chat"
-                                size="small"
-                                startAdornment={
-                                    <InputAdornment position="start">
-                                        <SearchIcon />
-                                    </InputAdornment>
-                                }
-                            />
-                        </FormControl>
+                        <Tooltip title="Search chat" placement="bottom">
+                            <FormControl sx={{flexGrow: 1, mr: 1}} variant="outlined">
+                                <OutlinedInput
+                                    type="text"
+                                    value={searchChatTitle}
+                                    onChange={(e) => setSearchChatTitle(e.target.value)}
+                                    placeholder="Search chat"
+                                    size="small"
+                                    startAdornment={
+                                        <InputAdornment position="start">
+                                            <SearchIcon />
+                                        </InputAdornment>
+                                    }
+                                />
+                            </FormControl>
+                        </Tooltip>
 
                         {/* Create new chat */}
                         <Tooltip title="Create new chat">
@@ -256,15 +252,17 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                                                 size="small"
                                                 sx={{flexGrow: 1, ml: -1}}
                                             />
-                                            <IconButton
-                                                edge="end"
-                                                onClick={(e) => {
-                                                    e.stopPropagation(); // Ngăn chọn chat
-                                                    handleSaveTitle(chat._id);
-                                                }}
-                                            >
-                                                <SaveIcon fontSize="small" />
-                                            </IconButton>
+                                            <Tooltip title="Save title" placement="bottom">
+                                                <IconButton
+                                                    edge="end"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation(); // Ngăn chọn chat
+                                                        handleSaveTitle(chat._id);
+                                                    }}
+                                                >
+                                                    <SaveIcon fontSize="small" />
+                                                </IconButton>
+                                            </Tooltip>
                                         </Box>
                                     ) : (
                                         <>
@@ -288,25 +286,30 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                                                     '.MuiListItem-root:hover &': {display: 'flex'}, // Kích hoạt từ ListItem cha
                                                 }}
                                             >
-                                                <IconButton
-                                                    edge="end"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation(); // Ngăn chọn chat khi nhấn Edit
-                                                        startEditChat(chat._id, chat.title);
-                                                    }}
-                                                    sx={{mr: 1}}
-                                                >
-                                                    <EditIcon fontSize="small" />
-                                                </IconButton>
-                                                <IconButton
-                                                    edge="end"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation(); // Ngăn chọn chat khi nhấn X
-                                                        handleDeleteChat(chat._id);
-                                                    }}
-                                                >
-                                                    <DeleteIcon fontSize="small" />
-                                                </IconButton>
+                                                <Tooltip title="Edit title" placement="bottom">
+                                                    <IconButton
+                                                        edge="end"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation(); // Ngăn chọn chat khi nhấn Edit
+                                                            startEditChat(chat._id, chat.title);
+                                                        }}
+                                                        sx={{mr: 1}}
+                                                    >
+                                                        <EditIcon fontSize="small" />
+                                                    </IconButton>
+                                                </Tooltip>
+
+                                                <Tooltip title="Delete chat" placement="bottom">
+                                                    <IconButton
+                                                        edge="end"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation(); // Ngăn chọn chat khi nhấn X
+                                                            handleDeleteChat(chat._id);
+                                                        }}
+                                                    >
+                                                        <DeleteIcon fontSize="small" />
+                                                    </IconButton>
+                                                </Tooltip>
                                             </Box>
                                         </>
                                     )}
@@ -324,37 +327,50 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                         height: '100%',
                         gap: 2,
                         py: 8,
+                        transition: 'all .3s ease',
                     }}
                 >
                     {/* Icon Logo */}
                     <Tooltip title="Home" placement="right">
                         <IconButton>
-                            <HomeIcon sx={{fontSize: '2rem', color: 'primary.main'}} />
+                            {config?.logoImage ? (
+                                <img
+                                    src={config.logoImage}
+                                    alt="KT SpeakUp Logo"
+                                    style={{
+                                        width: '32px',
+                                        objectFit: 'cover',
+                                        objectPosition: 'center',
+                                    }}
+                                />
+                            ) : (
+                                <HomeIcon sx={{fontSize: '32px', color: 'primary.main'}} />
+                            )}
                         </IconButton>
                     </Tooltip>
 
                     {/* Nút tạo chat mới */}
                     <Tooltip title="Create new chat" placement="right">
                         <IconButton onClick={() => navigate('/')} sx={{mb: 2}}>
-                            <AddIcon sx={{fontSize: '2rem', color: 'primary.main'}} />
+                            <AddIcon sx={{fontSize: '32px', color: 'primary.main'}} />
                         </IconButton>
                     </Tooltip>
                 </Box>
             )}
 
             {/* Nút toggle ẩn/hiện sidebar */}
-            <Tooltip title={isOpen ? 'Close Sidebar' : 'Open Sidebar'} placement="right">
+            <Tooltip title={isOpen ? 'Close Left Sidebar' : 'Open Left Sidebar'} placement="right">
                 <IconButton
                     sx={{
                         position: 'absolute',
                         top: 20,
                         right: isOpen ? 0 : 5,
-
+                        transition: 'left 0.3s ease',
                         zIndex: 1000,
                     }}
                     onClick={() => setIsOpen(!isOpen)}
                 >
-                    {isOpen ? <MenuOpenIcon /> : <MenuIcon sx={{fontSize: '2rem', color: 'primary.main'}} />}
+                    {isOpen ? <MenuOpenIcon /> : <MenuIcon sx={{fontSize: '32px', color: 'primary.main'}} />}
                 </IconButton>
             </Tooltip>
 

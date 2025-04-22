@@ -32,6 +32,7 @@ export const useVocab = (chatId, onVocabAdded) => {
         fetchVocab();
         setWordDetails(null);
         setSelectedWord(null);
+        setSearchTerm('');
     }, [chatId, fetchVocab]);
 
     // Truyền hàm fetchVocab ra ngoài qua onVocabAdded

@@ -186,32 +186,37 @@ function InputArea({
                 </Box>
 
                 {/* Icon */}
-                <IconButton
-                    onClick={() => generateSuggestionsAudio(suggestionData.latest_suggestion, chatId)}
-                    disabled={isPlaying}
-                    sx={{
-                        bgcolor: 'primary.main',
-                        color: 'white',
-                        '&:hover': {
-                            bgcolor: 'primary.dark',
-                        },
-                    }}
-                >
-                    {isPlaying ? <CircularProgress size={20} /> : <VolumeUpIcon fontSize="small" />}
-                </IconButton>
-                <IconButton
-                    onClick={() => translateSuggestion(suggestionData.latest_suggestion, chatId, suggestionData)}
-                    sx={{
-                        ml: 1,
-                        bgcolor: 'primary.main',
-                        color: 'white',
-                        '&:hover': {
-                            bgcolor: 'primary.dark',
-                        },
-                    }}
-                >
-                    {loading ? <CircularProgress size={20} /> : <TranslateIcon fontSize="small" />}
-                </IconButton>
+                <MuiTooltip title="Play Audio" placement="top">
+                    <IconButton
+                        onClick={() => generateSuggestionsAudio(suggestionData.latest_suggestion, chatId)}
+                        disabled={isPlaying}
+                        sx={{
+                            bgcolor: 'primary.main',
+                            color: 'white',
+                            '&:hover': {
+                                bgcolor: 'primary.dark',
+                            },
+                        }}
+                    >
+                        {isPlaying ? <CircularProgress size={20} /> : <VolumeUpIcon fontSize="small" />}
+                    </IconButton>
+                </MuiTooltip>
+
+                <MuiTooltip title="Translate" placement="top">
+                    <IconButton
+                        onClick={() => translateSuggestion(suggestionData.latest_suggestion, chatId, suggestionData)}
+                        sx={{
+                            ml: 1,
+                            bgcolor: 'primary.main',
+                            color: 'white',
+                            '&:hover': {
+                                bgcolor: 'primary.dark',
+                            },
+                        }}
+                    >
+                        {loading ? <CircularProgress size={20} /> : <TranslateIcon fontSize="small" />}
+                    </IconButton>
+                </MuiTooltip>
             </Box>
         )
     );
@@ -252,22 +257,24 @@ function InputArea({
                         }}
                         onClick={handleSpeedDialClose}
                     />
-                    <IconButton
-                        onClick={() => setSpeedDialOpen((prev) => !prev)} //Toggle
-                        sx={{
-                            width: 40,
-                            height: 40,
-                            bgcolor: speedDialOpen ? 'primary.light' : 'grey.200',
-                            color: speedDialOpen ? 'primary.contrastText' : 'grey.primary',
-                            '&:hover': {
-                                bgcolor: speedDialOpen ? 'primary.dark' : 'grey.300',
-                            },
-                            zIndex: 1,
-                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
-                        }}
-                    >
-                        <SettingsIcon />
-                    </IconButton>
+                    <MuiTooltip title="Select Method" placement="top">
+                        <IconButton
+                            onClick={() => setSpeedDialOpen((prev) => !prev)} //Toggle
+                            sx={{
+                                width: 40,
+                                height: 40,
+                                bgcolor: speedDialOpen ? 'primary.light' : 'grey.200',
+                                color: speedDialOpen ? 'primary.contrastText' : 'grey.primary',
+                                '&:hover': {
+                                    bgcolor: speedDialOpen ? 'primary.dark' : 'grey.300',
+                                },
+                                zIndex: 1,
+                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+                            }}
+                        >
+                            <SettingsIcon />
+                        </IconButton>
+                    </MuiTooltip>
 
                     {/* Modal settings method */}
                     <Box
@@ -358,26 +365,28 @@ function InputArea({
                             position: 'relative',
                         }}
                     >
-                        <IconButton
-                            onClick={() => setSuggestionsOpen(!suggestionsOpen)}
-                            sx={{
-                                position: 'absolute',
-                                top: -32,
-                                right: -8,
-                                bgcolor: suggestionData.latest_suggestion ? 'primary.light' : 'grey.200',
-                                color: suggestionData.latest_suggestion ? 'primary.contrastText' : 'grey.primary',
-                                '&:hover': {
-                                    bgcolor: suggestionData.latest_suggestion ? 'primary.main' : 'grey.300',
-                                },
-                                '&: disabled': {
-                                    bgcolor: 'grey.200',
-                                    color: 'grey.500',
-                                },
-                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
-                            }}
-                        >
-                            <LightbulbIcon />
-                        </IconButton>
+                        <MuiTooltip title={!suggestionsOpen ? 'Show Suggestion' : 'Hide Suggestion'} placement="top">
+                            <IconButton
+                                onClick={() => setSuggestionsOpen(!suggestionsOpen)}
+                                sx={{
+                                    position: 'absolute',
+                                    top: -32,
+                                    right: -8,
+                                    bgcolor: suggestionData.latest_suggestion ? 'primary.light' : 'grey.200',
+                                    color: suggestionData.latest_suggestion ? 'primary.contrastText' : 'grey.primary',
+                                    '&:hover': {
+                                        bgcolor: suggestionData.latest_suggestion ? 'primary.main' : 'grey.300',
+                                    },
+                                    '&: disabled': {
+                                        bgcolor: 'grey.200',
+                                        color: 'grey.500',
+                                    },
+                                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+                                }}
+                            >
+                                <LightbulbIcon />
+                            </IconButton>
+                        </MuiTooltip>
                     </Box>
 
                     <Collapse in={suggestionsOpen}>
@@ -437,19 +446,21 @@ function InputArea({
                     }}
                 >
                     {/* Icon Micro */}
-                    <IconButton
-                        onClick={isRecording ? stopRecording : startRecording}
-                        sx={{
-                            bgcolor: isRecording ? 'error.main' : 'primary.main',
-                            color: 'white',
-                            '&:hover': {
-                                bgcolor: isRecording ? 'error.dark' : 'primary.dark',
-                            },
-                        }}
-                        disabled={isSending || isPlayingWord} // Disable khi đang gửi hoặc phát âm
-                    >
-                        {isRecording ? <StopIcon /> : <MicIcon />}
-                    </IconButton>
+                    <MuiTooltip title={!isRecording ? 'Record' : 'Stop'} placement="top">
+                        <IconButton
+                            onClick={isRecording ? stopRecording : startRecording}
+                            sx={{
+                                bgcolor: isRecording ? 'error.main' : 'primary.main',
+                                color: 'white',
+                                '&:hover': {
+                                    bgcolor: isRecording ? 'error.dark' : 'primary.dark',
+                                },
+                            }}
+                            disabled={isSending || isPlayingWord} // Disable khi đang gửi hoặc phát âm
+                        >
+                            {isRecording ? <StopIcon /> : <MicIcon />}
+                        </IconButton>
+                    </MuiTooltip>
 
                     {/* Textarea */}
                     <TextareaAutosize
@@ -475,6 +486,7 @@ function InputArea({
                     />
 
                     {/* Icon Send */}
+
                     <IconButton
                         onClick={onSend}
                         disabled={!transcript.trim() || isSending}
