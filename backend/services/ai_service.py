@@ -8,13 +8,22 @@ from .ai.ai_client import AIClient
 from ..logging_config import logger
 
 class AIService:
-    def __init__(self, chat_repository: ChatRepository, openai_client: AIClient, mistral_client: AIClient, gemini_client: AIClient):
+    def __init__(
+        self, 
+        chat_repository: ChatRepository, 
+        openai_client: AIClient, # hiện tại không có key dùng, sẽ 
+        mistral_client: AIClient, 
+        gemini_client: AIClient
+    ):
         self.chat_repository = chat_repository
-        self.clients = {
-            "chatgpt": openai_client,
-            "mistral": mistral_client,
-            "gemini": gemini_client
-        }
+        self.clients = {}
+        # Chỉ thêm các client không phải None vào self.clients
+        if openai_client:
+            self.clients["chatgpt"] = openai_client
+        if mistral_client:
+            self.clients["mistral"] = mistral_client
+        if gemini_client:
+            self.clients["gemini"] = gemini_client
         
     async def generate_response(self, transcript: str, chat_id: str, user_id: str, method: str) -> dict:
         if not transcript:
@@ -22,7 +31,7 @@ class AIService:
         if not chat_id:
             raise HTTPException(status_code=400, detail="No chat_id provided")
         if method not in self.clients:
-            raise HTTPException(status_code=400, detail=f"Unsupported generate method: {method}")
+            raise HTTPException(status_code=400, detail=f"Client {method} is disabled or unsupported")
         
         # Lấy lịch sử chat
         chat = await self.chat_repository.find_chat_by_id_and_user(chat_id, user_id)

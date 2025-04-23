@@ -2,6 +2,7 @@
 #Tạo các instance singleton cho các dependency như MongoRepository, StorageClient, HTTPClient, v.v.
 #Sử dụng FastAPI's Depends để inject các instance này vào các service.
 
+import os
 from fastapi import Depends
 from .database.database_factory import database
 from .repositories.mongo_repository import MongoRepository
@@ -56,6 +57,12 @@ class DependencyContainer:
     _google_stt_client = None
     _google_translation_client = None
     
+    # Đọc cấu hình ENABLED_AI_CLIENTS từ biến môi trường
+    @classmethod
+    def _get_enabled_ai_clients(cls):
+        enabled_clients = os.getenv("ENABLED_AI_CLIENTS", "")
+        return set(enabled_clients.split(",")) if enabled_clients else set()
+    
     @classmethod
     async def get_mongo_repository(cls):
         if cls._mongo_repository is None:
@@ -105,18 +112,27 @@ class DependencyContainer:
 
     @classmethod
     def get_openai_client(cls):
+        enabled_clients = cls._get_enabled_ai_clients()
+        if "chatgpt" not in enabled_clients:
+            return None
         if cls._openai_client is None:
             cls._openai_client = OpenAIClient()
         return cls._openai_client
 
     @classmethod
     def get_mistral_client(cls):
+        enabled_clients = cls._get_enabled_ai_clients()
+        if "mistral" not in enabled_clients:
+            return None
         if cls._mistral_client is None:
             cls._mistral_client = MistralClient()
         return cls._mistral_client
 
     @classmethod
     def get_gemini_client(cls):
+        enabled_clients = cls._get_enabled_ai_clients()
+        if "gemini" not in enabled_clients:
+            return None
         if cls._gemini_client is None:
             cls._gemini_client = GeminiClient()
         return cls._gemini_client
@@ -149,18 +165,27 @@ class DependencyContainer:
 
     @classmethod
     def get_piper_client(cls):
+        enabled_clients = cls._get_enabled_ai_clients()
+        if "piper" not in enabled_clients:
+            return None
         if cls._piper_client is None:
             cls._piper_client = PiperClient()
         return cls._piper_client
 
     @classmethod
     def get_vosk_client(cls):
+        enabled_clients = cls._get_enabled_ai_clients()
+        if "vosk" not in enabled_clients:
+            return None
         if cls._vosk_client is None:
             cls._vosk_client = VoskSTTClient()
         return cls._vosk_client
 
     @classmethod
     def get_assemblyai_client(cls):
+        enabled_clients = cls._get_enabled_ai_clients()
+        if "assemblyai" not in enabled_clients:
+            return None
         if cls._assemblyai_client is None:
             cls._assemblyai_client = AssemblyAISTTClient()
         return cls._assemblyai_client

@@ -1,13 +1,15 @@
 // components/InputArea.jsx
-import React, {useState, useRef} from 'react';
+import React, {useState, useRef, useEffect} from 'react';
 import {useSpeechToText} from '../hooks/useSpeechToText';
 import {useMessageHandler} from '../hooks/useMessageHandler';
 import {useSuggestions} from '../hooks/useSuggestions';
 import {useWordTooltip} from '../hooks/useWordTooltip';
 import {useClickOutside} from '../hooks/useClickOutside';
 import {methodsConfig} from '../config/methodsConfig';
+import {useEnabledMethods} from '../hooks/useEnabledMethods';
 import {logger} from '../utils/logger';
 import useAudioPlayer from '../hooks/useAudioPlayer';
+import {toast} from 'react-toastify';
 
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
@@ -20,6 +22,7 @@ import MenuItem from '@mui/material/MenuItem';
 import {Tooltip as MuiTooltip} from '@mui/material';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
+import Alert from '@mui/material/Alert';
 
 import SettingsIcon from '@mui/icons-material/Settings';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
@@ -41,12 +44,13 @@ function InputArea({
 }) {
     const [sttMethod, setSttMethod] = useState('assemblyai');
     const [ttsMethod, setTtsMethod] = useState('gtts');
-    const [generateMethod, setGenerateMethod] = useState('mistral');
+    const [generateMethod, setGenerateMethod] = useState('gemini');
 
     // State cho SpeedDial (Settings)
     const [speedDialOpen, setSpeedDialOpen] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
     const [menuType, setMenuType] = useState(null);
+    const [error, setError] = useState(null);
 
     // State khi send
     const [isSending, setIsSending] = useState(false);
@@ -99,6 +103,33 @@ function InputArea({
         setWordTooltip(null);
     });
 
+    //lấy danh sách method được bật
+    const {enabledMethods, error: fetchError} = useEnabledMethods();
+
+    // Cập nhật error nếu có lỗi khi gọi API
+    useEffect(() => {
+        if (fetchError) {
+            setError(fetchError);
+        }
+    }, [fetchError]);
+
+    // Đặt method mặc định là method đầu tiên được bật trong từng loại
+    useEffect(() => {
+        if (enabledMethods.length > 0) {
+            const sttOptions = methodsConfig.stt.options.map((opt) => opt.value);
+            const generateOptions = methodsConfig.generate.options.map((opt) => opt.value);
+            const ttsOptions = methodsConfig.tts.options.map((opt) => opt.value);
+
+            const firstEnabledStt = sttOptions.find((opt) => enabledMethods.includes(opt));
+            const firstEnabledGenerate = generateOptions.find((opt) => enabledMethods.includes(opt));
+            const firstEnabledTts = ttsOptions.find((opt) => enabledMethods.includes(opt));
+
+            if (firstEnabledStt) setSttMethod(firstEnabledStt);
+            if (firstEnabledGenerate) setGenerateMethod(firstEnabledGenerate);
+            if (firstEnabledTts) setTtsMethod(firstEnabledTts);
+        }
+    }, [enabledMethods]);
+
     // Xử lý mở/đóng SpeedDial
     const handleSpeedDialOpen = () => setSpeedDialOpen(true);
     const handleSpeedDialClose = () => setSpeedDialOpen(false);
@@ -115,6 +146,12 @@ function InputArea({
 
     // Xử lý chọn method
     const handleMethodSelect = (method) => {
+        // Kiểm tra xem method có trong mảng enabledMethods không
+        if (!enabledMethods.includes(method)) {
+            toast.error(`Method "${method}" is disabled or unsupported.`);
+            return;
+        }
+        // Nếu method được bật => cập nhật state
         if (menuType === 'stt') setSttMethod(method);
         if (menuType === 'generate') setGenerateMethod(method);
         if (menuType === 'tts') setTtsMethod(method);
@@ -126,10 +163,17 @@ function InputArea({
     const onSend = async () => {
         setIsSending(true);
         setTranscript(''); // Xóa textarea ngay khi nhấn Send
+        setError(null); // Reset lỗi trước khi gửi
         try {
             const result = await handleSend(transcript);
             if (result && result.aiResponse && result.currentChatId) {
                 await fetchSuggestions(result.aiResponse, result.currentChatId);
+            }
+        } catch (err) {
+            if (err.response?.status === 400) {
+                setError(err.response.data.detail); // Hiển thị lỗi từ backend (ví dụ: "Client mistral is disabled or unsupported")
+            } else {
+                setError('Failed to send message. Please try again.');
             }
         } finally {
             setIsSending(false);
@@ -239,6 +283,12 @@ function InputArea({
                     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
                 }}
             >
+                {/* Hiển thị lỗi nếu có */}
+                {error && (
+                    <Alert severity="error" sx={{mb: 2, width: '100%'}}>
+                        {error}
+                    </Alert>
+                )}
                 {/* Khu vực 1: Icon Settings (SpeedDial) */}
                 <Box
                     sx={{
@@ -251,7 +301,7 @@ function InputArea({
                     <Backdrop
                         open={speedDialOpen}
                         sx={{
-                            zIndex: 1,
+                            zIndex: 2,
                             borderRadius: {md: 0, lg: 10},
                             bgcolor: 'rgba(0, 0, 0, 0.5)',
                         }}
@@ -268,7 +318,7 @@ function InputArea({
                                 '&:hover': {
                                     bgcolor: speedDialOpen ? 'primary.dark' : 'grey.300',
                                 },
-                                zIndex: 1,
+                                zIndex: 2,
                                 boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
                             }}
                         >
@@ -284,7 +334,7 @@ function InputArea({
                             left: 120,
                             display: speedDialOpen ? 'flex' : 'none',
                             gap: 12,
-                            zIndex: 1,
+                            zIndex: 2,
                         }}
                     >
                         {Object.values(methodsConfig).map((action) => (
@@ -329,22 +379,24 @@ function InputArea({
                     {/* Menu cho các phương thức */}
                     {menuType && methodsConfig[menuType] && (
                         <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose} sx={{mt: 1}}>
-                            {methodsConfig[menuType].options.map((option) => (
-                                <MenuItem
-                                    key={option.value}
-                                    onClick={() => handleMethodSelect(option.value)}
-                                    sx={{
-                                        bgcolor:
-                                            (menuType === 'stt' && sttMethod === option.value) ||
-                                            (menuType === 'generate' && generateMethod === option.value) ||
-                                            (menuType === 'tts' && ttsMethod === option.value)
-                                                ? 'primary.light'
-                                                : 'inherit',
-                                    }}
-                                >
-                                    {option.label}
-                                </MenuItem>
-                            ))}
+                            {methodsConfig[menuType].options
+                                .filter((option) => enabledMethods.includes(option.value)) // Lọc các phương thức được bật
+                                .map((option) => (
+                                    <MenuItem
+                                        key={option.value}
+                                        onClick={() => handleMethodSelect(option.value)}
+                                        sx={{
+                                            bgcolor:
+                                                (menuType === 'stt' && sttMethod === option.value) ||
+                                                (menuType === 'generate' && generateMethod === option.value) ||
+                                                (menuType === 'tts' && ttsMethod === option.value)
+                                                    ? 'primary.light'
+                                                    : 'inherit',
+                                        }}
+                                    >
+                                        {option.label}
+                                    </MenuItem>
+                                ))}
                         </Menu>
                     )}
                 </Box>

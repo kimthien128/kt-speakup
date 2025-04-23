@@ -460,7 +460,7 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                         top: 20,
                         right: isOpen ? 260 : 5,
                         transition: 'right 0.3s ease',
-                        zIndex: 1000,
+                        zIndex: 1,
                     }}
                     onClick={() => setIsOpen(!isOpen)}
                 >

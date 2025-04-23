@@ -24,6 +24,7 @@ export const methodsConfig = {
         options: [
             {value: 'mistral', label: 'Mistral'},
             {value: 'gemini', label: 'Gemini'},
+            {value: 'chatgpt', label: 'Chat GPT'},
         ],
     },
 

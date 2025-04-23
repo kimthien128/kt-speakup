@@ -365,7 +365,7 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                         top: 20,
                         right: isOpen ? 0 : 5,
                         transition: 'left 0.3s ease',
-                        zIndex: 1000,
+                        zIndex: 1,
                     }}
                     onClick={() => setIsOpen(!isOpen)}
                 >

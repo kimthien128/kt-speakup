@@ -1,3 +1,6 @@
+# backend/routes/config.py
+# Định nghĩa các route cho cấu hình của ứng dụng
+import os
 from fastapi import APIRouter, Depends, File, UploadFile
 from fastapi.responses import Response
 from pydantic import BaseModel
@@ -55,3 +58,9 @@ async def update_config(
     return await config_service.update_config(
         background, logo, aiIcon, hero, saveWord, current_user
     )
+
+# Lấy danh sách các model được bật từ biến môi trường (để frontend gọi)
+@router.get("/models")
+async def get_available_models():
+    """Trả về danh sách các method được bật."""
+    return os.getenv("ENABLED_AI_CLIENTS", "").split(",")
