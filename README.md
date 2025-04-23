@@ -1,6 +1,46 @@
+# 1. Cài đặt các gói cần thiết trên VPS
+
+```
+sudo apt update && sudo apt upgrade -y
+sudo apt install python3 python3-pip python3-venv nginx -y
+```
+
+# 2. Upload mã nguồn backend lên VPS
+
+-   Cài git:\
+    `sudo apt install git -y`
+-   Clone:\
+
+```
+git clone https://github.com/ten-ban/backend-cua-ban.git
+cd kt-speakup
+```
+
+# 3. Tạo môi trường ảo Python và cài dependencies
+
+```
+python3 -m venv venv
+source venv/bin/activate
+pip install --upgrade pip
+pip install -r backend/requirements.txt
+```
+
 ## Cài python v3.12
 
-## Cài đặt từ file requirements.txt
+## download mongodb compass
+
+## Cài MinIO
+
+-   tải file cài: https://dl.min.io/server/minio/release/windows-amd64/minio.exe
+-   Tạo thư mục lưu trữ: vd: D:\Code\minio\data
+-   Chạy cmd truy cập vào thư mục minio, chạy lệnh:
+    -   set MINIO_ROOT_USER=your_new_username
+    -   set MINIO_ROOT_PASSWORD=your_secure_password
+    -   minio.exe server D:\Code\kt-speakup\minio\data --console-address ":9001"
+    -   hoặc đặt biến global cho máy tính thì dùng setx MINIO_ROOT_USER your_new_username
+-   Giữ cho server của minio luôn chạy
+
+## Cài đặt các thư viện
 
 pip install -r requirements.txt
 
@@ -46,33 +86,6 @@ python -m pip install llama-cpp-python
 -   Tải 2 file cấu hình cho voice (chọn giọng đọc bất kỳ) "en_US-amy-medium.onnx", và "en_US-amy-medium.onnx.json" vào folder piper vừa giải nén
 -   Đặt lại biến môi trường cho PIPER_VOICE nếu khác giọng đọc
 
-## MinIO
-
--   tải file cài: https://dl.min.io/server/minio/release/windows-amd64/minio.exe
--   Tạo thư mục lưu trữ: vd: D:\Code\minio\data
--   Chạy cmd truy cập vào thư mục minio, chạy lệnh:
-    -   set MINIO_ROOT_USER=your_new_username
-    -   set MINIO_ROOT_PASSWORD=your_secure_password
-    -   minio.exe server D:\Code\kt-speakup\minio\data --console-address ":9001"
-    -   hoặc đặt biến global cho máy tính thì dùng setx MINIO_ROOT_USER your_new_username
--   Giữ cho server của minio luôn chạy
-
-## download mongodb compass
-
-## Extension "File Tree Generator"
-
--   tạo cây thư mục dưới dạng Markdown : shinotatwu-ds.file-tree-generator
-
 ## Chạy server
 
 -   python -m backend.server
-
-## Docker
-
--   docker volume rm ai-models
--   docker volume create ai-models
--   Copy models vào volume:
--   docker run --rm -v ai-models:/models -v D:\Code\kt-speakup\backend\models:/source busybox sh -c "cp -r /source/\* /models/"
--   Tạo image: docker-compose build
--   Chạy: docker-compose up -d
--   Dùng và xóa: docker-compose down
