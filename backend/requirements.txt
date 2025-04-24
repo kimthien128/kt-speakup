@@ -1,5 +1,6 @@
 fastapi==0.115.12
 uvicorn==0.34.0
+python-multipart==0.0.20 # phân tích và đọc dữ liệu từ Form() và File()
 httpx==0.23.0
 pymongo==4.11.2
 motor==3.7.0 #client MongoDB bất đồng bộ

@@ -23,5 +23,7 @@ jobs:
                   ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.SSH_SERVER_IP }} "
                   cd /root/kt-speakup
                   git pull origin main
+                  source venv/bin/activate
+                  pip install -r backend/requirements.txt
                   sudo systemctl restart ktspeakup
                   "
