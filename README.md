@@ -1,5 +1,7 @@
 # 1. Cài đặt các gói cần thiết trên VPS
 
+**Yêu cầu python 3.12**
+
 ```
 sudo apt update && sudo apt upgrade -y
 sudo apt install python3 python3-pip python3-venv nginx -y
@@ -9,12 +11,14 @@ sudo apt install python3 python3-pip python3-venv nginx -y
 
 -   Cài git:\
     `sudo apt install git -y`
--   Clone:\
+-   Clone:
 
 ```
 git clone https://github.com/ten-ban/backend-cua-ban.git
 cd kt-speakup
 ```
+
+**_Lưu y: Copy file .env_**
 
 # 3. Tạo môi trường ảo Python và cài dependencies
 
@@ -25,9 +29,84 @@ pip install --upgrade pip
 pip install -r backend/requirements.txt
 ```
 
-## Cài python v3.12
+# 4. Chạy thử FastAPI
 
-## download mongodb compass
+-   ubuntu:\
+    `python3 -m backend.server`
+
+# 5. Chạy FastAPI backend như một dịch vụ (service) trong Ubuntu
+
+-   Tạo file:\
+    `sudo nano /etc/systemd/system/ktspeakup.service`
+-   Nội dung:
+
+```
+[Unit]
+Description=FastAPI App
+After=network.target
+
+[Service]
+User=root
+Group=www-data
+WorkingDirectory=/root/kt-speakup
+ExecStart=/root/kt-speakup/venv/bin/python -m backend.server
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
+```
+
+-   Khởi động:
+
+```
+sudo systemctl daemon-reexec
+sudo systemctl daemon-reload
+sudo systemctl enable ktspeakup
+sudo systemctl start ktspeakup
+
+```
+
+# 6. Cấu hình Nginx để đưa app ra cổng 80 (http)
+
+`sudo nano /etc/nginx/sites-available/ktspeakup`
+
+-   Nội dung:
+
+```
+server {
+    listen 80;
+    server_name your_domain_or_ip;
+
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+
+```
+
+-   Kích hoạt config:
+
+```
+sudo ln -s /etc/nginx/sites-available/ktspeakup /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl restart nginx
+
+```
+
+# 7. Truy cập thử
+
+`http://<vps-ip>`\
+
+## Dùng HTTPS với Let’s Encrypt:
+
+```
+sudo apt install certbot python3-certbot-nginx -y
+sudo certbot --nginx
+
+```
 
 ## Cài MinIO
 
@@ -40,9 +119,7 @@ pip install -r backend/requirements.txt
     -   hoặc đặt biến global cho máy tính thì dùng setx MINIO_ROOT_USER your_new_username
 -   Giữ cho server của minio luôn chạy
 
-## Cài đặt các thư viện
-
-pip install -r requirements.txt
+## download mongodb compass
 
 ## Vosk
 
