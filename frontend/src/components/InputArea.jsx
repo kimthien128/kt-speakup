@@ -230,21 +230,19 @@ function InputArea({
                 </Box>
 
                 {/* Icon */}
-                <MuiTooltip title="Play Audio" placement="top">
-                    <IconButton
-                        onClick={() => generateSuggestionsAudio(suggestionData.latest_suggestion, chatId)}
-                        disabled={isPlaying}
-                        sx={{
-                            bgcolor: 'primary.main',
-                            color: 'white',
-                            '&:hover': {
-                                bgcolor: 'primary.dark',
-                            },
-                        }}
-                    >
-                        {isPlaying ? <CircularProgress size={20} /> : <VolumeUpIcon fontSize="small" />}
-                    </IconButton>
-                </MuiTooltip>
+                <IconButton
+                    onClick={() => generateSuggestionsAudio(suggestionData.latest_suggestion, chatId)}
+                    disabled={isPlaying}
+                    sx={{
+                        bgcolor: 'primary.main',
+                        color: 'white',
+                        '&:hover': {
+                            bgcolor: 'primary.dark',
+                        },
+                    }}
+                >
+                    {isPlaying ? <CircularProgress size={20} /> : <VolumeUpIcon fontSize="small" />}
+                </IconButton>
 
                 <MuiTooltip title="Translate" placement="top">
                     <IconButton
@@ -499,21 +497,19 @@ function InputArea({
                     }}
                 >
                     {/* Icon Micro */}
-                    <MuiTooltip title={!isRecording ? 'Record' : 'Stop'} placement="top">
-                        <IconButton
-                            onClick={isRecording ? stopRecording : startRecording}
-                            sx={{
-                                bgcolor: isRecording ? 'error.main' : 'primary.main',
-                                color: 'white',
-                                '&:hover': {
-                                    bgcolor: isRecording ? 'error.dark' : 'primary.dark',
-                                },
-                            }}
-                            disabled={isSending || isPlayingWord} // Disable khi đang gửi hoặc phát âm
-                        >
-                            {isRecording ? <StopIcon /> : <MicIcon />}
-                        </IconButton>
-                    </MuiTooltip>
+                    <IconButton
+                        onClick={isRecording ? stopRecording : startRecording}
+                        sx={{
+                            bgcolor: isRecording ? 'error.main' : 'primary.main',
+                            color: 'white',
+                            '&:hover': {
+                                bgcolor: isRecording ? 'error.dark' : 'primary.dark',
+                            },
+                        }}
+                        disabled={isSending || isPlayingWord} // Disable khi đang gửi hoặc phát âm
+                    >
+                        {isRecording ? <StopIcon /> : <MicIcon />}
+                    </IconButton>
 
                     {/* Textarea */}
                     <TextareaAutosize

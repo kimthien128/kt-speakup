@@ -25,6 +25,8 @@ export const methodsConfig = {
             {value: 'mistral', label: 'Mistral'},
             {value: 'gemini', label: 'Gemini'},
             {value: 'chatgpt', label: 'Chat GPT'},
+            {value: 'deepseek', label: 'DeepSeek'},
+            {value: 'openrouter', label: 'OpenRouter'},
         ],
     },
 

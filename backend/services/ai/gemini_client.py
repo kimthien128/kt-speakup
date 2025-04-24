@@ -14,7 +14,7 @@ class GeminiClient(AIClient):
         self.model = genai.GenerativeModel(
             "gemini-1.5-flash",
             generation_config=genai.types.GenerationConfig(
-                max_output_tokens=20, # Giới hạn token (~1 câu ngắn)
+                max_output_tokens=30, # Giới hạn token (~1 câu ngắn)
                 temperature=0.7 # Điều chỉnh độ sáng tạo
             )
         )

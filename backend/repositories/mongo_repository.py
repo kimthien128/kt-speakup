@@ -20,7 +20,9 @@ class MongoRepository(BaseRepository):
         return await self.db[resource].insert_one(document)
     
     async def update_one(self, resource: str, query: dict, update: dict, upsert: bool = False) -> Any:
-        update = {"$set": update}
+        # Kiểm tra xem update đã chứa toán tử MongoDB hay chưa
+        if not any(key.startswith("$") for key in update.keys()):
+            update = {"$set": update}
         return await self.db[resource].update_one(query, update, upsert=upsert)
         
     async def delete_one(self, resource: str, query: dict) -> Any:

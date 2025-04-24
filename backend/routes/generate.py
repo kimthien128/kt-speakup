@@ -4,7 +4,7 @@ from .auth import get_auth_service
 from ..security import get_current_user, UserInDB, oauth2_scheme
 from ..services.auth_service import AuthService
 from ..services.ai_service import AIService
-from ..dependencies import get_chat_repository, get_openai_client, get_mistral_client, get_gemini_client
+from ..dependencies import get_chat_repository, get_openai_client, get_deepseek_client, get_openrouter_client, get_mistral_client, get_gemini_client
 
 
 router = APIRouter()
@@ -13,11 +13,13 @@ router = APIRouter()
 async def get_ai_service(
     chat_repository = Depends(get_chat_repository),
     openai_client = Depends(get_openai_client),
+    deepseek_client = Depends(get_deepseek_client),
+    openrouter_client = Depends(get_openrouter_client),
     mistral_client = Depends(get_mistral_client),
     gemini_client = Depends(get_gemini_client)
 ):
     
-    return AIService(chat_repository, openai_client, mistral_client, gemini_client)
+    return AIService(chat_repository, openai_client, deepseek_client, openrouter_client, mistral_client, gemini_client)
 
 # Dependency để lấy current_user
 async def get_current_user_with_auth_service(

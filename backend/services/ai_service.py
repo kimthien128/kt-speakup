@@ -11,8 +11,10 @@ class AIService:
     def __init__(
         self, 
         chat_repository: ChatRepository, 
-        openai_client: AIClient, # hiện tại không có key dùng, sẽ 
-        mistral_client: AIClient, 
+        openai_client: AIClient, # hiện tại không có key dùng thử nghiệm
+        deepseek_client: AIClient, # yêu cầu nạp tiền
+        openrouter_client: AIClient,
+        mistral_client: AIClient, # đã chạy ok, nhưng phải tắt khi deploy vì khá nặng
         gemini_client: AIClient
     ):
         self.chat_repository = chat_repository
@@ -20,6 +22,10 @@ class AIService:
         # Chỉ thêm các client không phải None vào self.clients
         if openai_client:
             self.clients["chatgpt"] = openai_client
+        if deepseek_client:
+            self.clients["deepseek"] = deepseek_client
+        if openrouter_client:
+            self.clients["openrouter"] = openrouter_client
         if mistral_client:
             self.clients["mistral"] = mistral_client
         if gemini_client:

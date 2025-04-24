@@ -13,7 +13,8 @@ from .repositories.config_repository import ConfigRepository
 from .storage.minio_client import MinioClient
 from .services.http.httpx_client import HttpxClient
 from .services.ai.openai_client import OpenAIClient
-from .services.ai.mistral_client import MistralClient
+from .services.ai.deepseek_client import DeepSeekClient
+from .services.ai.openrouter_client import OpenRouterClient
 from .services.ai.gemini_client import GeminiClient
 from .services.audio.ffmpeg_audio_processor import FFmpegAudioProcessor
 from .services.dictionary.dictionaryapi_client import DictionaryAPIClient
@@ -45,6 +46,8 @@ class DependencyContainer:
     _storage_client = None
     _http_client = None
     _openai_client = None
+    _deepseek_client = None
+    _openrouter_client = None
     _mistral_client = None
     _gemini_client = None
     _audio_processor = None
@@ -118,12 +121,33 @@ class DependencyContainer:
         if cls._openai_client is None:
             cls._openai_client = OpenAIClient()
         return cls._openai_client
+    
+    @classmethod
+    def get_deepseek_client(cls):
+        enabled_clients = cls._get_enabled_ai_clients()
+        if "deepseek" not in enabled_clients:
+            return None
+        if cls._deepseek_client is None:
+            cls._deepseek_client = DeepSeekClient()
+        return cls._deepseek_client
+    
+    @classmethod
+    def get_openrouter_client(cls):
+        enabled_clients = cls._get_enabled_ai_clients()
+        if "openrouter" not in enabled_clients:
+            return None
+        if cls._openrouter_client is None:
+            cls._openrouter_client = OpenRouterClient()
+        return cls._openrouter_client
 
     @classmethod
     def get_mistral_client(cls):
         enabled_clients = cls._get_enabled_ai_clients()
         if "mistral" not in enabled_clients:
             return None
+        
+        # Trì hoãn việc import MistralClient cho đến khi thực sự cần, yêu cầu thư viện llama-cpp-python và build tools c++
+        from .services.ai.mistral_client import MistralClient
         if cls._mistral_client is None:
             cls._mistral_client = MistralClient()
         return cls._mistral_client
@@ -223,6 +247,12 @@ def get_http_client():
 
 def get_openai_client():
     return DependencyContainer.get_openai_client()
+
+def get_deepseek_client():
+    return DependencyContainer.get_deepseek_client()
+
+def get_openrouter_client():
+    return DependencyContainer.get_openrouter_client()
 
 def get_mistral_client():
     return DependencyContainer.get_mistral_client()

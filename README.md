@@ -115,7 +115,7 @@ sudo certbot --nginx
 -   Chạy cmd truy cập vào thư mục minio, chạy lệnh:
     -   set MINIO_ROOT_USER=your_new_username
     -   set MINIO_ROOT_PASSWORD=your_secure_password
-    -   minio.exe server D:\Code\kt-speakup\minio\data --console-address ":9001"
+    -   `minio.exe server D:\Code\kt-speakup\minio\data --console-address ":9001"`
     -   hoặc đặt biến global cho máy tính thì dùng setx MINIO_ROOT_USER your_new_username
 -   Giữ cho server của minio luôn chạy
 
@@ -128,6 +128,8 @@ sudo certbot --nginx
 -   Đặt lại biến môi trường VOSK_MODEL_DIR nếu khác model
 
 ## Tải model
+
+python -m pip install llama-cpp-python
 
 huggingface-cli download TheBloke/Mistral-7B-Instruct-v0.1-GGUF mistral-7b-instruct-v0.1.Q4_K_M.gguf --local-dir D:\Code\kt-speakup\backend\models
 
@@ -152,8 +154,6 @@ MSVC v143 - VS 2022 C++ x64/x86 build tools (hoặc phiên bản mới nhất).
 Windows 10/11 SDK (cho compatiblity).
 
 Nhấn Install (khoảng 2-5GB).
-
-python -m pip install llama-cpp-python
 
 ## Piper
 

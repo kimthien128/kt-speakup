@@ -16,4 +16,4 @@ google-generativeai==0.8.4
 minio==7.2.15 # Lưu file âm thanh
 deep-translator==1.11.4
 apscheduler==3.11.0 # Lập lịch
-#llama_cpp_python==0.3.8 #bỏ nếu không dùng model Mistral
+#llama_cpp_python==0.3.8 #nếu model Mistral, cần cài thêm build tools c++, yêu cầu cấu hình máy cao

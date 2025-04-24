@@ -6,11 +6,11 @@ import os
 import time
 import re
 from fastapi import HTTPException, Response
-from .tts_client import TTSClient
-from ..audio.audio_processor import AudioProcessor
-from ...storage.storage_client import StorageClient
-from ...utils import CACHE_DIR
-from ...logging_config import logger
+from .tts.tts_client import TTSClient
+from .audio.audio_processor import AudioProcessor
+from ..storage.storage_client import StorageClient
+from ..utils import CACHE_DIR
+from ..logging_config import logger
 
 class TTSService:
     def __init__(self, audio_processor: AudioProcessor, storage_client: StorageClient, gtts_client: TTSClient, piper_client: TTSClient):
@@ -59,12 +59,22 @@ class TTSService:
                 if os.path.exists(wav_path):
                     os.remove(wav_path)
 
+            # Kiểm tra file tồn tại trước khi upload
+            if not os.path.exists(temp_path):
+                raise HTTPException(status_code=500, detail=f"Audio file {temp_path} not found")
+            
+            # Tính độ dài file
+            file_size = os.path.getsize(temp_path)
+            
             # Upload file lên MinIO
-            self.storage_client.put_object(
-                bucket_name=self.audio_bucket,
-                object_name=audio_filename,
-                file_path=temp_path
-            )
+            with open(temp_path, 'rb') as file_data:
+                self.storage_client.put_object(
+                    bucket_name=self.audio_bucket,
+                    object_name=audio_filename,
+                    data=file_data,
+                    length=file_size,
+                    content_type='audio/mpeg'
+                )
             logger.info(f'Uploaded to MinIO: {audio_filename}')
 
             # Tạo URL từ MinIO
