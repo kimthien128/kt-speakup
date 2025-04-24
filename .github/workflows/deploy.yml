@@ -1,6 +1,7 @@
 name: Deploy to VPS
 
 on:
+    pull_request:
     push:
         branches:
             - main
@@ -8,20 +9,19 @@ on:
 jobs:
     deploy:
         runs-on: ubuntu-latest
-
         steps:
-        - name: Checkout code
-            uses: actions/checkout@v3
+            - name: Checkout code
+              uses: actions/checkout@v4
 
-        - name: Set up SSH
-            uses: webfactory/ssh-agent@v0.5.3
-            with:
-                ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+            - name: Setup SSH Agent
+              uses: webfactory/ssh-agent@v0.9.0
+              with:
+                  ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-        - name: Deploy to VPS
-            run: |
-                ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.SSH_SERVER_IP }} << 'EOF'
-                cd ~/kt-speakup
-                git pull origin main
-                sudo systemctl restart ktspeakup
-                EOF
+            - name: Deploy to VPS
+              run: |
+                  ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.SSH_SERVER_IP }} "
+                  cd /root/kt-speakup
+                  git pull origin main
+                  sudo systemctl restart ktspeakup
+                  "
