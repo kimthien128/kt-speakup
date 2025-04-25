@@ -115,19 +115,24 @@ Hoặc nếu bạn đang ở trong VPS rồi thì move thư mục dist vào:\
 ## Cấp quyền để truy cập folder dist cho các user gọi từ web
 
 ```
-sudo chown -R root:www-data /var/www/kt-speakup
+sudo chown -R www-data:www-data /var/www/kt-speakup
 sudo chmod -R 755 /var/www/kt-speakup
 ```
 
-## nếu upload lại thì nên xóa đi rồi up lại và Cập nhật quyền
+## nếu upload lại thì nên xóa đi rồi up lại và Cập nhật quyền để overwrite
 
 `sudo rm -rf /var/www/kt-speakup/*`
+
+```
+sudo chown -R root:www-data /var/www/kt-speakup
+sudo chmod -R 755 /var/www/kt-speakup
+```
 
 # 6. Cấu hình Nginx để đưa app ra cổng 80 (http)
 
 ### proxy_pass
 
-`sudo nano /etc/nginx/sites-available/ktspeakup`
+`sudo nano /etc/nginx/sites-available/kt-speakup`
 
 -   Nội dung:\
     Đây là cấu hình dùng để "forward" tất cả request tới backend (FastAPI) đang chạy ở localhost:8000.
@@ -153,7 +158,7 @@ server {
 ```
 server {
     listen 80;
-    server_name 157.230.242.152;
+    server_name speakup.ktstudio.vn; #your_domain_or_ip
 
     root /var/www/kt-speakup;
     index index.html;
@@ -168,7 +173,7 @@ server {
 
 ```
 Tạo symbolic link để kích hoạt site
-sudo ln -s /etc/nginx/sites-available/ktspeakup /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/kt-speakup /etc/nginx/sites-enabled/
 
 Kiểm tra cấu hình Nginx có hợp lệ không
 sudo nginx -t
