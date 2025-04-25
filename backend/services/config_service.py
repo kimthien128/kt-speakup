@@ -105,7 +105,7 @@ class ConfigService:
                         length=len(content),
                         content_type=file.content_type
                     )
-                    url = f"http://{self.minio_endpoint}/{self.image_bucket}/{file_name}"
+                    url = f"{self.minio_endpoint}/{self.image_bucket}/{file_name}"
                     update_data[field] = url
                     logger.info(f"Uploaded {field} to MinIO: {url}")
                 except Exception as e:

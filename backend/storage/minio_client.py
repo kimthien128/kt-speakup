@@ -22,7 +22,7 @@ class MinioClient(StorageClient):
             endpoint=self.endpoint,
             access_key=self.access_key,
             secret_key=self.secret_key,
-            secure=False  # Đặt True nếu dùng HTTPS
+            secure=True  # Đặt True nếu dùng HTTPS, local thì False
         )
         
         self._initialize_buckets()
