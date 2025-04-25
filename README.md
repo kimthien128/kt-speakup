@@ -107,7 +107,7 @@ npm install
 ```
 
 Copy lên VPS (nếu build ở local):\
-`scp -r dist root@your-vps-ip:/var/www/kt-speakup`
+`scp -r dist/* root@your-vps-ip:/var/www/kt-speakup`
 
 Hoặc nếu bạn đang ở trong VPS rồi thì move thư mục dist vào:\
 `mv dist /var/www/kt-speakup`
@@ -190,9 +190,13 @@ sudo systemctl restart nginx
 ## Dùng HTTPS với Let’s Encrypt:
 
 ```
+đổi biến môi trường của frontend sang https : VITE_API_URL=https://157.230.242.152:8000
 sudo apt install certbot python3-certbot-nginx -y
 sudo certbot --nginx
-
+hoặc
+sudo certbot --nginx -d speakup.ktstudio.vn
+sudo nginx -t
+sudo systemctl restart nginx
 ```
 
 ## Cài MinIO

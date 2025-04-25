@@ -13,8 +13,9 @@ def configure_app(app: FastAPI):
     # Cấu hình CORS
     origins = [
         "http://localhost:5173",  # Frontend dev server
-        #"http://127.0.0.1:5173",
-        "http://157.230.242.152",  # Thay bằng domain production sau này
+        "http://127.0.0.1:5173",
+        "http://157.230.242.152:8000",
+        "http://157.230.242.152",
         "http://speakup.ktstudio.vn",
         "https://speakup.ktstudio.vn"
     ]
