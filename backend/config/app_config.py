@@ -14,7 +14,7 @@ def configure_app(app: FastAPI):
     origins = [
         "http://localhost:5173",  # Frontend dev server
         "http://127.0.0.1:5173",
-        "https://your-production-domain.com",  # Thay bằng domain production sau này
+        "https://157.230.242.152:8000",  # Thay bằng domain production sau này
     ]
     
     app.add_middleware(
