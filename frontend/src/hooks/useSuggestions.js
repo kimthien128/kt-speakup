@@ -14,8 +14,9 @@ export const useSuggestions = (chatId, updateSuggestionData, generateMethod, tts
     // Lấy gợi ý từ AI
     const fetchSuggestions = async (baseText, currentChatId) => {
         const suggestionPrompts = [
-            `Provide ONLY ONE direct follow-up question or response (without any introductory phrase) for this sentence: "${baseText}"`,
-            // `Short next question after: "${baseText}"` // Tạm thời chỉ lấy 1 gợi ý
+            // `Provide ONLY ONE direct follow-up question or response (without any introductory phrase) for this sentence: "${baseText}"`,
+            // `Short next question after: "${baseText}"`,
+            `Suggest a follow-up question or response for: "${baseText}"`,
         ];
         const newSuggestions = [];
         for (const prompt of suggestionPrompts) {
