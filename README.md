@@ -107,7 +107,8 @@ npm install
 ```
 
 Copy lên VPS (nếu build ở local):\
-`scp -r dist/* root@your-vps-ip:/var/www/kt-speakup`
+`scp -r dist/* root@your-vps-ip:/var/www/kt-speakup`\
+`scp -r dist/* root@157.230.242.152:/var/www/kt-speakup`
 
 Hoặc nếu bạn đang ở trong VPS rồi thì move thư mục dist vào:\
 `mv dist /var/www/kt-speakup`

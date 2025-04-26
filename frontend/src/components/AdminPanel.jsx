@@ -95,7 +95,7 @@ function AdminPanel() {
                     if (heroFile) formData.append('hero', heroFile);
                     if (saveWordFile) formData.append('saveWord', saveWordFile);
 
-                    const res = await axios.patch('/config', formData, {
+                    const res = await axios.put('/config', formData, {
                         headers: {
                             'Content-Type': 'multipart/form-data',
                         },
