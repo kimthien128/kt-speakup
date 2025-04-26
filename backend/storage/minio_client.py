@@ -18,10 +18,10 @@ class MinioClient(StorageClient):
         self.audio_bucket = os.getenv("AUDIO_BUCKET")
         
         self.client = Minio(
-            endpoint='speakup.ktstudio.vn:9000', # local thì localhost:9000
+            endpoint='localhost:9000', # chỉ tương tác nội bộ ở server
             access_key=self.access_key,
             secret_key=self.secret_key,
-            secure=False  # Đặt True nếu dùng HTTPS, local thì False
+            secure=True  # Đặt True nếu dùng HTTPS, local thì False
         )
         # Lưu URL công khai để tạo presigned URL
         self.public_endpoint = os.getenv("MINIO_ENDPOINT")  # https://speakup.ktstudio.vn/storage
@@ -108,7 +108,7 @@ class MinioClient(StorageClient):
             # Tạo URL với endpoint gốc
             url = self.client.presigned_get_object(bucket_name, object_name)
             # Thay endpoint gốc bằng public_endpoint
-            url = url.replace(self.client._endpoint_url, self.public_endpoint.rstrip('/'))
+            url = url.replace("https://localhost:9000", self.public_endpoint.rstrip('/'))
             return url
         except S3Error as e:
             logger.error(f"Failed to generate presigned URL: {e}")
