@@ -21,7 +21,7 @@ class MinioClient(StorageClient):
             endpoint='localhost:9000', # chỉ tương tác nội bộ ở server
             access_key=self.access_key,
             secret_key=self.secret_key,
-            secure=True,  # Đặt True nếu dùng HTTPS, local thì False
+            secure=False,  # Đặt True nếu dùng HTTPS, local thì False
             cert_check=False  # Tắt kiểm tra chứng chỉ SSL
         )
         # Lưu URL công khai để tạo presigned URL

@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {Link} from 'react-router-dom';
 import useSiteConfig from '../hooks/useSiteConfig';
-import axios from 'axios';
+import axios from '../axiosInstance';
 
 import {Box, Grid, TextField, Button, Typography, Link as MuiLink, FormControlLabel, Switch} from '@mui/material';
 import CircularProgress from '@mui/material/CircularProgress';
