@@ -122,7 +122,7 @@ class MinioClient(StorageClient):
                 ).replace(
                     "localhost:9000", self.public_endpoint.rstrip('/')  # Thêm trường hợp không có http://
                 )
-            logger.debug(f"Final URL: {url}")
+            logger.info(f"Final URL: {url}")
             return url
         except S3Error as e:
             logger.error(f"Failed to generate presigned URL: {e}")
