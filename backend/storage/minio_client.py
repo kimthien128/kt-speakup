@@ -112,16 +112,8 @@ class MinioClient(StorageClient):
     def presigned_get_object(self, bucket_name: str, object_name: str) -> str:
         """Tạo URL công khai để truy cập file."""
         try:
-            # Tạo URL với endpoint gốc
-            url = self.client.presigned_get_object(bucket_name, object_name)
-            # Thay endpoint gốc bằng public_endpoint
-            url = url.replace(
-                "https://localhost:9000", self.public_endpoint.rstrip('/')
-                ).replace(
-                    "http://localhost:9000", self.public_endpoint.rstrip('/')
-                ).replace(
-                    "localhost:9000", self.public_endpoint.rstrip('/')  # Thêm trường hợp không có http://
-                )
+            # Trả về URL trực tiếp thay vì presigned URL, vì đã thiết lập policy công khai
+            url = f"{self.public_endpoint.rstrip('/')}/{bucket_name}/{object_name}"
             logger.info(f"Final URL: {url}")
             return url
         except S3Error as e:
