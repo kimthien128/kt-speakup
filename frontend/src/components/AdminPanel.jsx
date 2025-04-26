@@ -36,7 +36,7 @@ function AdminPanel() {
     useEffect(() => {
         const fetchConfig = async () => {
             try {
-                const res = await axios.get('/site-config');
+                const res = await axios.get('/config');
                 setConfig(res.data);
                 setBackgroundPreview(res.data.backgroundImage || '');
                 setLogoPreview(res.data.logoImage || '');
@@ -95,7 +95,7 @@ function AdminPanel() {
                     if (heroFile) formData.append('hero', heroFile);
                     if (saveWordFile) formData.append('saveWord', saveWordFile);
 
-                    const res = await axios.patch('/site-config', formData, {
+                    const res = await axios.patch('/config', formData, {
                         headers: {
                             'Content-Type': 'multipart/form-data',
                         },
