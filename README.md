@@ -248,6 +248,15 @@ server {
 
 ## sửa luôn biến minio_endpoint trong .env của backend và thêm đoạn nginx sau:
 
+### file cấu hình biến môi trường cho minio:
+
+`sudo nano /etc/default/minio`\
+
+```
+sudo systemctl daemon-reexec
+sudo systemctl restart minio
+```
+
 (https://speakup.ktstudio.vn/storage)
 
 ```

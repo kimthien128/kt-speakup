@@ -21,11 +21,11 @@ class MinioClient(StorageClient):
             endpoint='localhost:9000', # chỉ tương tác nội bộ ở server
             access_key=self.access_key,
             secret_key=self.secret_key,
-            secure=True,  # Đặt True nếu dùng HTTPS, local thì False
+            secure=False,  # Đặt True nếu dùng HTTPS, local thì False
             cert_check=False  # Tắt kiểm tra chứng chỉ SSL
         )
         # Lưu URL công khai để tạo presigned URL
-        self.public_endpoint = os.getenv("MINIO_ENDPOINT")  # https://speakup.ktstudio.vn/storage
+        self.public_endpoint = os.getenv("MINIO_ENDPOINT")  # http hoặc https://speakup.ktstudio.vn/storage
         
         self._initialize_buckets()
     
