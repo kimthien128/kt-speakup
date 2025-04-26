@@ -16,6 +16,7 @@ class MinioClient(StorageClient):
         self.secret_key = os.getenv("MINIO_SECRET_KEY")
         self.image_bucket = os.getenv("IMAGE_BUCKET")
         self.audio_bucket = os.getenv("AUDIO_BUCKET")
+        self.avatars_bucket = os.getenv("AVATARS_BUCKET")
         
         self.client = Minio(
             endpoint='localhost:9000', # chỉ tương tác nội bộ ở server
@@ -70,6 +71,7 @@ class MinioClient(StorageClient):
         """Khởi tạo các bucket và thiết lập policy."""
         self._setup_bucket(self.image_bucket)
         self._setup_bucket(self.audio_bucket)
+        self._setup_bucket(self.avatars_bucket)
             
     def bucket_exists(self, bucket_name: str) -> bool:
         """Kiểm tra xem bucket có tồn tại hay không."""
