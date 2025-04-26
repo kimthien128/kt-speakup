@@ -2,7 +2,7 @@
 
 # 1. Cài đặt các gói cần thiết trên VPS
 
--   mở CORS tới ip của vpn (trong file backend/config/app_config.py)
+-   mở CORS tới ip, domain của vpn (trong file backend/config/app_config.py)
 
 **Yêu cầu python 3.12**
 
@@ -275,6 +275,12 @@ sudo systemctl reload nginx
 -   sửa cấu hình khởi tạo minio_client.py
 
 `npm run build`
+
+##
+
+##
+
+##
 
 ## Cài MinIO
 

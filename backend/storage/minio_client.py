@@ -109,7 +109,11 @@ class MinioClient(StorageClient):
             # Tạo URL với endpoint gốc
             url = self.client.presigned_get_object(bucket_name, object_name)
             # Thay endpoint gốc bằng public_endpoint
-            url = url.replace("https://localhost:9000", self.public_endpoint.rstrip('/'))
+            url = url.replace(
+                "https://localhost:9000", self.public_endpoint.rstrip('/')
+                ).replace(
+                    "http://localhost:9000", self.public_endpoint.rstrip('/')
+                )
             return url
         except S3Error as e:
             logger.error(f"Failed to generate presigned URL: {e}")
