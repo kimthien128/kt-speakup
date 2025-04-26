@@ -44,7 +44,7 @@ async def get_config(config_service: ConfigService = Depends(get_config_service)
     return await config_service.get_config()
     
 # Cập nhật config
-@router.put("/", response_model=SiteConfig)
+@router.patch("/", response_model=SiteConfig)
 async def update_config(
     background: UploadFile = File(None),
     logo: UploadFile = File(None),
