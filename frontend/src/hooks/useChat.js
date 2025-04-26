@@ -5,6 +5,7 @@ import {useState, useEffect, useCallback} from 'react';
 import {toast} from 'react-toastify';
 import {chatService} from '../services/chatService';
 import {logger} from '../utils/logger';
+import axios from '../axiosInstance';
 
 export const useChat = (chatId, onSendMessage) => {
     const [chatHistory, setChatHistory] = useState([]);
@@ -62,18 +63,53 @@ export const useChat = (chatId, onSendMessage) => {
         }
     }, [onSendMessage]);
 
+    //hàm phụ cho PlayMessage
+    const playAudioFromUrl = async (playSound, audioUrl) => {
+        try {
+            await playSound({audioUrl});
+            return true;
+        } catch (err) {
+            logger.warn(`Failed to play audioUrl: ${err.message}`);
+            return false;
+        }
+    };
+    const regenerateAudioAndUpdateUrl = async (playSound, text, chatId, index) => {
+        if (!text) throw new Error('No text to regenerate audio');
+
+        const newAudioUrl = await playSound({text});
+        logger.info('Generated new audio URL:', newAudioUrl);
+        if (chatId) {
+            try {
+                await axios.patch(
+                    `/chats/${chatId}/audioUrl`,
+                    {index, audioUrl: newAudioUrl},
+                    {headers: {'Content-Type': 'application/json'}}
+                );
+                logger.info('Audio URL updated successfully');
+            } catch (patchErr) {
+                logger.error(`Failed to update audioUrl: ${patchErr.message}`);
+            }
+        } else {
+            logger.warn('chatId is undefined, skipping audioUrl update');
+        }
+
+        return newAudioUrl;
+    };
     const playMessage = async (audioUrl, text, index, playSound, chatId) => {
         if (isPlaying) return;
         setIsPlaying(true);
         try {
+            let success = false;
             if (audioUrl) {
-                await playSound({audioUrl});
-            } else if (text) {
-                logger.info(`No audio URL, generating from text: ${text}`);
-                if (!chatId) {
-                    logger.warn('chatId is undefined, skipping database update');
+                success = await playAudioFromUrl(playSound, audioUrl);
+            }
+            if (!success) {
+                if (text) {
+                    await regenerateAudioAndUpdateUrl(playSound, text, chatId, index);
+                    fetchHistory(); //cập nhật lại UI để button nhận được link mới
+                } else {
+                    throw new Error('No audio URL and no text to play');
                 }
-                await playSound({text: text, chatId: chatId || '', index});
             }
             setError(null);
         } catch (err) {

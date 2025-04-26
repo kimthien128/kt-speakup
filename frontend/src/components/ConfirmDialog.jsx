@@ -103,7 +103,7 @@ function ConfirmDialog({
                 <Button
                     onClick={onConfirm}
                     color={confirmColor}
-                    autoFocus
+                    // autoFocus
                     variant="contained"
                     sx={{
                         px: 3,

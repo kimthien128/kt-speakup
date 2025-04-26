@@ -46,7 +46,7 @@ from .services.cache_service import CacheService
 from .scheduler.scheduler_config import configure_scheduler
 from .utils import CACHE_DIR
 
-app = FastAPI(redirect_slashes=False)
+app = FastAPI(redirect_slashes=False) # Không tự động chuyển hướng khi có dấu / ở cuối URL, kiểm soát nghiêm ngặt các route tự đặt
 
 # Khởi tạo MinIO client và cache service
 storage_client = MinioClient()

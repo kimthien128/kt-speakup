@@ -156,6 +156,7 @@ function InputArea({
         if (menuType === 'generate') setGenerateMethod(method);
         if (menuType === 'tts') setTtsMethod(method);
         logger.info(`Selected ${menuType} method: ${method}`);
+        toast.info(`Selected ${menuType} method: ${method}`);
         handleMenuClose();
     };
 

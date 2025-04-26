@@ -13,8 +13,8 @@ axiosInstance.interceptors.request.use(
         } else {
             console.log('No token found in localStorage');
         }
-        console.log('Request URL:', config.url); // Debug URL
-        console.log('Full URL:', config.baseURL + config.url); // Debug full URL
+        // console.log('Request URL:', config.url); // Debug URL
+        // console.log('Full URL:', config.baseURL + config.url); // Debug full URL
         return config;
     },
     (error) => Promise.reject(error)
