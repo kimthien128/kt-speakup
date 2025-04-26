@@ -38,13 +38,13 @@ async def get_current_user_with_auth_service(
     return await get_current_user(token=token, auth_service=auth_service, response=response)
 
 # Lấy config hiện tại
-@router.get("/", response_model=SiteConfig)
+@router.get("", response_model=SiteConfig)
 async def get_config(config_service: ConfigService = Depends(get_config_service)):
     logger.info("Fetching site config")
     return await config_service.get_config()
     
 # Cập nhật config
-@router.patch("/", response_model=SiteConfig)
+@router.patch("", response_model=SiteConfig)
 async def update_config(
     background: UploadFile = File(None),
     logo: UploadFile = File(None),

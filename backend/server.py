@@ -46,7 +46,7 @@ from .services.cache_service import CacheService
 from .scheduler.scheduler_config import configure_scheduler
 from .utils import CACHE_DIR
 
-app = FastAPI()
+app = FastAPI(redirect_slashes=False)
 
 # Khởi tạo MinIO client và cache service
 storage_client = MinioClient()
