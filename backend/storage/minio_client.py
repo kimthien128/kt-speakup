@@ -12,7 +12,6 @@ from ..logging_config import logger
 
 class MinioClient(StorageClient):
     def __init__(self):
-        self.endpoint = os.getenv("MINIO_ENDPOINT")
         self.access_key = os.getenv("MINIO_ACCESS_KEY")
         self.secret_key = os.getenv("MINIO_SECRET_KEY")
         self.image_bucket = os.getenv("IMAGE_BUCKET")

@@ -27,7 +27,7 @@ class ConfigService:
         self.config_repository = config_repository
         self.storage_client = storage_client
         self.image_bucket = os.getenv("IMAGE_BUCKET")
-        self.minio_endpoint = os.getenv("MINIO_ENDPOINT")
+        # self.minio_endpoint = os.getenv("MINIO_ENDPOINT")
         self.default_config = {
             "backgroundImage": None,
             "logoImage": None,
@@ -105,7 +105,9 @@ class ConfigService:
                         length=len(content),
                         content_type=file.content_type
                     )
-                    url = f"{self.minio_endpoint}/{self.image_bucket}/{file_name}"
+                    # Sử dụng presigned_get_object để tạo URL
+                    # url = f"{self.minio_endpoint}/{self.image_bucket}/{file_name}"
+                    url = self.storage_client.presigned_get_object(self.image_bucket, file_name)
                     update_data[field] = url
                     logger.info(f"Uploaded {field} to MinIO: {url}")
                 except Exception as e:

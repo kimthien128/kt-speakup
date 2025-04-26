@@ -151,7 +151,9 @@ class AuthService:
                     content_type=avatar.content_type
                 )
                 # Tạo URL cho avatar
-                avatar_url = f"{self.minio_endpoint}/{self.avatar_bucket}/{file_name}"
+                # avatar_url = f"{self.minio_endpoint}/{self.avatar_bucket}/{file_name}"
+                # Sử dụng presigned_get_object để tạo URL
+                avatar_url = self.storage_client.presigned_get_object(self.avatar_bucket, file_name)
                 update_data["avatarPath"] = avatar_url
             except Exception as e:
                 logger.error(f"Error uploading to MinIO: {e}")
