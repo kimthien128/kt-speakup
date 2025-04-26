@@ -262,10 +262,17 @@ location /storage/ {
 -   Kích hoạt file config:
 
 ```
+endpoint='localhost:9000'
+secure=True
+```
+
+```
 sudo ln -sf /etc/nginx/sites-available/kt-speakup /etc/nginx/sites-enabled/kt-speakup
 sudo nginx -t  # kiểm tra cấu hình
 sudo systemctl reload nginx
 ```
+
+-   sửa cấu hình khởi tạo minio_client.py
 
 `npm run build`
 
