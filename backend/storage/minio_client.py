@@ -26,7 +26,7 @@ class MinioClient(StorageClient):
         )
         # Lưu URL công khai để tạo presigned URL
         self.public_endpoint = os.getenv("MINIO_ENDPOINT")  # http hoặc https://speakup.ktstudio.vn/storage
-        
+        logger.info(f"MinIO public endpoint: {self.public_endpoint}")
         self._initialize_buckets()
     
     def _generate_public_read_policy(self, bucket_name: str) -> str:
@@ -113,7 +113,10 @@ class MinioClient(StorageClient):
                 "https://localhost:9000", self.public_endpoint.rstrip('/')
                 ).replace(
                     "http://localhost:9000", self.public_endpoint.rstrip('/')
+                ).replace(
+                    "localhost:9000", self.public_endpoint.rstrip('/')  # Thêm trường hợp không có http://
                 )
+            logger.debug(f"Final URL: {url}")
             return url
         except S3Error as e:
             logger.error(f"Failed to generate presigned URL: {e}")
