@@ -26,6 +26,10 @@ class MinioClient(StorageClient):
         )
         # Lưu URL công khai để tạo presigned URL
         self.public_endpoint = os.getenv("MINIO_ENDPOINT")  # http hoặc https://speakup.ktstudio.vn/storage
+        if not self.public_endpoint:
+            logger.error("MINIO_ENDPOINT environment variable not set!")
+            self.public_endpoint = "http://speakup.ktstudio.vn/storage"  # Giá trị mặc định
+            
         logger.info(f"MinIO public endpoint: {self.public_endpoint}")
         self._initialize_buckets()
     
