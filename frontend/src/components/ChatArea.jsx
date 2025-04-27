@@ -324,12 +324,32 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                                 <Typography
                                     variant="body2"
                                     sx={{
+                                        fontSize: '.85rem',
+                                        color: 'text.secondary',
+                                    }}
+                                >
+                                    {wordTooltip.translatedWord}
+                                </Typography>
+
+                                <Typography
+                                    variant="body2"
+                                    sx={{
                                         fontSize: '.95rem',
                                         mt: 1,
                                     }}
                                 >
                                     {wordTooltip.definition}
                                 </Typography>
+                                <Typography
+                                    variant="body2"
+                                    sx={{
+                                        fontSize: '.85rem',
+                                        color: 'text.secondary',
+                                    }}
+                                >
+                                    {wordTooltip.translatedDefinition}
+                                </Typography>
+
                                 <Typography
                                     variant="body2"
                                     sx={{

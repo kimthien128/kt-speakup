@@ -1,5 +1,6 @@
 //hooks/useLogin.js
 import {useState, useEffect} from 'react';
+import {useNavigate} from 'react-router-dom';
 import axios from '../axiosInstance';
 
 const useLogin = ({setToken, setUserEmail}) => {
@@ -7,6 +8,8 @@ const useLogin = ({setToken, setUserEmail}) => {
     const [password, setPassword] = useState('');
     const [rememberMe, setRememberMe] = useState(false); // State cho switch
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
 
     // Tự động điền email từ localStorage khi component mount
     useEffect(() => {
@@ -19,6 +22,12 @@ const useLogin = ({setToken, setUserEmail}) => {
 
     const handleLogin = async (e) => {
         e.preventDefault();
+        if (!email || !password) {
+            setError('Please enter both email and password');
+            return;
+        }
+        setLoading(true); // Bật trạng thái loading
+        setError('');
         try {
             const formData = new URLSearchParams();
             formData.append('username', email); // Gửi email như username
@@ -39,9 +48,14 @@ const useLogin = ({setToken, setUserEmail}) => {
             } else {
                 localStorage.removeItem('rememberedEmail');
             }
+
+            // Điều hướng sau khi đăng nhập thành công
+            navigate('/chat');
         } catch (err) {
-            setError('Invalid credentials');
+            setError('Invalid email or password');
             console.error('Login error:', err.response?.data || err.message);
+        } finally {
+            setLoading(false); // Tắt trạng thái loading
         }
     };
     return {
@@ -52,6 +66,7 @@ const useLogin = ({setToken, setUserEmail}) => {
         rememberMe,
         setRememberMe,
         error,
+        loading,
         handleLogin,
     };
 };

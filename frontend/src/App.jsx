@@ -1,7 +1,8 @@
-import React, {useState, useRef, useEffect, use} from 'react';
+import React, {useState, useRef, useEffect} from 'react';
 import {BrowserRouter as Router, Routes, Route, useParams, useNavigate, Navigate} from 'react-router-dom';
 import axios from './axiosInstance';
 import {Box, Container} from '@mui/material';
+import {logger} from './utils/logger';
 
 import ChatArea from './components/ChatArea';
 import InputArea from './components/InputArea';
@@ -167,8 +168,9 @@ function App() {
                 const res = await axios.get('/auth/me');
                 setUserEmail(res.data.email);
                 setIsAdmin(res.data.isAdmin || false); // Lưu trạng thái admin từ backend, mặc định là false
+                // logger.info('isAdmin from backend:', res.data.isAdmin);
             } catch (err) {
-                console.error('Error fetching user email:', err.response?.data || err.message);
+                logger.error('Error fetching user email:', err.response?.data || err.message);
                 localStorage.removeItem('token'); // Xóa token nếu không hợp lệ
                 setToken(null);
             } finally {
@@ -214,9 +216,20 @@ function App() {
                 <Route
                     path="/admin"
                     element={
-                        token ? isAdmin ? <AdminPanel /> : <Navigate to="/chat" replace /> : <Navigate to="/" replace />
+                        token ? (
+                            isAdmin ? (
+                                <AdminPanel />
+                            ) : (
+                                <>
+                                    <Navigate to="/chat" replace />
+                                </>
+                            )
+                        ) : (
+                            <Navigate to="/" replace />
+                        )
                     }
                 />
+
                 <Route
                     path="/chat/:chatId"
                     element={

@@ -3,6 +3,7 @@ import {useNavigate} from 'react-router-dom';
 import ConfirmDialog from './ConfirmDialog';
 import {getAvatarInitial} from '../utils/avatarUtils';
 import useSiteConfig from '../hooks/useSiteConfig';
+import ChangePassword from './ChangePassword';
 
 import {Box, Typography, Avatar, TextField, Button, Chip, IconButton, Grid, MenuItem, Tabs, Tab} from '@mui/material';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -46,12 +47,6 @@ function Profile({onLogout}) {
     const [success, setSuccess] = useState(''); // Thành công
     const [loading, setLoading] = useState(false); // Đang tải
     const [tabValue, setTabValue] = useState(0); // Giá trị của tab hiện tại
-    const [oldPassword, setOldPassword] = useState(''); // Mật khẩu cũ
-    const [newPassword, setNewPassword] = useState(''); // Mật khẩu mới
-    const [confirmPassword, setConfirmPassword] = useState(''); // Xác nhận mật khẩu mới
-    const [passwordError, setPasswordError] = useState(''); // Lỗi mật khẩu
-    const [passwordSuccess, setPasswordSuccess] = useState(''); // Thành công mật khẩu
-    const [passwordLoading, setPasswordLoading] = useState(false); // Đang tải mật khẩu
     const [confirmDialog, setConfirmDialog] = useState({
         open: false,
         title: '',
@@ -167,52 +162,6 @@ function Profile({onLogout}) {
                     console.error('Error updating profile:', err.response?.data || err.message);
                 } finally {
                     setLoading(false);
-                    setConfirmDialog((prev) => ({...prev, open: false}));
-                }
-            },
-        });
-    };
-
-    // Xử lý đổi mật khẩu (Change Password)
-    const handleChangePassword = async () => {
-        if (!oldPassword || !newPassword || !confirmPassword) {
-            setPasswordError('All fields are required');
-            return;
-        }
-
-        if (newPassword !== confirmPassword) {
-            setPasswordError('New password and confirm password do not match');
-            return;
-        }
-
-        if (newPassword.length < 6) {
-            setPasswordError('Password should be at least 6 characters');
-            return;
-        }
-
-        setConfirmDialog({
-            open: true,
-            title: 'Confirm Change Password',
-            content: 'Are you sure you want to change password?',
-            onConfirm: async () => {
-                setPasswordLoading(true);
-                setPasswordError('');
-                setPasswordSuccess('');
-
-                try {
-                    await axios.post('/auth/change-password', {
-                        oldPassword,
-                        newPassword,
-                    });
-                    setPasswordSuccess('Password changed successfully');
-                    setOldPassword('');
-                    setNewPassword('');
-                    setConfirmPassword('');
-                } catch (err) {
-                    setPasswordError(err.response?.data?.detail || 'Failed to change password');
-                    console.error('Error changing password:', err.response?.data || err.message);
-                } finally {
-                    setPasswordLoading(false);
                     setConfirmDialog((prev) => ({...prev, open: false}));
                 }
             },
@@ -558,80 +507,7 @@ function Profile({onLogout}) {
 
                             {/* Tab 2: Change Password */}
                             <TabPanel value={tabValue} index={1}>
-                                <Typography
-                                    variant="h6"
-                                    sx={{
-                                        mb: 3,
-                                        textAlign: 'center',
-                                    }}
-                                >
-                                    Change Password
-                                </Typography>
-                                <TextField
-                                    label="Old Password"
-                                    type="password"
-                                    variant="outlined"
-                                    fullWidth
-                                    value={oldPassword}
-                                    onChange={(e) => setOldPassword(e.target.value)}
-                                    margin="normal"
-                                />
-                                <TextField
-                                    label="New Password"
-                                    type="password"
-                                    variant="outlined"
-                                    fullWidth
-                                    value={newPassword}
-                                    onChange={(e) => setNewPassword(e.target.value)}
-                                    margin="normal"
-                                />
-                                <TextField
-                                    label="Confirm Password"
-                                    type="password"
-                                    variant="outlined"
-                                    fullWidth
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                    margin="normal"
-                                />
-                                {passwordError && (
-                                    <Alert severity="error" sx={{mt: 2}}>
-                                        {passwordError}
-                                    </Alert>
-                                )}
-                                {passwordSuccess && (
-                                    <Alert severity="success" sx={{mt: 2}}>
-                                        {passwordSuccess}
-                                    </Alert>
-                                )}
-                                <Box
-                                    sx={{
-                                        mt: 3,
-                                        display: 'flex',
-                                        justifyContent: 'center',
-                                    }}
-                                >
-                                    <Button
-                                        variant="outlined"
-                                        color="primary"
-                                        onClick={handleChangePassword}
-                                        fullWidth
-                                        sx={{
-                                            py: 1,
-                                            px: 3,
-                                            textTransform: 'none',
-                                            fontSize: '1rem',
-                                            borderRadius: 1,
-                                            minWidth: 150,
-                                        }}
-                                    >
-                                        {passwordLoading ? (
-                                            <CircularProgress size={24} color="inherit" />
-                                        ) : (
-                                            'Change Password'
-                                        )}
-                                    </Button>
-                                </Box>
+                                <ChangePassword setConfirmDialog={setConfirmDialog} />
                             </TabPanel>
                         </Box>
                     </Box>

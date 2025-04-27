@@ -2,9 +2,19 @@
 
 import React from 'react';
 import {Link} from 'react-router-dom';
-import {Box, TextField, Button, Typography, Link as MuiLink, FormControlLabel, Switch, Alert} from '@mui/material';
+import {
+    Box,
+    TextField,
+    Button,
+    Typography,
+    Link as MuiLink,
+    FormControlLabel,
+    Switch,
+    Alert,
+    CircularProgress,
+} from '@mui/material';
 
-function LoginForm({email, setEmail, password, setPassword, handleLogin, error, rememberMe, setRememberMe}) {
+function LoginForm({email, setEmail, password, setPassword, handleLogin, error, rememberMe, setRememberMe, loading}) {
     return (
         <Box
             sx={{
@@ -77,8 +87,9 @@ function LoginForm({email, setEmail, password, setPassword, handleLogin, error, 
                         py: 1.5,
                         fontSize: '1rem',
                     }}
+                    disabled={loading}
                 >
-                    Login
+                    {loading ? <CircularProgress size={24} color="inherit" /> : 'Login'}
                 </Button>
             </form>
             <Typography

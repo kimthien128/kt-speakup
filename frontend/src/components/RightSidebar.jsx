@@ -158,9 +158,10 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                                             fontWeight: 'bold',
                                             color: 'primary.main',
                                         },
+                                        pl: 4,
                                     }}
                                 >
-                                    Welcome <span>{userInfo.displayName || userEmail}</span>
+                                    <span>{userInfo.displayName || userEmail}</span>
                                 </Typography>
                             )}
 
@@ -458,7 +459,7 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                     sx={{
                         position: 'absolute',
                         top: 20,
-                        right: isOpen ? 260 : 5,
+                        right: isOpen ? 250 : 5,
                         transition: 'right 0.3s ease',
                         zIndex: 1,
                     }}

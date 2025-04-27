@@ -61,7 +61,7 @@ function ResetPassword() {
                 token,
                 newPassword,
             });
-            setMessage(response.data.message || 'Password reset successfully!');
+            setMessage(response.data.message || 'Password reset successfully! Redirecting to login...');
 
             // Đăng xuất người dùng (xóa token) nếu họ đã đăng nhập
             localStorage.removeItem('token');

@@ -20,3 +20,4 @@ apscheduler==3.11.0 # Lập lịch
 #llama_cpp_python==0.3.8 #nếu model Mistral, cần cài thêm build tools c++, yêu cầu cấu hình máy cao
 mailjet-rest==1.3.4
 pydantic[email]==2.2.0
+Jinja2==3.1.6

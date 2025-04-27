@@ -6,6 +6,7 @@ import {fetchWordInfo} from '../services/dictionaryService';
 import {cleanWord, addToVocab} from '../utils/vocabUtils';
 import {toast} from 'react-toastify';
 import useAudioPlayer from './useAudioPlayer';
+import useTranslate from './useTranslate';
 import {logger} from '../utils/logger';
 
 export const useWordTooltip = ({chatId, onVocabAdded, dictionarySource = 'dictionaryapi'}) => {
@@ -13,6 +14,7 @@ export const useWordTooltip = ({chatId, onVocabAdded, dictionarySource = 'dictio
     const wordTooltipRef = useRef(null); // Ref để tham chiếu vùng word tooltip
     const {playSound, audioRef} = useAudioPlayer(); // Ref để quản lý audio element
     const [isPlaying, setIsPlaying] = useState(false); // Trạng thái loading cho phát âm thanh
+    const {translateText} = useTranslate(); // lấy hàm dịch văn bản
 
     // Xử lý double-click từ
     const handleWordClick = async (word, event) => {
@@ -27,10 +29,13 @@ export const useWordTooltip = ({chatId, onVocabAdded, dictionarySource = 'dictio
             definition: 'Loading...',
             phonetic: 'Loading...',
             audio: 'Loading...',
+            translatedWord: 'Translating...',
+            translatedDefinition: 'Translating...',
             x: event.pageX,
             y: event.pageY,
         });
         try {
+            // Lấy thông tin từ từ điển
             const res = await fetchWordInfo(cleanedWord, dictionarySource);
             // Kiểm tra res có hợp lệ không
             if (!res || typeof res !== 'object' || !res.definition) {
@@ -39,12 +44,22 @@ export const useWordTooltip = ({chatId, onVocabAdded, dictionarySource = 'dictio
 
             // Lấy âm thanh đầu tiên từ danh sách res.audio (nếu có)
             const audioUrl = Array.isArray(res.audio) && res.audio.length > 0 ? res.audio[0] : '';
+            const definition = typeof res.definition === 'string' ? res.definition : 'No definition found';
+
+            // Dịch word và definition bằng hàm translateText
+            const translatedWord = await translateText(cleanedWord);
+            let translatedDefinition = 'Translation not available';
+            if (definition !== 'No definition found') {
+                translatedDefinition = await translateText(definition);
+            }
 
             setWordTooltip({
                 word: cleanedWord,
                 definition: res.definition || 'No definition found',
                 phonetic: res.phonetic || 'N/A',
                 audio: audioUrl,
+                translatedWord,
+                translatedDefinition,
                 x: event.pageX,
                 y: event.pageY,
             });
@@ -55,6 +70,8 @@ export const useWordTooltip = ({chatId, onVocabAdded, dictionarySource = 'dictio
                 definition: 'Failed to fetch info',
                 phonetic: 'N/A',
                 audio: '',
+                translatedWord: 'Translation not available',
+                translatedDefinition: 'Translation not available',
                 x: event.pageX,
                 y: event.pageY,
             });
