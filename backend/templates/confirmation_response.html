@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>{{ title }}</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+                background-color: #f0f2f5;
+            }
+            .container {
+                text-align: center;
+                padding: 20px;
+                background-color: white;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+            h1 {
+                color: {{ "green" if success else "#d32f2f" }};
+            }
+            p {
+                color: #666;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>{{ title }}</h1>
+            <p>{{ message }}</p>
+            <p>You will be redirected to the login page in 3 seconds...</p>
+        </div>
+        <script>
+            setTimeout(() => {
+                window.location.href = '{{ redirect_url }}';
+            }, 5000);
+        </script>
+    </body>
+</html>

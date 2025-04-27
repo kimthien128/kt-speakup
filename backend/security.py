@@ -15,7 +15,8 @@ class UserInDB:
         gender: str | None = None, 
         location: str | None = None, 
         isAdmin: bool = False, 
-        id: str = None
+        id: str = None,
+        status: str = "pending",
         ):
         self.email = email
         self.hashed_password = hashed_password
@@ -26,6 +27,7 @@ class UserInDB:
         self.location = location
         self.isAdmin = isAdmin
         self.id = id
+        self.status = status
         
 async def get_current_user(
     token: str = Depends(oauth2_scheme),

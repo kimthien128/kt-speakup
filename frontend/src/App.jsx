@@ -9,6 +9,8 @@ import LeftSidebar from './components/LeftSidebar';
 import RightSidebar from './components/RightSidebar';
 import Login from './components/Login';
 import Register from './components/Register';
+import ForgotPassword from './components/ForgotPassword';
+import ResetPassword from './components/ResetPassword';
 import Profile from './components/Profile';
 import AdminPanel from './components/AdminPanel';
 
@@ -148,10 +150,11 @@ function ChatPage({userEmail, onLogout, onSendMessageRef}) {
 function App() {
     const [token, setToken] = useState(localStorage.getItem('token'));
     const [userEmail, setUserEmail] = useState(''); // Lưu email để hiển thị user đăng nhập
+    const [isAdmin, setIsAdmin] = useState(false); // Trạng thái admin
     const [isLoading, setIdLoading] = useState(true); // Trạng thái kiểm tra token
     const onSendMessageRef = useRef(null);
 
-    // Lấy email từ backend khi có token
+    // Lấy email và isAdmin từ backend khi có token
     useEffect(() => {
         const verifyToken = async () => {
             const storedToken = localStorage.getItem('token');
@@ -163,8 +166,11 @@ function App() {
                 // Gọi API để kiểm tra token hợp lệ
                 const res = await axios.get('/auth/me');
                 setUserEmail(res.data.email);
+                setIsAdmin(res.data.isAdmin || false); // Lưu trạng thái admin từ backend, mặc định là false
             } catch (err) {
                 console.error('Error fetching user email:', err.response?.data || err.message);
+                localStorage.removeItem('token'); // Xóa token nếu không hợp lệ
+                setToken(null);
             } finally {
                 setIdLoading(false);
             }
@@ -176,29 +182,41 @@ function App() {
         localStorage.removeItem('token');
         setToken(null);
         setUserEmail(''); // Xóa email khi logout
+        setIsAdmin(false); // Đặt lại trạng thái admin
     };
 
-    // Nếu không có token, hiển thị Router với Login/Register
-    if (!token) {
-        return (
-            <Router>
-                <Routes>
-                    <Route path="/" element={<Login setToken={setToken} setUserEmail={setUserEmail} />} />
-                    <Route path="/register" element={<Register />} />
-
-                    {/* Catch-all route - điều hướng mọi đường dẫn không khớp về "/" */}
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
-            </Router>
-        );
+    if (isLoading) {
+        return <div>Loading...</div>;
     }
 
-    // Nếu có token, hiển thị giao diện chính
     return (
         <Router>
             <Routes>
+                {/* Các route không yêu cầu đăng nhập */}
+                <Route
+                    path="/"
+                    element={
+                        token ? (
+                            <Navigate to="/chat" replace />
+                        ) : (
+                            <Login setToken={setToken} setUserEmail={setUserEmail} />
+                        )
+                    }
+                />
+                <Route path="/register" element={token ? <Navigate to="/chat" replace /> : <Register />} />
+                <Route path="/forgot-password" element={token ? <Navigate to="/chat" replace /> : <ForgotPassword />} />
+
+                {/* Luôn cho phép truy cập /reset-password, bất kể đã đăng nhập hay chưa */}
+                <Route path="/reset-password" element={<ResetPassword />} />
+
+                {/* Các route yêu cầu đăng nhập */}
                 <Route path="/profile" element={<Profile onLogout={handleLogout} />} />
-                <Route path="/admin" element={<AdminPanel />} />
+                <Route
+                    path="/admin"
+                    element={
+                        token ? isAdmin ? <AdminPanel /> : <Navigate to="/chat" replace /> : <Navigate to="/" replace />
+                    }
+                />
                 <Route
                     path="/chat/:chatId"
                     element={
@@ -221,6 +239,9 @@ function App() {
                         />
                     }
                 />
+
+                {/* Catch-all route */}
+                <Route path="*" element={token ? <Navigate to="/chat" replace /> : <Navigate to="/" replace />} />
             </Routes>
         </Router>
     );

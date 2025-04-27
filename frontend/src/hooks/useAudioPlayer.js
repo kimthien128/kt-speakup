@@ -1,6 +1,6 @@
 import {useRef} from 'react';
 import {fetchAudioUrl, generateUrlByTts} from '../services/audioService';
-import {sanitizeFilename} from '../utils/sanitizeFilname';
+import {sanitizeFilename} from '../utils/sanitizeFilename';
 
 const useAudioPlayer = () => {
     const audioRef = useRef(null);

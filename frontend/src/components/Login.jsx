@@ -1,55 +1,24 @@
-import React, {useEffect, useState} from 'react';
-import {Link} from 'react-router-dom';
+import React from 'react';
 import useSiteConfig from '../hooks/useSiteConfig';
-import axios from '../axiosInstance';
+import useLogin from '../hooks/useLogin';
+import LoginForm from './LoginForm';
 
-import {Box, Grid, TextField, Button, Typography, Link as MuiLink, FormControlLabel, Switch} from '@mui/material';
+import {Box, Grid, Typography} from '@mui/material';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 
 function Login({setToken, setUserEmail}) {
     const {config, loading: configLoading, error: configError} = useSiteConfig();
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [rememberMe, setRememberMe] = useState(false); // State cho switch
-    const [error, setError] = useState('');
-
-    // Tự động điền email từ localStorage khi component mount
-    useEffect(() => {
-        const savedEmail = localStorage.getItem('rememberedEmail');
-        if (savedEmail) {
-            setEmail(savedEmail);
-            setRememberMe(true);
-        }
-    }, []);
-
-    const handleLogin = async (e) => {
-        e.preventDefault();
-        try {
-            const formData = new URLSearchParams();
-            formData.append('username', email); // Gửi email như username
-            formData.append('password', password);
-
-            const res = await axios.post(`${import.meta.env.VITE_API_URL}/auth/login`, formData, {
-                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-            });
-            const token = res.data.access_token;
-            localStorage.setItem('token', token);
-            setToken(token);
-            setUserEmail(email);
-            setError('');
-
-            // Xử lý "Remember Me"
-            if (rememberMe) {
-                localStorage.setItem('rememberedEmail', email);
-            } else {
-                localStorage.removeItem('rememberedEmail');
-            }
-        } catch (err) {
-            setError('Invalid credentials');
-            console.error('Login error:', err.response?.data || err.message);
-        }
-    };
+    const {
+        email,
+        setEmail,
+        password,
+        setPassword,
+        rememberMe,
+        setRememberMe,
+        error: loginError,
+        handleLogin,
+    } = useLogin({setToken, setUserEmail});
 
     // Xử lý config
     if (configLoading) {
@@ -97,81 +66,16 @@ function Login({setToken, setUserEmail}) {
 
             {/* Bên phải: Form login */}
             <Grid item xs={12} md={6}>
-                <Box
-                    sx={{
-                        height: '100%',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        p: 4,
-                    }}
-                >
-                    <Typography variant="h5" align="center" gutterBottom>
-                        Login
-                    </Typography>
-                    <form onSubmit={handleLogin}>
-                        <TextField
-                            label="Email"
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            fullWidth
-                            margin="normal"
-                            variant="outlined"
-                            required
-                        />
-                        <TextField
-                            label="Password"
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            fullWidth
-                            margin="normal"
-                            variant="outlined"
-                            required
-                        />
-                        <FormControlLabel
-                            control={
-                                <Switch
-                                    checked={rememberMe}
-                                    onChange={(e) => setRememberMe(e.target.checked)}
-                                    color="primary"
-                                />
-                            }
-                            label="Remember me"
-                            sx={{mt: 1}}
-                        />
-                        {error && (
-                            <Alert severity="error" sx={{mt: 2}}>
-                                {error}
-                            </Alert>
-                        )}
-                        <Button
-                            type="submit"
-                            variant="contained"
-                            color="primary"
-                            fullWidth
-                            sx={{
-                                mt: 3,
-                                py: 1.5,
-                                fontSize: '1rem',
-                            }}
-                        >
-                            Login
-                        </Button>
-                    </form>
-                    <Typography
-                        align="center"
-                        sx={{
-                            mt: 2,
-                        }}
-                    >
-                        Don't have an account?&nbsp;
-                        <MuiLink component={Link} to="/register" color="primary">
-                            Register here
-                        </MuiLink>
-                    </Typography>
-                </Box>
+                <LoginForm
+                    email={email}
+                    setEmail={setEmail}
+                    password={password}
+                    setPassword={setPassword}
+                    handleLogin={handleLogin}
+                    error={loginError}
+                    rememberMe={rememberMe}
+                    setRememberMe={setRememberMe}
+                />
             </Grid>
         </Grid>
     );
