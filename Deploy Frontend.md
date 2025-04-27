@@ -1,0 +1,113 @@
+# Frontend:
+
+Nếu server mạnh thì run npm trên server, còn không thì chỉ deploy file tĩnh
+
+## Cai nodejs >= v20.0.0
+
+```
+sudo apt install -y nodejs
+sudo apt install npm -y
+node -v
+npm -v
+```
+
+Nếu version < v20.0.0:
+
+```
+npm install -g n
+n latest
+node -v
+npm install -g npm
+npm -v
+```
+
+## Build frontend tren may local
+
+`npm run build`
+
+```
+cd kt-speakup/frontend
+npm install
+```
+
+Copy lên VPS (nếu build ở local):\
+`scp -r dist/* root@your-vps-ip:/var/www/kt-speakup`\
+`scp -r dist/* root@157.230.242.152:/var/www/kt-speakup`
+
+Hoặc nếu bạn đang ở trong VPS rồi thì move thư mục dist vào:\
+`mv dist /var/www/kt-speakup`
+
+## Cấp quyền để truy cập folder dist cho các user gọi từ web
+
+```
+sudo chown -R www-data:www-data /var/www/kt-speakup
+sudo chmod -R 755 /var/www/kt-speakup
+```
+
+## nếu upload lại thì nên xóa đi rồi up lại và Cập nhật quyền để overwrite
+
+`sudo rm -rf /var/www/kt-speakup/*`
+
+```
+sudo chown -R root:www-data /var/www/kt-speakup
+sudo chmod -R 755 /var/www/kt-speakup
+```
+
+# 6. Cấu hình Nginx để đưa app ra cổng 80 (http)
+
+### proxy_pass
+
+`sudo nano /etc/nginx/sites-available/kt-speakup`
+
+-   Nội dung:\
+    Đây là cấu hình dùng để "forward" tất cả request tới backend (FastAPI) đang chạy ở localhost:8000.
+
+👉 Phù hợp khi bạn chạy backend bằng Uvicorn, và dùng Nginx làm cổng chuyển tiếp ra ngoài.
+
+```
+server {
+    listen 80;
+    server_name 157.230.242.152; #your_domain_or_ip
+
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+
+```
+
+### trường hợp “frontend đã build rồi” thì dùng nội dung này
+
+```
+server {
+    listen 80;
+    server_name speakup.ktstudio.vn; #your_domain_or_ip
+
+    root /var/www/kt-speakup;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
+```
+
+-   Kích hoạt config:
+
+```
+Tạo symbolic link để kích hoạt site
+sudo ln -s /etc/nginx/sites-available/kt-speakup /etc/nginx/sites-enabled/
+
+Kiểm tra cấu hình Nginx có hợp lệ không
+sudo nginx -t
+
+Khởi động lại Nginx
+sudo systemctl restart nginx
+
+```
+
+# 7. Truy cập thử
+
+`http://<vps-ip>`\

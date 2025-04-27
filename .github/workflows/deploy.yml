@@ -18,7 +18,7 @@ jobs:
               with:
                   ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-            - name: Deploy to VPS
+            - name: Deploy Backend to VPS
               run: |
                   ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.SSH_SERVER_IP }} "
                   cd /root/kt-speakup
@@ -26,4 +26,22 @@ jobs:
                   source venv/bin/activate
                   pip install -r backend/requirements.txt
                   sudo systemctl restart ktspeakup
+                  "
+
+            - name: Deploy Frontend to VPS
+              run: |
+                  ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.SSH_SERVER_IP }} "
+                  cd /root/kt-speakup/frontend
+                  npm install
+                  npm run build
+                  sudo rm -rf /var/www/kt-speakup/*
+                  sudo cp -r dist/* /var/www/kt-speakup/
+                  sudo chown -R www-data:www-data /var/www/kt-speakup
+                  sudo chmod -R 755 /var/www/kt-speakup
+                  "
+
+            - name: Restart Nginx
+              run: |
+                  ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.SSH_SERVER_IP }} "
+                  sudo systemctl restart nginx
                   "
