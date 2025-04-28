@@ -65,6 +65,15 @@ async def get_current_user_with_auth_service(
 ) -> UserInDB:
     return await get_current_user(token=token,auth_service=auth_service, response=response)
 
+# Dependency để kiểm tra quyền admin
+async def get_admin_user(
+    current_user: UserInDB = Depends(get_current_user_with_auth_service)
+) -> UserInDB:
+    if not current_user.isAdmin:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    return current_user
+
+
 # Đăng ký user mới.
 @router.post("/register")
 async def register(user: UserCreate, auth_service: AuthService = Depends(get_auth_service)):

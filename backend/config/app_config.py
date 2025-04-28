@@ -40,6 +40,7 @@ def configure_app(app: FastAPI):
     from ..routes.translate import router as translate_router
     from ..routes.config import router as config_router
     from ..routes.audio import router as audio_router
+    from ..routes.users import router as users_router
 
     app.include_router(auth_router, prefix='/auth')
     app.include_router(stt_router, prefix='/stt')
@@ -51,5 +52,6 @@ def configure_app(app: FastAPI):
     app.include_router(config_router, prefix='/config')
     app.include_router(chats_router, prefix='/chats')
     app.include_router(audio_router, prefix='/audio')
+    app.include_router(users_router, prefix='/users')
     
     logger.info("App configured with CORS and routers")

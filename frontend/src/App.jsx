@@ -174,6 +174,7 @@ function App() {
                 localStorage.removeItem('token'); // Xóa token nếu không hợp lệ
                 setToken(null);
             } finally {
+                // logger.info('isAdmin:', isAdmin);
                 setIdLoading(false);
             }
         };

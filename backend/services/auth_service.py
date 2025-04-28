@@ -105,6 +105,7 @@ class AuthService:
             "status": "pending", # Trạng thái mặc định là pending
             "confirmation_token": confirmation_token, # Lưu token vào DB
             "confirmation_token_expiry": token_expiry, # Lưu thời gian hết hạn token
+            "createdAt": datetime.utcnow(),
             }
         await self.auth_repository.create_user(user_dict)
         
@@ -114,6 +115,7 @@ class AuthService:
         return {
             "message": "User registered successfully",
             "confirmation_token": confirmation_token, # Trả về token để gửi qua email
+            "createdAt": user_dict["createdAt"],
         }
     
     async def login(self, form_data: OAuth2PasswordRequestForm):
@@ -135,6 +137,7 @@ class AuthService:
     
     async def get_user_info(self, current_user: UserInDB):
         """Lấy thông tin user hiện tại"""
+        user = await self.auth_repository.find_user_by_email(current_user.email)
         return {
             "email": current_user.email,
             "avatarPath": current_user.avatarPath,
@@ -144,6 +147,7 @@ class AuthService:
             "location": current_user.location,
             "isAdmin": current_user.isAdmin,
             "status": current_user.status,
+            "createdAt": user.get("createdAt"),
         }
         
     async def update_user(self, displayName: str, phoneNumber: str, gender: str, location: str, avatar: UploadFile, current_user: UserInDB):
@@ -220,6 +224,7 @@ class AuthService:
             "avatarPath": updated_user.get("avatarPath"),
             "isAdmin": updated_user.get("isAdmin", False),
             "status": updated_user.get("status"),
+            "createdAt": updated_user.get("createdAt"),
         }
     
     async def change_password(self, old_password: str, new_password: str, current_user: UserInDB):

@@ -534,7 +534,6 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                     Logout
                 </MenuItem>
             </Menu>
-
             {/* Hiển thị ConfirmDialog */}
             <ConfirmDialog
                 open={dialog.open}

@@ -1,6 +1,5 @@
 //hooks/useLogin.js
 import {useState, useEffect} from 'react';
-import {useNavigate} from 'react-router-dom';
 import axios from '../axiosInstance';
 
 const useLogin = ({setToken, setUserEmail}) => {
@@ -9,7 +8,6 @@ const useLogin = ({setToken, setUserEmail}) => {
     const [rememberMe, setRememberMe] = useState(false); // State cho switch
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const navigate = useNavigate();
 
     // Tự động điền email từ localStorage khi component mount
     useEffect(() => {
@@ -49,8 +47,7 @@ const useLogin = ({setToken, setUserEmail}) => {
                 localStorage.removeItem('rememberedEmail');
             }
 
-            // Điều hướng sau khi đăng nhập thành công
-            navigate('/chat');
+            window.location.href = '/'; // dùng href để chuyển trang và có refresh để mount lại app.jsx và set lại token
         } catch (err) {
             setError('Invalid email or password');
             console.error('Login error:', err.response?.data || err.message);
