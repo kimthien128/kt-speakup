@@ -2,6 +2,8 @@
 //sẽ cung cấp giao diện và chức năng để quản lý danh sách người dùng, bao gồm các thao tác như xem danh sách, chỉnh sửa thông tin, xóa user, và có thể thêm user mới
 import React, {useState, useEffect} from 'react';
 import axios from '../axiosInstance';
+import {toast, ToastContainer} from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 import {
     Table,
@@ -12,6 +14,7 @@ import {
     TableRow,
     Paper,
     Button,
+    IconButton,
     Dialog,
     DialogTitle,
     DialogContent,
@@ -25,8 +28,9 @@ import {
     Typography,
     Alert,
     CircularProgress,
-    Tab,
 } from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 import ConfirmDialog from './ConfirmDialog';
 
 function UserManagement() {
@@ -44,6 +48,19 @@ function UserManagement() {
         password: '',
         displayName: '',
         isAdmin: false,
+    });
+
+    // State cho lỗi validation của form tạo user
+    const [createErrors, setCreateErrors] = useState({
+        email: '',
+        password: '',
+        displayName: '',
+    });
+
+    // State cho lỗi validation của form chỉnh sửa user
+    const [editErrors, setEditErrors] = useState({
+        email: '',
+        displayName: '',
     });
 
     // Fetch users khi component mounts
@@ -64,8 +81,78 @@ function UserManagement() {
         fetchUsers();
     }, []);
 
+    // Hàm validate form tạo user
+    const validateCreateForm = () => {
+        const errors = {
+            email: '',
+            password: '',
+            displayName: '',
+        };
+        let isValid = true;
+
+        //validate email
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!createForm.email) {
+            errors.email = 'Email is required';
+            isValid = false;
+        } else if (!emailPattern.test(createForm.email)) {
+            errors.email = 'Please enter a valid email address (e.g., user@example.com)';
+            isValid = false;
+        }
+
+        //validate password
+        const passwordPattern = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
+        if (!createForm.password) {
+            errors.password = 'Password is required';
+            isValid = false;
+        } else if (!passwordPattern.test(createForm.password)) {
+            errors.password =
+                'Password must be at least 8 characters long and contain at least one number, one lowercase letter, and one uppercase letter';
+            isValid = false;
+        }
+
+        //validate displayName
+        if (createForm.displayName && createForm.displayName.trim() === '') {
+            errors.displayName = 'Display Name cannot be empty if provided';
+            isValid = false;
+        }
+        setCreateErrors(errors);
+        return isValid;
+    };
+
+    // Hàm validate form chỉnh sửa user
+    const validateEditForm = (updatedUser) => {
+        const errors = {
+            email: '',
+            displayName: '',
+        };
+        let isValid = true;
+
+        // Validate email
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!updatedUser.email) {
+            errors.email = 'Email is required';
+            isValid = false;
+        } else if (!emailPattern.test(updatedUser.email)) {
+            errors.email = 'Please enter a valid email address (e.g., user@example.com)';
+            isValid = false;
+        }
+
+        // Validate displayName
+        if (updatedUser.displayName && updatedUser.displayName.trim() === '') {
+            errors.displayName = 'Display Name cannot be empty if provided';
+            isValid = false;
+        }
+
+        setEditErrors(errors);
+        return isValid;
+    };
+
     // Handle edit user
     const handleEditUser = async (updatedUser) => {
+        const isValid = validateEditForm(updatedUser);
+        if (!isValid) return;
+
         setLoading(true);
         setError('');
         setSuccess('');
@@ -79,11 +166,18 @@ function UserManagement() {
         } finally {
             setLoading(false);
             setEditDialog({open: false, user: null});
+            setEditErrors({
+                email: '',
+                displayName: '',
+            });
         }
     };
 
     // Handle create user
     const handleCreateUser = async () => {
+        const isValid = validateCreateForm();
+        if (!isValid) return;
+
         setLoading(true);
         setError('');
         setSuccess('');
@@ -102,6 +196,11 @@ function UserManagement() {
                 password: '',
                 displayName: '',
                 isAdmin: false,
+            });
+            setCreateErrors({
+                email: '',
+                password: '',
+                displayName: '',
             });
         }
     };
@@ -130,6 +229,11 @@ function UserManagement() {
             ...prev,
             user: {...prev.user, [field]: value},
         }));
+        // Xóa lỗi của field khi người dùng bắt đầu chỉnh sửa
+        setEditErrors((prev) => ({
+            ...prev,
+            [field]: '',
+        }));
     };
 
     // Handle create dialog form changes
@@ -138,10 +242,27 @@ function UserManagement() {
             ...prev,
             [field]: value,
         }));
+        // Xóa lỗi của field khi người dùng bắt đầu chỉnh sửa
+        setCreateErrors((prev) => ({
+            ...prev,
+            [field]: '',
+        }));
+    };
+
+    // Hàm handleCopyToClipboard
+    const handleCopyToClipboard = async (event, text) => {
+        event.stopPropagation();
+        try {
+            await navigator.clipboard.writeText(text);
+            toast.success(`Copied "${text}" to clipboard!`);
+        } catch (err) {
+            toast.error('Failed to copy to clipboard');
+            console.error('Failed to copy:', err);
+        }
     };
 
     return (
-        <Box sx={{p: 2}}>
+        <Box sx={{width: '100%'}}>
             {/* Tiêu đề và nút Create User */}
             <Box sx={{display: 'flex', justifyContent: 'space-between'}}>
                 <Typography variant="h6" sx={{mb: 2}}>
@@ -191,31 +312,34 @@ function UserManagement() {
                         <TableBody>
                             {users.map((user) => (
                                 <TableRow key={user.id}>
-                                    <TableCell>{user.id}</TableCell>
-                                    <TableCell>{user.email}</TableCell>
+                                    <TableCell
+                                        sx={{textOverflow: 'ellipsis', overflow: 'hidden', maxWidth: 150}}
+                                        onClick={(e) => handleCopyToClipboard(e, user.id)}
+                                    >
+                                        {user.id}
+                                    </TableCell>
+                                    <TableCell
+                                        sx={{textOverflow: 'ellipsis', overflow: 'hidden', maxWidth: 150}}
+                                        onClick={(e) => handleCopyToClipboard(e, user.email)}
+                                    >
+                                        {user.email}
+                                    </TableCell>
                                     <TableCell>{user.displayName || 'N/A'}</TableCell>
                                     <TableCell>{user.isAdmin ? 'Admin' : 'User'}</TableCell>
                                     <TableCell>{user.status}</TableCell>
                                     <TableCell>
                                         {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
                                     </TableCell>
-                                    <TableCell>
-                                        <Button
-                                            variant="outlined"
-                                            size="small"
-                                            onClick={() => setEditDialog({open: true, user})}
-                                            sx={{mr: 1}}
-                                        >
-                                            Edit
-                                        </Button>
-                                        <Button
-                                            variant="outlined"
+                                    <TableCell sx={{whiteSpace: 'nowrap'}}>
+                                        <IconButton color="primary" onClick={() => setEditDialog({open: true, user})}>
+                                            <EditIcon fontSize="small" />
+                                        </IconButton>
+                                        <IconButton
                                             color="error"
-                                            size="small"
                                             onClick={() => setConfirmDialog({open: true, userId: user.id})}
                                         >
-                                            Delete
-                                        </Button>
+                                            <DeleteIcon fontSize="small" />
+                                        </IconButton>
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -240,12 +364,17 @@ function UserManagement() {
                                 value={editDialog.user.email || ''}
                                 onChange={(e) => handleFormChange('email', e.target.value)}
                                 fullWidth
+                                required
+                                error={!!editErrors.email}
+                                helperText={editErrors.email}
                             />
                             <TextField
                                 label="Display Name"
                                 value={editDialog.user.displayName || ''}
                                 onChange={(e) => handleFormChange('displayName', e.target.value)}
                                 fullWidth
+                                error={!!editErrors.displayName}
+                                helperText={editErrors.displayName}
                             />
                             <FormControl fullWidth>
                                 <InputLabel>Role</InputLabel>
@@ -296,6 +425,8 @@ function UserManagement() {
                             onChange={(e) => handleCreateFormChange('email', e.target.value)}
                             fullWidth
                             required
+                            error={!!createErrors.email}
+                            helperText={createErrors.email}
                         />
                         <TextField
                             label="Password"
@@ -304,12 +435,16 @@ function UserManagement() {
                             onChange={(e) => handleCreateFormChange('password', e.target.value)}
                             fullWidth
                             required
+                            error={!!createErrors.password}
+                            helperText={createErrors.password}
                         />
                         <TextField
                             label="Display Name"
                             value={createForm.displayName || ''}
                             onChange={(e) => handleCreateFormChange('displayName', e.target.value)}
                             fullWidth
+                            error={!!createErrors.displayName}
+                            helperText={createErrors.displayName}
                         />
                         <FormControl fullWidth>
                             <InputLabel>Role</InputLabel>
@@ -342,6 +477,7 @@ function UserManagement() {
                 confirmText="Delete"
                 cancelText="Cancel"
             />
+            <ToastContainer position="bottom-left" autoClose={2000} />
         </Box>
     );
 }

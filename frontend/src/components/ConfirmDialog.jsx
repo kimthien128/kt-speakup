@@ -37,6 +37,7 @@ function ConfirmDialog({
                     overflow: 'hidden',
                 },
             }}
+            disableEnforceFocus={false}
         >
             <DialogTitle
                 sx={{
