@@ -1,17 +1,11 @@
 // src/hooks/useVocab.js
-// hook để quản lý danh sách từ vựng, tìm kiếm, và chi tiết từ vựng. Hook này sẽ gọi vocabService và fetchWordInfo
 
 import {useState, useEffect, useCallback} from 'react';
-import {fetchWordInfo} from '../services/dictionaryService';
 import {vocabService} from '../services/vocabService';
-import {logger} from '../utils/logger';
 
 export const useVocab = (chatId, onVocabAdded) => {
     const [vocabList, setVocabList] = useState([]);
-    const [searchTerm, setSearchTerm] = useState('');
     const [selectedWord, setSelectedWord] = useState(null);
-    const [wordDetails, setWordDetails] = useState(null);
-    const [loadingDetails, setLoadingDetails] = useState(false);
     const [isDeleteMode, setIsDeleteMode] = useState(false);
     const [error, setError] = useState(null);
 
@@ -30,9 +24,7 @@ export const useVocab = (chatId, onVocabAdded) => {
     // Fetch từ vựng khi chatId thay đổi
     useEffect(() => {
         fetchVocab();
-        setWordDetails(null);
         setSelectedWord(null);
-        setSearchTerm('');
     }, [chatId, fetchVocab]);
 
     // Truyền hàm fetchVocab ra ngoài qua onVocabAdded
@@ -41,32 +33,6 @@ export const useVocab = (chatId, onVocabAdded) => {
             onVocabAdded.current = fetchVocab;
         }
     }, [fetchVocab, onVocabAdded]);
-
-    // Hàm lấy chi tiết từ vựng
-    const fetchWordDetails = async (word) => {
-        setSelectedWord(word);
-        setLoadingDetails(true);
-        setWordDetails(null);
-
-        try {
-            const data = await fetchWordInfo(word, 'wordnik', 2);
-            setWordDetails(data);
-            setError(null);
-        } catch (err) {
-            logger.error(`Error fetching word details for ${word}: ${err.message}`);
-            setWordDetails({
-                definition: 'Error fetching data',
-                phonetic: 'N/A',
-                audio: [],
-                examples: [],
-                pronunciations: [],
-                topExample: '',
-            });
-            setError('Failed to load word details');
-        } finally {
-            setLoadingDetails(false);
-        }
-    };
 
     // Hàm xóa từ vựng
     const deleteVocab = async (vocabId, word) => {
@@ -83,22 +49,14 @@ export const useVocab = (chatId, onVocabAdded) => {
         }
     };
 
-    // Lọc từ vựng dựa trên searchTerm
-    const filteredVocab = vocabList.filter((vocab) => vocab.word.toLowerCase().includes(searchTerm.toLowerCase()));
-
     return {
         vocabList,
-        searchTerm,
-        setSearchTerm,
         selectedWord,
-        wordDetails,
-        loadingDetails,
+        setSelectedWord,
         isDeleteMode,
         setIsDeleteMode,
         error,
         fetchVocab,
-        fetchWordDetails,
         deleteVocab,
-        filteredVocab,
     };
 };
