@@ -168,7 +168,7 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                                     }}
                                 >
                                     <Avatar
-                                        src={config?.aiChatIcon || null}
+                                        src={config?.aiChatIcon || '/images/default-bot-avatar.jpg'}
                                         alt="AI Icon"
                                         sx={{
                                             width: 40,
@@ -290,7 +290,7 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                             >
                                 {/* Logo */}
                                 <img
-                                    src={config?.logoImage || null}
+                                    src={config?.logoImage || '/images/logo.png'}
                                     alt="Logo"
                                     style={{
                                         width: '100px',

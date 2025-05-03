@@ -150,7 +150,7 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                         >
                             <Tooltip title="Home" placement="bottom">
                                 <img
-                                    src={config?.logoImage || null}
+                                    src={config?.logoImage || '/images/logo.png'}
                                     alt="KT SpeakUp Logo"
                                     style={{
                                         width: '100%',

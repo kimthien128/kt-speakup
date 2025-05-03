@@ -91,7 +91,7 @@ function VocabList({
                 vocabList.length === 0 && (
                     <>
                         <img
-                            src={config?.saveWordImage || null}
+                            src={config?.saveWordImage || '/images/default-save-word.png'}
                             alt="KT SpeakUp Logo"
                             style={{width: '70px', objectFit: 'cover', objectPosition: 'center'}}
                         />
