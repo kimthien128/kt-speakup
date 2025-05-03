@@ -1,5 +1,6 @@
 // components/InputArea.jsx
 import React, {useState, useRef, useEffect} from 'react';
+import {logger} from '../utils/logger';
 import {useSpeechToText} from '../hooks/useSpeechToText';
 import {useMessageHandler} from '../hooks/useMessageHandler';
 import {useSuggestions} from '../hooks/useSuggestions';
@@ -7,16 +8,20 @@ import {useWordTooltip} from '../hooks/useWordTooltip';
 import {useClickOutside} from '../hooks/useClickOutside';
 import useAudioPlayer from '../hooks/useAudioPlayer';
 import {useDictionary} from '../context/DictionaryContext';
+import {createChat, generateResponse, translate} from '../services/apiService';
 
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
+import Switch from '@mui/material/Switch';
 import TextareaAutosize from '@mui/material/TextareaAutosize';
 import Collapse from '@mui/material/Collapse';
 import Typography from '@mui/material/Typography';
 import {Tooltip as MuiTooltip} from '@mui/material';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
+import LinearProgress from '@mui/material/LinearProgress';
 import Alert from '@mui/material/Alert';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import MicIcon from '@mui/icons-material/Mic';
 import StopIcon from '@mui/icons-material/Stop';
@@ -44,6 +49,22 @@ function InputArea({
 
     // State khi send
     const [isSending, setIsSending] = useState(false);
+
+    //state cho tự động gửi
+    const [isFocused, setIsFocused] = useState(false);
+    const [autoSendTimeout, setAutoSendTimeout] = useState(null);
+    const [timeLeft, setTimeLeft] = useState(0);
+    const [prevTranscript, setPrevTranscript] = useState(''); // Lưu transcript trước đó để phát hiện thay đổi
+
+    // State cho chức năng chuyển ngữ
+    const [translateOpen, setTranslateOpen] = useState(false);
+    const [sourceText, setSourceText] = useState('');
+    const [targetText, setTargetText] = useState('');
+    const [isTranslating, setIsTranslating] = useState(false);
+
+    // biến ngôn ngữ
+    const [sourceLang, setSourceLang] = useState('Vietnamese');
+    const [targetLang, setTargetLang] = useState('English');
 
     // Sử dụng useAudioPlayer
     const {playSound, audioRef} = useAudioPlayer();
@@ -112,6 +133,98 @@ function InputArea({
             }
         } finally {
             setIsSending(false);
+            setTimeLeft(0); // Reset tiến trình khi gửi thủ công
+            if (autoSendTimeout) {
+                clearTimeout(autoSendTimeout); // Xóa timeout nếu có
+                setAutoSendTimeout(null);
+            }
+        }
+    };
+
+    // Kiểm tra transcript thay đổi để kích hoạt đếm ngược
+    useEffect(() => {
+        if (
+            !isFocused && // Chỉ chạy khi không focus
+            !isRecording &&
+            transcript !== prevTranscript && // Chỉ chạy khi transcript thay đổi
+            transcript.trim() &&
+            transcript.toLowerCase() !== 'no speech detected'
+        ) {
+            setTimeLeft(10); // Bắt đầu đếm ngược từ 10s khi transcript được cập nhật
+            const timeoutId = setTimeout(() => {
+                onSend(); // Gửi tin nhắn sau 10 giây
+            }, 10000);
+            setAutoSendTimeout(timeoutId); // Lưu timeout ID để có thể xóa sau này
+
+            // Cập nhật thời gian còn lại mỗi giây
+            const timer = setInterval(() => {
+                setTimeLeft((prev) => {
+                    if (prev <= 1) {
+                        clearInterval(timer); // Dừng đếm ngược khi thời gian còn lại <= 0
+                        return 0;
+                    }
+                    return prev - 1; // Giảm thời gian còn lại mỗi giây
+                });
+            }, 1000);
+        }
+        setPrevTranscript(transcript); // Cập nhật transcript trước đó
+    }, [transcript, isFocused, isRecording, prevTranscript]);
+
+    // Hủy tự động gửi khi nhấn vào Textarea hoặc thay đổi transcript
+    const handleTextareaFocus = () => {
+        setIsFocused(true);
+        if (autoSendTimeout) {
+            clearTimeout(autoSendTimeout); // Xóa timeout nếu có
+            setAutoSendTimeout(null);
+            setTimeLeft(0); // Reset tiến trình
+        }
+    };
+
+    const handleTextareaBlur = () => {
+        setIsFocused(false);
+    };
+
+    const handleTranscriptChange = (e) => {
+        setTranscript(e.target.value);
+        if (autoSendTimeout) {
+            clearTimeout(autoSendTimeout);
+            setAutoSendTimeout(null);
+            setTimeLeft(0); // Reset tiến trình
+        }
+    };
+
+    // Xử lý chuyển ngữ
+    const handleTranslate = async () => {
+        if (!sourceText.trim()) return;
+        setIsTranslating(true);
+
+        let currentChatId = chatId;
+        try {
+            // Nếu chatId không hợp lệ, tạo chat mới trước
+            if (
+                !currentChatId ||
+                currentChatId === 'null' ||
+                currentChatId === 'undefined' ||
+                typeof currentChatId !== 'string'
+            ) {
+                currentChatId = await createChat(); // Tạo chat mới
+                setChatId(currentChatId); // Cập nhật chatId trong state
+                if (refreshChats) await refreshChats(); // Cập nhật danh sách chat nếu có
+            }
+
+            // Gọi generateResponse với chatId đã được đảm bảo
+            const translatedText = await translate({
+                method: generateMethod,
+                text: sourceText,
+                sourceLang: sourceLang,
+                targetLang: targetLang,
+            });
+            setTargetText(translatedText || 'Translation failed');
+        } catch (err) {
+            logger.error('Translation error:', err);
+            setTargetText('Error translating text');
+        } finally {
+            setIsTranslating(false);
         }
     };
 
@@ -347,7 +460,9 @@ function InputArea({
                     {/* Textarea */}
                     <TextareaAutosize
                         value={transcript}
-                        onChange={(e) => setTranscript(e.target.value)}
+                        onChange={handleTranscriptChange}
+                        onFocus={handleTextareaFocus} // Hủy timeout khi nhấn vào
+                        onBlur={handleTextareaBlur}
                         placeholder="Your speech here..."
                         minRows={1}
                         maxRows={3}
@@ -367,11 +482,27 @@ function InputArea({
                         }}
                     />
 
+                    {/* Icon Chuyển ngữ */}
+                    <MuiTooltip title={`Translate from ${sourceLang} to ${targetLang}`} placement="top">
+                        <IconButton
+                            onClick={() => setTranslateOpen(!translateOpen)}
+                            sx={{
+                                bgcolor: 'primary.main',
+                                color: 'white',
+                                '&:hover': {
+                                    bgcolor: 'primary.dark',
+                                },
+                            }}
+                        >
+                            <SwapHorizIcon />
+                        </IconButton>
+                    </MuiTooltip>
+
                     {/* Icon Send */}
 
                     <IconButton
                         onClick={onSend}
-                        disabled={!transcript.trim() || isSending}
+                        disabled={!transcript.trim() || isSending || transcript.toLowerCase() === 'no speech detected'}
                         sx={{
                             bgcolor: transcript.trim() ? 'primary.main' : 'grey.300',
                             color: transcript.trim() ? 'white' : 'grey.500',
@@ -383,6 +514,86 @@ function InputArea({
                         <SendIcon />
                     </IconButton>
                 </Box>
+
+                {/* Khu vực 4: Chuyển ngữ */}
+                <Collapse in={translateOpen} sx={{width: '100%', maxWidth: '900px'}}>
+                    <Box
+                        sx={{
+                            width: '100%',
+                            mt: 2,
+                            p: 2,
+                            bgcolor: 'grey.100',
+                            borderRadius: 2,
+                            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                        }}
+                    >
+                        <Box sx={{mt: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                            <TextareaAutosize
+                                value={sourceText}
+                                onChange={(e) => setSourceText(e.target.value)}
+                                placeholder={`Enter text in ${sourceLang}...`}
+                                minRows={1}
+                                maxRows={3}
+                                style={{
+                                    width: '100%',
+                                    flexGrow: 1,
+                                    padding: '8px 12px',
+                                    borderRadius: 4,
+                                    border: 'none',
+                                    resize: 'none',
+                                    fontSize: '1rem',
+                                    fontFamily: 'inherit',
+                                    outline: 'none',
+                                    '&:focus': {
+                                        borderColor: 'primary.main',
+                                        boxShadow: '0 0 0 2px rgba(25, 118, 210, 0.2)',
+                                    },
+                                }}
+                            />
+
+                            <Button
+                                variant="contained"
+                                onClick={handleTranslate}
+                                disabled={isTranslating || !sourceText.trim()}
+                                sx={{textTransform: 'none', ml: 2}}
+                            >
+                                {isTranslating ? <CircularProgress size={20} /> : 'Translate'}
+                            </Button>
+                        </Box>
+                        {targetText && (
+                            <Typography
+                                variant="body1"
+                                sx={{mt: 2, fontSize: '1rem', fontStyle: 'italic', color: 'text.primary'}}
+                            >
+                                {targetText}
+                            </Typography>
+                        )}
+                    </Box>
+                </Collapse>
+
+                {/* Hiển thị tiến trình tự động gửi (nếu có) */}
+                {timeLeft > 0 && (
+                    <Box sx={{width: '100%', maxWidth: '900px', mt: 1}}>
+                        <LinearProgress
+                            variant="determinate"
+                            value={100 - (timeLeft / 10) * 100} // Tính toán phần trăm còn lại
+                            sx={{
+                                height: '4px',
+                                borderRadius: 2,
+                                bgcolor: 'grey.300',
+                                '& .MuiLinearProgress-bar': {
+                                    bgcolor: 'primary.main',
+                                },
+                            }}
+                        />
+                        <Typography
+                            variant="caption"
+                            sx={{color: 'text.secondary', textAlign: 'right', display: 'block', mt: 0.5}}
+                        >
+                            Auto sending in {timeLeft}s... (Editing will cancel auto-send)
+                        </Typography>
+                    </Box>
+                )}
 
                 {/* Tooltip cho từ vựng */}
                 {wordTooltip && (

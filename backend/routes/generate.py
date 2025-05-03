@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Depends
+from fastapi import APIRouter, Request, Depends, HTTPException
 from fastapi.responses import Response
 from .auth import get_auth_service
 from ..security import get_current_user, UserInDB, oauth2_scheme
@@ -40,3 +40,21 @@ async def generate(
     chat_id = data.get('chat_id', '') # Lấy chat_id từ request để truy xuất history
     method = request.query_params.get('method', 'gemini')
     return await ai_service.generate_response(transcript, chat_id, current_user.id, method)
+
+@router.post('/translate')
+async def translate(
+    request: Request,
+    ai_service: AIService = Depends(get_ai_service)
+):
+    data = await request.json()
+    text = data.get('text', '')
+    source_lang = data.get('source_lang', 'English')
+    target_lang = data.get('target_lang', 'Vietnamese')
+    method = request.query_params.get('method', 'gemini')
+    
+    if not text:
+        raise HTTPException(status_code=400, detail="No text provided")
+    if not source_lang or not target_lang:
+        raise HTTPException(status_code=400, detail="Source and target languages are required")
+    
+    return await ai_service.translate(text, source_lang, target_lang, method)

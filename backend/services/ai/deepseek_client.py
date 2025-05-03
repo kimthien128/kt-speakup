@@ -34,3 +34,26 @@ class DeepSeekClient(AIClient):
         except Exception as e:
             logger.error(f"Error calling DeepSeek API: {str(e)}")
             raise HTTPException(status_code=503, detail=f"Failed to generate response from DeepSeek: {str(e)}")
+        
+    def translate(self, text: str, source_lang: str, target_lang: str) -> str:
+        messages = [
+            {"role": "system", "content": "You are a translator. Provide accurate translations in a natural tone."},
+            {"role": "user", "content": f"Translate the following {source_lang} text to {target_lang}: {text}"}
+        ]
+        payload = {
+            "model": "deepseek-chat",
+            "messages": messages,
+            "max_tokens": 100,  # Tăng giới hạn token cho dịch
+            "temperature": 0.3  # Giảm temperature để dịch chính xác hơn
+        }
+        try:
+            response = requests.post(self.api_url, headers=self.headers, json=payload)
+            if response.status_code != 200:
+                logger.error(f"DeepSeek API translation error: {response.status_code} - {response.text}")
+                raise HTTPException(status_code=503, detail="DeepSeek API translation unavailable")
+
+            result = response.json()
+            return result["choices"][0]["message"]["content"].strip()
+        except Exception as e:
+            logger.error(f"Error calling DeepSeek API for translation: {str(e)}")
+            raise HTTPException(status_code=503, detail=f"Failed to translate with DeepSeek: {str(e)}")

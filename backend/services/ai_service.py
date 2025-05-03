@@ -47,7 +47,7 @@ class AIService:
         # Chuẩn bị messages
         history = chat.get('history', [])
         messages = [
-            {"role": "system", "content": "You are a chatbot assisting in learning English. Reply with one short, complete sentence."}
+            {"role": "system", "content": "You are a friendly English conversation partner. Help me practice speaking by replying with short, natural, and complete sentences suitable for daily conversation. After each reply, ask a follow-up question to keep the conversation going. Use clear and simple language appropriate for an intermediate learner."}
         ]
         for msg in history:
             messages.append({"role": "user", "content": msg["user"]})
@@ -62,3 +62,18 @@ class AIService:
             generated_text = "I don't know what to say!"
         logger.info(f'{method.capitalize()} response: {generated_text}')
         return {'response': generated_text}
+    
+    async def translate(self, text: str, source_lang: str, target_lang: str, method: str) -> dict:
+        if not text:
+            raise HTTPException(status_code=400, detail="No text provided")
+        if method not in self.clients:
+            raise HTTPException(status_code=400, detail=f"Client {method} is disabled or unsupported")
+        
+        # Gọi phương thức translate của client
+        logger.info(f'{method.capitalize()} translating: {text} from {source_lang} to {target_lang}')
+        translated_text = self.clients[method].translate(text, source_lang, target_lang)
+        if not translated_text:
+            translated_text = "Translation failed!"
+        
+        logger.info(f'{method.capitalize()} translated response: {translated_text}')
+        return {'translated_text': translated_text}

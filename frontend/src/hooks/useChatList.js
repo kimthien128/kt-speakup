@@ -5,7 +5,7 @@ import {useState, useEffect, useCallback} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {toast} from 'react-toastify';
 import {logger} from '../utils/logger';
-import axios from '../axiosInstance';
+import {fetchChatList, createChat, deleteChat, saveChatTitle} from '../services/apiService';
 
 export const useChatList = (onSelectChat, refreshChatsCallback) => {
     const [chats, setChats] = useState([]);
@@ -17,11 +17,11 @@ export const useChatList = (onSelectChat, refreshChatsCallback) => {
     const navigate = useNavigate();
 
     // Lấy danh sách chat từ backend
-    const fetchChats = useCallback(async () => {
+    const fetchChatsLocal = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await axios('/chats');
-            setChats(res.data.chats || res.data); // Thêm fallback nếu backend trả trực tiếp mảng
+            const res = await fetchChatList();
+            setChats(res || []); // Thêm fallback nếu backend trả trực tiếp mảng
             setError(null);
         } catch (err) {
             logger.error('Error fetching chats:', err.response?.data || err.message);
@@ -33,11 +33,10 @@ export const useChatList = (onSelectChat, refreshChatsCallback) => {
     }, []);
 
     // Tạo chat mới
-    const createChat = useCallback(async () => {
+    const createChatLocal = useCallback(async () => {
         try {
-            const res = await axios.post('/chats');
-            const newChatId = res.data.chat_id;
-            await fetchChats(); // Cập nhật danh sách chat
+            const newChatId = await createChat();
+            await fetchChatsLocal(); // Cập nhật danh sách chat
             onSelectChat(newChatId); // Chọn chat mới ngay
             navigate(`/chat/${newChatId}`); // Chuyển URL
             if (refreshChatsCallback) refreshChatsCallback(); // Gọi callback nếu có
@@ -47,13 +46,13 @@ export const useChatList = (onSelectChat, refreshChatsCallback) => {
             toast.error('Failed to create chat');
             throw err;
         }
-    }, [onSelectChat, navigate, refreshChatsCallback, fetchChats]);
+    }, [onSelectChat, navigate, refreshChatsCallback, fetchChatsLocal]);
 
     // Xóa chat
-    const deleteChat = useCallback(
+    const deleteChatLocal = useCallback(
         async (chatId) => {
             try {
-                await axios.delete(`/chats/${chatId}`);
+                await deleteChat(chatId);
                 // Cập nhật danh sách chat sau khi xóa
                 setChats((prevChats) => prevChats.filter((chat) => chat._id !== chatId));
                 if (chatId === editingChatId) setEditingChatId(null);
@@ -77,7 +76,7 @@ export const useChatList = (onSelectChat, refreshChatsCallback) => {
     }, []);
 
     // Lưu tiêu đề mới
-    const saveChatTitle = useCallback(
+    const saveChatTitleLocal = useCallback(
         async (chatId) => {
             if (!editTitle.trim()) {
                 toast.error('Title cannot be empty');
@@ -85,11 +84,7 @@ export const useChatList = (onSelectChat, refreshChatsCallback) => {
             }
 
             try {
-                await axios.put(
-                    `/chats/${chatId}`,
-                    {title: editTitle},
-                    {headers: {'Content-Type': 'application/json'}}
-                );
+                await saveChatTitle(chatId, editTitle);
                 setChats((prevChats) =>
                     prevChats.map((chat) => (chat._id === chatId ? {...chat, title: editTitle} : chat))
                 );
@@ -111,15 +106,15 @@ export const useChatList = (onSelectChat, refreshChatsCallback) => {
 
     // Tải danh sách chat khi mount
     useEffect(() => {
-        fetchChats();
-    }, [fetchChats]);
+        fetchChatsLocal();
+    }, [fetchChatsLocal]);
 
     // Cập nhật refreshChatsCallback
     useEffect(() => {
         if (refreshChatsCallback) {
-            refreshChatsCallback(fetchChats);
+            refreshChatsCallback(fetchChatsLocal);
         }
-    }, [refreshChatsCallback, fetchChats]);
+    }, [refreshChatsCallback, fetchChatsLocal]);
 
     return {
         chats,
@@ -132,10 +127,10 @@ export const useChatList = (onSelectChat, refreshChatsCallback) => {
         setEditingChatId,
         editTitle,
         setEditTitle,
-        createChat,
-        deleteChat,
+        createChat: createChatLocal,
+        deleteChat: deleteChatLocal,
         startEditChat,
-        saveChatTitle,
-        fetchChats,
+        saveChatTitle: saveChatTitleLocal,
+        fetchChats: fetchChatsLocal,
     };
 };

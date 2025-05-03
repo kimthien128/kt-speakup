@@ -1,18 +1,17 @@
 // src/hooks/useChat.js
-// hook để quản lý lịch sử chat, trạng thái phát âm, và xử lý tin nhắn. Hook này sẽ gọi chatService và useAudioPlayer
+// hook để quản lý lịch sử chat, trạng thái phát âm, và xử lý tin nhắn
 
-import {useState, useEffect, useCallback} from 'react';
+import {useState, useEffect, useCallback, useRef} from 'react';
 import {toast} from 'react-toastify';
-import {chatService} from '../services/chatService';
+import {getChatHistory, updateAudioUrl} from '../services/apiService';
 import {logger} from '../utils/logger';
-import axios from '../axiosInstance';
 
 export const useChat = (chatId, onSendMessage) => {
     const [chatHistory, setChatHistory] = useState([]);
     const [isPlaying, setIsPlaying] = useState(false);
     const [isSending, setIsSending] = useState(false); // Trạng thái gửi tin nhắn
     const [error, setError] = useState(null);
-    const [skipFirstFetch, setSkipFirstFetch] = useState(true); // Biến để bỏ qua fetch đầu tiên
+    const pendingResponseRef = useRef(false);
 
     // Hàm fetch lịch sử chat
     const fetchHistory = useCallback(async () => {
@@ -21,40 +20,33 @@ export const useChat = (chatId, onSendMessage) => {
         }
 
         try {
-            const history = await chatService.fetchHistory(chatId);
-            // So sánh history từ server với chatHistory hiện tại
-            setChatHistory((prev) => {
-                // Đảm bảo history là mảng trước khi cập nhật
-                const newHistory = Array.isArray(history) ? history : [];
-                if (JSON.stringify(prev) === JSON.stringify(newHistory)) {
-                    return prev; // Không cập nhật nếu không có thay đổi
-                }
-                return [...newHistory]; // Luôn tạo mảng mới
-            });
+            const history = await getChatHistory(chatId);
+
+            // KHÔNG cập nhật nếu đang chờ phản hồi
+            if (!pendingResponseRef.current) {
+                setChatHistory(Array.isArray(history) ? history : []);
+            }
+
             setError(null);
         } catch (err) {
+            logger.error('Error fetching chat history:', err.message);
             setChatHistory([]);
             setError('Failed to load chat history');
         }
     }, [chatId]);
 
-    // Fetch lịch sử khi chatId thay đổi, và fetch lịch sử khi chatId hợp lệ.
+    // Luôn fetch khi chatId thay đổi
     useEffect(() => {
-        if (!chatId || typeof chatId !== 'string') {
-            setChatHistory([]); // Reset chatHistory khi chatId không hợp lệ (tại / hoặc /chat)
-            return;
-        }
-        if (skipFirstFetch) {
-            return;
-        }
-        fetchHistory(); // Gọi fetchHistory khi chatId hợp lệ
-    }, [fetchHistory, chatId]);
+        fetchHistory();
+    }, [chatId, fetchHistory]);
 
     // Cập nhật chatHistory khi có tin nhắn mới
     useEffect(() => {
         if (onSendMessage) {
             onSendMessage.current = (message, sending = false) => {
                 setIsSending(sending); // Cập nhật isSending từ onSendMessage
+                pendingResponseRef.current = sending; // Cập nhật ref
+
                 setChatHistory((prev) => {
                     // Thay thế tin nhắn tạm cuối cùng (ai: '...')
                     const lastIndex = prev.length - 1;
@@ -63,12 +55,15 @@ export const useChat = (chatId, onSendMessage) => {
                     }
                     return [...prev, {...message}]; // Tạo object mới để chatHistory nhận biết có thay đổi để cuộn xuống cuối
                 });
+                // Sau khi nhận phản hồi thực, cho phép fetch lịch sử
                 if (!sending) {
-                    setSkipFirstFetch(false);
+                    pendingResponseRef.current = false;
+                    // Fetch lại sau khi nhận phản hồi để đồng bộ
+                    setTimeout(() => fetchHistory(), 300);
                 }
             };
         }
-    }, [onSendMessage]);
+    }, [onSendMessage, fetchHistory]);
 
     //hàm phụ cho PlayMessage
     const playAudioFromUrl = async (playSound, audioUrl) => {
@@ -87,11 +82,7 @@ export const useChat = (chatId, onSendMessage) => {
         logger.info('Generated new audio URL:', newAudioUrl);
         if (chatId) {
             try {
-                await axios.patch(
-                    `/chats/${chatId}/audioUrl`,
-                    {index, audioUrl: newAudioUrl},
-                    {headers: {'Content-Type': 'application/json'}}
-                );
+                await updateAudioUrl(chatId, index, newAudioUrl);
                 logger.info('Audio URL updated successfully');
             } catch (patchErr) {
                 logger.error(`Failed to update audioUrl: ${patchErr.message}`);

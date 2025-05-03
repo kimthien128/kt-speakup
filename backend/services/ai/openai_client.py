@@ -31,3 +31,22 @@ class OpenAIClient(AIClient):
 
         result = response.json()
         return result["choices"][0]["message"]["content"].strip()
+    
+    def translate(self, text: str, source_lang: str, target_lang: str) -> str:
+        messages = [
+            {"role": "system", "content": "You are a translator. Provide accurate translations in a natural tone."},
+            {"role": "user", "content": f"Translate the following {source_lang} text to {target_lang}: {text}"}
+        ]
+        payload = {
+            "model": "gpt-3.5-turbo",
+            "messages": messages,
+            "max_tokens": 100,  # Tăng giới hạn token cho dịch
+            "temperature": 0.3  # Giảm temperature để dịch chính xác hơn
+        }
+        response = requests.post(self.api_url, headers=self.headers, json=payload)
+        if response.status_code != 200:
+            logger.error(f"OpenAI API translation error: {response.status_code} - {response.text}")
+            raise HTTPException(status_code=503, detail="OpenAI API translation unavailable")
+
+        result = response.json()
+        return result["choices"][0]["message"]["content"].strip()

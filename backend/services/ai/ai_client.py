@@ -8,3 +8,7 @@ class AIClient(ABC):
     @abstractmethod
     def generate_response(self, messages: list) -> str:
         pass
+    
+    @abstractmethod
+    def translate(self, text: str, source_lang: str, target_lang: str) -> str:
+        pass

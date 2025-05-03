@@ -1,7 +1,7 @@
 // hooks/useMessageHandler.js
 // Quản lý gửi tin nhắn và phản hồi AI
 
-import axios from '../axiosInstance';
+import {createChat, generateResponse, saveChatHistory, getTTS} from '../services/apiService';
 import {logger} from '../utils/logger';
 
 export const useMessageHandler = (
@@ -26,8 +26,7 @@ export const useMessageHandler = (
             typeof currentChatId !== 'string'
         ) {
             try {
-                const res = await axios.post(`/chats`);
-                currentChatId = res.data.chat_id;
+                currentChatId = await createChat(); // Tạo chat mới
                 setChatId(currentChatId); // Cập nhật chatId và URL
                 if (refreshChats) await refreshChats(); // Cập nhật chatList sau khi tạo chat
             } catch (err) {
@@ -48,41 +47,25 @@ export const useMessageHandler = (
             const userInput = temp.charAt(0).toUpperCase() + temp.slice(1);
 
             // Gửi transcript đến /generate để lấy phản hồi từ AI
-            const generateResponse = await axios.post(
-                `/generate?method=${generateMethod}`,
-                {transcript: userInput, chat_id: currentChatId},
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
-            if (generateResponse.data.error) throw new Error(generateResponse.data.error);
-            const aiResponse = generateResponse.data.response;
+            const aiResponse = await generateResponse({
+                method: generateMethod,
+                transcript: userInput,
+                chatId: currentChatId,
+            });
 
             // Lấy audioUrl từ /tts và truyền vào playSound
-            const ttsResponse = await axios.post(
-                `/tts?method=${ttsMethod}`,
-                {text: aiResponse},
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
-            const audioUrl = ttsResponse.headers['x-audio-url'];
+            const audioUrl = await getTTS({
+                method: ttsMethod,
+                text: aiResponse,
+            });
             await playSound({audioUrl}); // Phát âm thanh với audioUrl
 
             // Lưu vào backend /chats/{chat_id}/history
-            await axios.post(
-                `/chats/${currentChatId}/history`,
-                {user: userInput, ai: aiResponse, audioUrl: audioUrl},
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
+            await saveChatHistory(currentChatId, {
+                user: userInput,
+                ai: aiResponse,
+                audioUrl,
+            });
 
             // Cập nhật ChatArea với phản hồi AI
             const updatedMessage = {user: userInput, ai: aiResponse};

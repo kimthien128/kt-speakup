@@ -22,7 +22,7 @@ class GeminiClient(AIClient):
     def generate_response(self, messages: list) -> str:
         try:
             chat_history = [
-                {"role": "user", "parts": [{"text": "You are a chatbot assisting me in learning English. Reply with one short, complete sentence."}]},
+                {"role": "user", "parts": [{"text": "You are a friendly English conversation partner. Help me practice speaking by replying with short, natural, and complete sentences suitable for daily conversation. After each reply, ask a follow-up question to keep the conversation going. Use clear and simple language appropriate for an intermediate learner."}]},
                 {"role": "model", "parts": [{"text": "Understood, I'll keep my responses short!"}]}
             ]
             for msg in messages[1:]:  # Bỏ message "system" đầu tiên
@@ -38,3 +38,18 @@ class GeminiClient(AIClient):
         except genai.types.generation_types.BrokenResponseError as e:
             logger.error(f'Gemini API error: {e}')
             raise HTTPException(status_code=400, detail=f"Gemini API error: {str(e)}")
+        
+    def translate(self, text: str, source_lang: str, target_lang: str) -> str:
+        try:
+            prompt = f"Translate the following {source_lang} text to {target_lang}: {text}"
+            chat_history = [
+                {"role": "user", "parts": [{"text": "You are a translator. Provide accurate translations in a natural tone."}]},
+                {"role": "model", "parts": [{"text": "Understood, I'll provide accurate translations."}]},
+                {"role": "user", "parts": [{"text": prompt}]}
+            ]
+            chat_session = self.model.start_chat(history=chat_history)
+            response = chat_session.send_message(prompt)
+            return response.text.strip()
+        except genai.types.generation_types.BrokenResponseError as e:
+            logger.error(f'Gemini API translation error: {e}')
+            raise HTTPException(status_code=400, detail=f"Gemini API translation error: {str(e)}")

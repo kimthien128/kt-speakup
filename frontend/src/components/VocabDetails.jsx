@@ -263,9 +263,12 @@ function VocabDetails({word}) {
                                         <ListItemText
                                             primary={
                                                 <>
-                                                    <Typography variant="body2">{example}</Typography>
+                                                    <Typography component="span" variant="body2">
+                                                        {example}
+                                                    </Typography>
                                                     {loadingTranslations.examples ? (
                                                         <Typography
+                                                            component="span"
                                                             variant="body2"
                                                             sx={{
                                                                 fontSize: '.85rem',
@@ -276,6 +279,7 @@ function VocabDetails({word}) {
                                                         </Typography>
                                                     ) : errorTranslations.examples ? (
                                                         <Typography
+                                                            component="span"
                                                             variant="body2"
                                                             sx={{
                                                                 fontSize: '.85rem',
@@ -287,6 +291,7 @@ function VocabDetails({word}) {
                                                     ) : (
                                                         translations.examples[index] && (
                                                             <Typography
+                                                                component="span"
                                                                 variant="body2"
                                                                 sx={{
                                                                     fontSize: '.85rem',
