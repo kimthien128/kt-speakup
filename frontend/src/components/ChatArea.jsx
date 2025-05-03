@@ -24,11 +24,13 @@ import {toast, ToastContainer} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; // Import CSS của thư viện toastify
 
 import {useChat} from '../hooks/useChat';
+import {useDictionary} from '../context/DictionaryContext';
 
 function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded}) {
     const {config, loading: configLoading, error: configError} = useSiteConfig(); // Lấy config từ backend
     const {userInfo, loading: userLoading, error: userError} = useUserInfo(userEmail); // Hook lấy thông tin user
     const {playSound, audioRef} = useAudioPlayer(); // Ref để quản lý audio element
+    const {dictionarySource} = useDictionary(); // Lấy nguồn từ điển từ context
 
     const {
         wordTooltip,
@@ -38,7 +40,8 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
         handlePlay,
         handleAddToVocab,
         isPlaying: isPlayingWord,
-    } = useWordTooltip({chatId, onVocabAdded}); // Hook quản lý tooltip từ vựng
+        isLoading: isLoadingWord,
+    } = useWordTooltip({chatId, onVocabAdded, dictionarySource}); // Hook quản lý tooltip từ vựng
 
     const {translateTooltip, setTranslateTooltip, translateTooltipRef, handleTranslate} = useTranslateTooltip({chatId}); // Hook quản lý tooltip dịch
 
@@ -59,7 +62,7 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
     // Thêm ref để tham chiếu đến container chứa danh sách tin nhắn, để cuộn xuống khi có tin nhắn mới
     const chatContainerRef = useRef(null);
     useEffect(() => {
-        if (chatContainerRef.current) {
+        if (chatId && chatContainerRef.current) {
             // Trì hoãn cuộn để đảm bảo DOM được render xong
             setTimeout(() => {
                 chatContainerRef.current.scrollTo({
@@ -101,7 +104,7 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                     scrollbarColor: 'rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.1)', // Màu thứ 2 là màu khi hover
                 }}
             >
-                {chatHistory.length > 0 ? (
+                {isSending || chatHistory.length > 0 ? (
                     chatHistory.map((msg, index) => (
                         <Box key={index} sx={{mt: 3, display: 'flex', flexDirection: 'column', gap: 2}}>
                             {/* Tin nhắn người dùng */}
@@ -381,7 +384,7 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                                                 borderColor: 'text.secondary',
                                             },
                                         }}
-                                        disabled={isPlayingWord}
+                                        disabled={isLoadingWord || isPlayingWord}
                                     >
                                         {isPlayingWord ? 'Fetching...' : 'Pronounce'}
                                     </Button>
@@ -390,7 +393,7 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                                         size="small"
                                         startIcon={<BookmarkAddIcon fontSize="small" />}
                                         onClick={handleAddToVocab}
-                                        disabled={wordTooltip.definition == 'No definition found'}
+                                        disabled={isLoadingWord || wordTooltip.definition == 'No definition found'}
                                         sx={{
                                             textTransform: 'none',
                                             color: 'text.secondary',
@@ -404,7 +407,7 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                                             },
                                         }}
                                     >
-                                        Add to vocab
+                                        {isLoadingWord ? 'Fetching...' : 'Add to Vocab'}
                                     </Button>
                                 </Box>
                             </Box>

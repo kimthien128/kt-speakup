@@ -40,7 +40,10 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
     const {userInfo, loading: userLoading, error: userError} = useUserInfo(userEmail); // Hook lấy thông tin user
     const {dialog, showDialog, hideDialog} = useConfirmDialog(); // Hook sử dụng ConfirmDialog
     const {config, loading: configLoading, error: configError} = useSiteConfig();
-    const {vocabList, selectedWord, setSelectedWord, isDeleteMode, setIsDeleteMode} = useVocab(chatId, onVocabAdded); // Hook xử lý từ vựng
+    const {vocabList, selectedWord, setSelectedWord, isDeleteMode, setIsDeleteMode, deleteVocab} = useVocab(
+        chatId,
+        onVocabAdded
+    ); // Hook xử lý từ vựng
 
     // Hàm mở và đóng Menu
     const handleMenuOpen = (e) => setAnchorEl(e.currentTarget);

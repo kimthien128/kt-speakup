@@ -1,8 +1,11 @@
 import React, {useState, useRef, useEffect} from 'react';
 import {BrowserRouter as Router, Routes, Route, useParams, useNavigate, Navigate} from 'react-router-dom';
 import axios from './axiosInstance';
-import {Box, Container} from '@mui/material';
 import {logger} from './utils/logger';
+import {DictionaryProvider} from './context/DictionaryContext';
+
+import {Box, Container} from '@mui/material';
+import CircularProgress from '@mui/material/CircularProgress';
 
 import ChatArea from './components/ChatArea';
 import InputArea from './components/InputArea';
@@ -89,7 +92,7 @@ function ChatPage({userEmail, onLogout, onSendMessageRef}) {
     };
 
     return (
-        <>
+        <DictionaryProvider>
             {/* LeftSidebar */}
             <LeftSidebar
                 onSelectChat={handleSelectChat}
@@ -144,7 +147,7 @@ function ChatPage({userEmail, onLogout, onSendMessageRef}) {
                 chatId={selectedChatId}
                 onVocabAdded={refreshVocabRef}
             />
-        </>
+        </DictionaryProvider>
     );
 }
 
@@ -189,7 +192,7 @@ function App() {
     };
 
     if (isLoading) {
-        return <div>Loading...</div>;
+        return <CircularProgress />;
     }
 
     return (

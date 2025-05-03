@@ -1,6 +1,7 @@
 //components/SiteConfig.jsx
 import React, {useState, useEffect} from 'react';
 import {fetchWordInfo} from '../services/dictionaryService';
+import {useDictionary} from '../context/DictionaryContext';
 import useTranslate from '../hooks/useTranslate';
 import {logger} from '../utils/logger';
 import axios from '../axiosInstance';
@@ -17,6 +18,7 @@ import CircleIcon from '@mui/icons-material/Circle';
 
 function VocabDetails({word}) {
     const {translatedText, loading: translateLoading, error: translateError, translateText} = useTranslate();
+    const {dictionarySource} = useDictionary();
 
     const [wordDetails, setWordDetails] = useState(null);
     const [loadingDetails, setLoadingDetails] = useState(false);
@@ -45,7 +47,7 @@ function VocabDetails({word}) {
         setErrorDetails(null);
 
         try {
-            const data = await fetchWordInfo(wordToFetch, 'dictionaryapi', 2);
+            const data = await fetchWordInfo(wordToFetch, dictionarySource, 2);
             setWordDetails(data);
             setErrorDetails(null);
         } catch (err) {

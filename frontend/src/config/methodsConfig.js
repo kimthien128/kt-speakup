@@ -4,6 +4,7 @@
 import SpeechToTextIcon from '@mui/icons-material/RecordVoiceOver';
 import ModelTrainingIcon from '@mui/icons-material/ModelTraining';
 import TextToSpeechIcon from '@mui/icons-material/VoiceOverOff';
+import BookIcon from '@mui/icons-material/Book';
 
 export const methodsConfig = {
     stt: {
@@ -37,6 +38,16 @@ export const methodsConfig = {
         options: [
             {value: 'gtts', label: 'gTTS (Google)'},
             {value: 'piper', label: 'Piper (Local)'},
+        ],
+    },
+
+    dictionary: {
+        icon: BookIcon,
+        name: 'Dictionary Source',
+        type: 'dictionary',
+        options: [
+            {value: 'dictionaryapi', label: 'Dictionary API'},
+            {value: 'wordnik', label: 'Wordnik'},
         ],
     },
 };

@@ -12,6 +12,7 @@ export const useChat = (chatId, onSendMessage) => {
     const [isPlaying, setIsPlaying] = useState(false);
     const [isSending, setIsSending] = useState(false); // Trạng thái gửi tin nhắn
     const [error, setError] = useState(null);
+    const [skipFirstFetch, setSkipFirstFetch] = useState(true); // Biến để bỏ qua fetch đầu tiên
 
     // Hàm fetch lịch sử chat
     const fetchHistory = useCallback(async () => {
@@ -37,10 +38,13 @@ export const useChat = (chatId, onSendMessage) => {
         }
     }, [chatId]);
 
-    // Fetch lịch sử khi chatId thay đổi, và fetch lịch sử khi chatId hợp lệ
+    // Fetch lịch sử khi chatId thay đổi, và fetch lịch sử khi chatId hợp lệ.
     useEffect(() => {
         if (!chatId || typeof chatId !== 'string') {
             setChatHistory([]); // Reset chatHistory khi chatId không hợp lệ (tại / hoặc /chat)
+            return;
+        }
+        if (skipFirstFetch) {
             return;
         }
         fetchHistory(); // Gọi fetchHistory khi chatId hợp lệ
@@ -59,6 +63,9 @@ export const useChat = (chatId, onSendMessage) => {
                     }
                     return [...prev, {...message}]; // Tạo object mới để chatHistory nhận biết có thay đổi để cuộn xuống cuối
                 });
+                if (!sending) {
+                    setSkipFirstFetch(false);
+                }
             };
         }
     }, [onSendMessage]);

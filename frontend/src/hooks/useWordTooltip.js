@@ -14,6 +14,7 @@ export const useWordTooltip = ({chatId, onVocabAdded, dictionarySource = 'dictio
     const wordTooltipRef = useRef(null); // Ref để tham chiếu vùng word tooltip
     const {playSound, audioRef} = useAudioPlayer(); // Ref để quản lý audio element
     const [isPlaying, setIsPlaying] = useState(false); // Trạng thái loading cho phát âm thanh
+    const [isLoading, setIsLoading] = useState(false); // Trạng thái loading cho từ điển
     const {translateText} = useTranslate(); // lấy hàm dịch văn bản
 
     // Xử lý double-click từ
@@ -35,6 +36,8 @@ export const useWordTooltip = ({chatId, onVocabAdded, dictionarySource = 'dictio
             y: event.pageY,
         });
         try {
+            setIsLoading(true); // Bắt đầu trạng thái loading
+
             // Lấy thông tin từ từ điển
             const res = await fetchWordInfo(cleanedWord, dictionarySource);
             // Kiểm tra res có hợp lệ không
@@ -76,6 +79,8 @@ export const useWordTooltip = ({chatId, onVocabAdded, dictionarySource = 'dictio
                 y: event.pageY,
             });
             toast.error(err.message || 'Failed to fetch word info');
+        } finally {
+            setIsLoading(false); // Kết thúc trạng thái loading
         }
     };
 
@@ -116,5 +121,6 @@ export const useWordTooltip = ({chatId, onVocabAdded, dictionarySource = 'dictio
         handlePlay,
         handleAddToVocab,
         isPlaying,
+        isLoading,
     };
 };

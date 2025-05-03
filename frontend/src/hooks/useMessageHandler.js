@@ -41,12 +41,11 @@ export const useMessageHandler = (
         if (onSendMessage && onSendMessage.current) {
             onSendMessage.current(userMessage, true); // Đặt isSending = true khi gửi tin nhắn tạm
         }
-        // const temp = transcript;
-        // setTranscript(''); // Xóa textarea
+        const temp = transcript;
 
         try {
             // Xử lý viết hoa chữ cái đầu
-            const userInput = transcript.charAt(0).toUpperCase() + transcript.slice(1);
+            const userInput = temp.charAt(0).toUpperCase() + temp.slice(1);
 
             // Gửi transcript đến /generate để lấy phản hồi từ AI
             const generateResponse = await axios.post(
