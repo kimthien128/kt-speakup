@@ -19,11 +19,11 @@ class MinioClient(StorageClient):
         self.avatars_bucket = os.getenv("AVATARS_BUCKET")
         
         self.client = Minio(
-            # endpoint='localhost:9000', # chỉ tương tác nội bộ ở server
-            endpoint='speakup.ktstudio.vn:443', # chỉ tương tác nội bộ ở server
+            endpoint='localhost:9000', # chỉ tương tác nội bộ ở server
+            # endpoint='speakup.ktstudio.vn',
             access_key=self.access_key,
             secret_key=self.secret_key,
-            secure=True,  # Đặt True nếu dùng HTTPS, local thì False
+            secure=False,  # Đặt True nếu dùng HTTPS, local thì False
             cert_check=False  # Tắt kiểm tra chứng chỉ SSL
         )
         # Lưu URL công khai để tạo presigned URL
@@ -33,6 +33,15 @@ class MinioClient(StorageClient):
             self.public_endpoint = "https://speakup.ktstudio.vn/storage"  # Giá trị mặc định
             
         logger.info(f"MinIO public endpoint: {self.public_endpoint}")
+        
+        # Thêm kiểm tra kết nối ngay khi khởi tạo
+        try:
+            if not self.client.bucket_exists(self.image_bucket):
+                logger.info("MinIO connection successful")
+        except Exception as e:
+            logger.error(f"MinIO connection failed: {e}")
+            raise
+    
         self._initialize_buckets()
     
     def _generate_public_read_policy(self, bucket_name: str) -> str:

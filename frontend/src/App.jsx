@@ -216,7 +216,10 @@ function App() {
                 <Route path="/reset-password" element={<ResetPassword />} />
 
                 {/* Các route yêu cầu đăng nhập */}
-                <Route path="/profile" element={<Profile onLogout={handleLogout} />} />
+                <Route
+                    path="/profile"
+                    element={token ? <Profile onLogout={handleLogout} /> : <Navigate to="/" replace />}
+                />
                 <Route
                     path="/admin"
                     element={
@@ -237,28 +240,36 @@ function App() {
                 <Route
                     path="/chat/:chatId"
                     element={
-                        <ChatPage
-                            token={token}
-                            userEmail={userEmail}
-                            onLogout={handleLogout}
-                            onSendMessageRef={onSendMessageRef}
-                        />
+                        token ? (
+                            <ChatPage
+                                token={token}
+                                userEmail={userEmail}
+                                onLogout={handleLogout}
+                                onSendMessageRef={onSendMessageRef}
+                            />
+                        ) : (
+                            <Navigate to="/" replace />
+                        )
                     }
                 />
                 <Route
-                    path="*"
+                    path="/chat"
                     element={
-                        <ChatPage
-                            token={token}
-                            userEmail={userEmail}
-                            onLogout={handleLogout}
-                            onSendMessageRef={onSendMessageRef}
-                        />
+                        token ? (
+                            <ChatPage
+                                token={token}
+                                userEmail={userEmail}
+                                onLogout={handleLogout}
+                                onSendMessageRef={onSendMessageRef}
+                            />
+                        ) : (
+                            <Navigate to="/" replace />
+                        )
                     }
                 />
 
                 {/* Catch-all route */}
-                <Route path="*" element={token ? <Navigate to="/chat" replace /> : <Navigate to="/" replace />} />
+                <Route path="*" element={<Navigate to={token ? '/chat' : '/'} replace />} />
             </Routes>
         </Router>
     );

@@ -1,6 +1,7 @@
 //componenets/ForgotPassword.jsx
 import React, {useState} from 'react';
 import useSiteConfig from '../hooks/useSiteConfig';
+import {useImageLoadStatus} from '../utils/imageLoader';
 import {Link} from 'react-router-dom';
 import axios from '../axiosInstance';
 import {Grid, Box, TextField, Button, Typography, Link as MuiLink, Alert} from '@mui/material';
@@ -10,6 +11,11 @@ function ForgotPassword() {
     const [email, setEmail] = useState('');
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
+
+    // Cấu hình các hình ảnh cần kiểm tra
+    const imageConfigs = [{key: 'heroImage', url: config?.heroImage}];
+    // Sử dụng hook để kiểm tra trạng thái tải hình ảnh
+    const imageLoadStatus = useImageLoadStatus(imageConfigs, 2000);
 
     const handleForgotPassword = async (e) => {
         e.preventDefault();
@@ -31,9 +37,9 @@ function ForgotPassword() {
                 <Box
                     sx={{
                         height: '100%',
-                        backgroundImage: config?.heroImage
+                        backgroundImage: imageLoadStatus.heroImage
                             ? `url(${config.heroImage})`
-                            : 'linear-gradient(135deg, #3a7bd5 0%, #00d2ff 100%)',
+                            : `url(/images/default-hero.jpg)`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                         backgroundRepeat: 'no-repeat',
@@ -103,7 +109,7 @@ function ForgotPassword() {
                     </form>
 
                     <Box sx={{textAlign: 'center', mt: 2}}>
-                        <MuiLink component={Link} to="/login">
+                        <MuiLink component={Link} to="/">
                             Back to Login
                         </MuiLink>
                     </Box>

@@ -2,6 +2,7 @@ import React from 'react';
 import useSiteConfig from '../hooks/useSiteConfig';
 import useLogin from '../hooks/useLogin';
 import LoginForm from './LoginForm';
+import {useImageLoadStatus} from '../utils/imageLoader';
 
 import {Box, Grid, Typography} from '@mui/material';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -20,6 +21,11 @@ function Login({setToken, setUserEmail}) {
         handleLogin,
     } = useLogin({setToken, setUserEmail});
 
+    // Cấu hình các hình ảnh cần kiểm tra
+    const imageConfigs = [{key: 'heroImage', url: config?.heroImage}];
+    // Sử dụng hook để kiểm tra trạng thái tải hình ảnh
+    const imageLoadStatus = useImageLoadStatus(imageConfigs, 2000);
+
     // Xử lý config
     if (configLoading) {
         return <CircularProgress />;
@@ -35,9 +41,10 @@ function Login({setToken, setUserEmail}) {
                 <Box
                     sx={{
                         height: '100%',
-                        backgroundImage: config?.heroImage
+                        backgroundImage: imageLoadStatus.heroImage
                             ? `url(${config.heroImage})`
-                            : 'linear-gradient(135deg, #3a7bd5 0%, #00d2ff 100%)',
+                            : `url(/images/default-hero.jpg)`,
+                        // : 'linear-gradient(135deg, #3a7bd5 0%, #00d2ff 100%)',
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                         backgroundRepeat: 'no-repeat',

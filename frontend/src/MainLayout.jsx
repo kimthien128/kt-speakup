@@ -1,10 +1,17 @@
 import useSiteConfig from './hooks/useSiteConfig';
+import {useImageLoadStatus} from './utils/imageLoader';
+
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import {Box, Container} from '@mui/material';
 
 function MainLayout({children}) {
     const {config, loading, error} = useSiteConfig();
+
+    // Cấu hình các hình ảnh cần kiểm tra
+    const imageConfigs = [{key: 'backgroundImage', url: config?.backgroundImage}];
+    // Sử dụng hook để kiểm tra trạng thái tải hình ảnh
+    const imageLoadStatus = useImageLoadStatus(imageConfigs, 2000);
 
     // Xử lý config
     if (loading) {
@@ -20,9 +27,9 @@ function MainLayout({children}) {
                 display: 'flex',
                 p: {md: 0, lg: 4},
                 height: '100vh',
-                background: config?.backgroundImage
+                background: imageLoadStatus.backgroundImage
                     ? `url("${config.backgroundImage}")`
-                    : 'linear-gradient(135deg, #3a7bd5 0%, #00d2ff 100%)',
+                    : 'url("/images/default-bg.jpg")',
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 boxSizing: 'border-box',

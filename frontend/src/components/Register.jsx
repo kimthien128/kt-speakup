@@ -2,7 +2,7 @@ import React from 'react';
 import {useNavigate} from 'react-router-dom';
 import RegisterForm from './RegisterForm';
 import useSiteConfig from '../hooks/useSiteConfig';
-import {logger} from '../utils/logger';
+import {useImageLoadStatus} from '../utils/imageLoader';
 
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
@@ -13,6 +13,11 @@ import Alert from '@mui/material/Alert';
 function Register() {
     const {config, loading: configLoading, error: configError} = useSiteConfig();
     const navigate = useNavigate();
+
+    // Cấu hình các hình ảnh cần kiểm tra
+    const imageConfigs = [{key: 'heroImage', url: config?.heroImage}];
+    // Sử dụng hook để kiểm tra trạng thái tải hình ảnh
+    const imageLoadStatus = useImageLoadStatus(imageConfigs, 2000);
 
     const handleSuccess = async () => {
         setTimeout(() => navigate('/'), 5000);
@@ -34,9 +39,9 @@ function Register() {
                 <Box
                     sx={{
                         height: '100%',
-                        backgroundImage: config?.heroImage
+                        backgroundImage: imageLoadStatus.heroImage
                             ? `url(${config.heroImage})`
-                            : 'linear-gradient(135deg, #3a7bd5 0%, #00d2ff 100%)',
+                            : 'url(/images/default-hero.jpg)',
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                         backgroundRepeat: 'no-repeat',

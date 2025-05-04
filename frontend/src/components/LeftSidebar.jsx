@@ -1,6 +1,7 @@
 import React, {useState, useEffect, useRef} from 'react';
 import {useNavigate} from 'react-router-dom';
 import useSiteConfig from '../hooks/useSiteConfig';
+import {useImageLoadStatus} from '../utils/imageLoader';
 import {useChatList} from '../hooks/useChatList';
 import useConfirmDialog from '../hooks/useConfirmDialog';
 import ConfirmDialog from './ConfirmDialog';
@@ -18,9 +19,6 @@ import FormControl from '@mui/material/FormControl';
 import IconButton from '@mui/material/IconButton';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import InputAdornment from '@mui/material/InputAdornment';
-import Divider from '@mui/material/Divider';
-import CircularProgress from '@mui/material/CircularProgress';
-import Alert from '@mui/material/Alert';
 
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -40,6 +38,11 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
     const navigate = useNavigate();
     const editRef = useRef(null); // Ref để kiểm tra click ngoài
     const {dialog, showDialog, hideDialog} = useConfirmDialog(); // Hook sử dụng ConfirmDialog
+
+    // Cấu hình các hình ảnh cần kiểm tra
+    const imageConfigs = [{key: 'logoImage', url: config?.logoImage}];
+    // Sử dụng hook để kiểm tra trạng thái tải hình ảnh
+    const imageLoadStatus = useImageLoadStatus(imageConfigs, 2000);
 
     // Sử dụng hook useChatList
     const {
@@ -150,7 +153,7 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                         >
                             <Tooltip title="Home" placement="bottom">
                                 <img
-                                    src={config?.logoImage || '/images/logo.png'}
+                                    src={imageLoadStatus.logoImage ? config.logoImage : '/images/logo.png'}
                                     alt="KT SpeakUp Logo"
                                     style={{
                                         width: '100%',

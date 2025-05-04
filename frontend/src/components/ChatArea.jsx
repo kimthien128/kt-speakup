@@ -16,6 +16,7 @@ import BookmarkAddIcon from '@mui/icons-material/BookmarkAdd';
 import useAudioPlayer from '../hooks/useAudioPlayer';
 import useSiteConfig from '../hooks/useSiteConfig';
 import useUserInfo from '../hooks/useUserInfo';
+import {useImageLoadStatus} from '../utils/imageLoader';
 import {useWordTooltip} from '../hooks/useWordTooltip';
 import {useTranslateTooltip} from '../hooks/useTranslateTooltip';
 import {useClickOutside} from '../hooks/useClickOutside';
@@ -29,6 +30,15 @@ import {useDictionary} from '../context/DictionaryContext';
 function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded}) {
     const {config, loading: configLoading, error: configError} = useSiteConfig(); // Lấy config từ backend
     const {userInfo, loading: userLoading, error: userError} = useUserInfo(userEmail); // Hook lấy thông tin user
+
+    // Cấu hình các hình ảnh cần kiểm tra
+    const imageConfigs = [
+        {key: 'logoImage', url: config?.logoImage},
+        {key: 'aiChatIcon', url: config?.aiChatIcon},
+    ];
+    // Sử dụng hook để kiểm tra trạng thái tải hình ảnh
+    const imageLoadStatus = useImageLoadStatus(imageConfigs, 2000);
+
     const {playSound, audioRef} = useAudioPlayer(); // Ref để quản lý audio element
     const {dictionarySource} = useDictionary(); // Lấy nguồn từ điển từ context
 
@@ -168,7 +178,11 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                                     }}
                                 >
                                     <Avatar
-                                        src={config?.aiChatIcon || '/images/default-bot-avatar.jpg'}
+                                        src={
+                                            imageLoadStatus.aiChatIcon
+                                                ? config.aiChatIcon
+                                                : '/images/default-bot-avatar.jpg'
+                                        }
                                         alt="AI Icon"
                                         sx={{
                                             width: 40,
@@ -290,7 +304,7 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                             >
                                 {/* Logo */}
                                 <img
-                                    src={config?.logoImage || '/images/logo.png'}
+                                    src={imageLoadStatus.logoImage ? config.logoImage : '/images/logo.png'}
                                     alt="Logo"
                                     style={{
                                         width: '100px',

@@ -1,5 +1,6 @@
 //components/SiteConfig.jsx
 import React, {useState} from 'react';
+import {useImageLoadStatus} from '../utils/imageLoader';
 
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -23,6 +24,11 @@ function VocabList({
     isDeleteMode,
     setIsDeleteMode,
 }) {
+    // Cấu hình các hình ảnh cần kiểm tra
+    const imageConfigs = [{key: 'saveWordImage', url: config?.saveWordImage}];
+    // Sử dụng hook để kiểm tra trạng thái tải hình ảnh
+    const imageLoadStatus = useImageLoadStatus(imageConfigs, 2000);
+
     const [searchTerm, setSearchTerm] = useState('');
 
     // Lọc từ vựng dựa trên searchTerm
@@ -91,7 +97,7 @@ function VocabList({
                 vocabList.length === 0 && (
                     <>
                         <img
-                            src={config?.saveWordImage || '/images/default-save-word.png'}
+                            src={imageLoadStatus.saveWordImage ? config.saveWordImage : '/images/default-save-word.png'}
                             alt="KT SpeakUp Logo"
                             style={{width: '70px', objectFit: 'cover', objectPosition: 'center'}}
                         />
