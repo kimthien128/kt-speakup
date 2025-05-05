@@ -18,6 +18,9 @@ from .storage.minio_client import MinioClient
 from .services.cache_service import CacheService
 from .scheduler.scheduler_config import configure_scheduler
 from .utils import CACHE_DIR, BASE_DIR
+from .dependencies import DependencyContainer
+from .services.user_service import UserService
+from .services.admin_initializer import initialize_admin
 
 app = FastAPI(redirect_slashes=False) # Không tự động chuyển hướng khi có dấu / ở cuối URL, kiểm soát nghiêm ngặt các route tự đặt
 
@@ -42,6 +45,13 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # Startup logic
     logger.info("Application started")
     cache_service.clean_cache()  # Dọn cache khi khởi động
+    
+    # Khởi tạo UserService và tạo tài khoản admin mặc định
+    global user_service
+    auth_repository = await DependencyContainer.get_auth_repository()  # Đảm bảo await trước
+    user_service = UserService(auth_repository, storage_client)
+    await initialize_admin(user_service)
+    
     yield
     # Shutdown logic
     logger.info("Application shutdown")
