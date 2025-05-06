@@ -113,7 +113,7 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                 <Box sx={{height: '100%', display: 'flex', flexDirection: 'column'}}>
                     {/* Phần 1: Thông tin user + Account Menu */}
                     {userEmail && userInfo && (
-                        <Box sx={{display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 2, mb: 2}}>
+                        <Box sx={{display: 'flex', alignItems: 'center', mb: 2}}>
                             {/* Link: Admin thì hiện link quản lý, user thì hiện Welcome + displayName */}
                             {userInfo.isAdmin ? (
                                 <Button
@@ -124,6 +124,8 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                                     sx={{
                                         textTransform: 'none',
                                         fontSize: '1rem',
+                                        flexGrow: 1,
+                                        pl: 5,
                                     }}
                                 >
                                     Admin Panel
@@ -139,7 +141,9 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                                             fontWeight: 'bold',
                                             color: 'primary.main',
                                         },
-                                        pl: 4,
+                                        flexGrow: 1,
+                                        textAlign: 'center',
+                                        pl: 5,
                                     }}
                                 >
                                     <span>{userInfo.displayName || userEmail}</span>
@@ -148,7 +152,7 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
 
                             {/* Account Menu */}
                             <Tooltip title="Profile" placement="bottom">
-                                <IconButton onClick={handleMenuOpen}>
+                                <IconButton onClick={handleMenuOpen} sx={{ml: 'auto'}}>
                                     <Avatar src={userInfo.avatarPath} sx={{bgcolor: 'primary.main'}}>
                                         {/* Hiển thị chữ cái đầu nếu không có avatarPath */}
                                         {!userInfo.avatarPath && getAvatarInitial(userInfo)}

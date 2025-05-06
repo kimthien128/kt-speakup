@@ -87,7 +87,8 @@ function LoginForm({email, setEmail, password, setPassword, handleLogin, error, 
                         py: 1.5,
                         fontSize: '1rem',
                     }}
-                    disabled={loading}
+                    disabled={loading || !email || !password}
+                    startIcon={loading ? <CircularProgress size={20} /> : null}
                 >
                     {loading ? <CircularProgress size={24} color="inherit" /> : 'Login'}
                 </Button>

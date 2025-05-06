@@ -20,7 +20,7 @@ function Register() {
     const imageLoadStatus = useImageLoadStatus(imageConfigs, 2000);
 
     const handleSuccess = async () => {
-        setTimeout(() => navigate('/'), 5000);
+        setTimeout(() => navigate('/'), 10000);
         return true; // Trả về true nếu gửi email thành công
     };
 

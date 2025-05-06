@@ -25,7 +25,7 @@ pip install -r backend/requirements.txt
     set MINIO_ROOT_PASSWORD=abc@123A
     minio.exe server D:\minio\data --console-address ":9001"
     ```
--   Hoặc đặt biến global cho máy tính thì dùng `setx MINIO_ROOT_USER your_new_username`
+-   Hoặc đặt biến global vĩnh viễn cho máy tính bằng lệnh `setx MINIO_ROOT_USER your_new_username` và `setx MINIO_ROOT_PASSWORD your_new_password`
 -   Có thể đặt username và password tự chọn, nhưng cần thay đổi tương ứng trong biến môi trường "backend/.env"
 -   Giữ cho server của minio luôn chạy khi dùng app
 

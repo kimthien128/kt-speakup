@@ -3,6 +3,7 @@ import {useNavigate} from 'react-router-dom';
 import ConfirmDialog from './ConfirmDialog';
 import {getAvatarInitial} from '../utils/avatarUtils';
 import useSiteConfig from '../hooks/useSiteConfig';
+import {useImageLoadStatus} from '../utils/imageLoader';
 import ChangePassword from './ChangePassword';
 
 import {Box, Typography, Avatar, TextField, Button, Chip, IconButton, Grid, MenuItem, Tabs, Tab} from '@mui/material';
@@ -36,6 +37,12 @@ function TabPanel(props) {
 
 function Profile({onLogout}) {
     const {config, loading: configLoading, error: configError} = useSiteConfig();
+
+    // Cấu hình các hình ảnh cần kiểm tra
+    const imageConfigs = [{key: 'logoImage', url: config?.logoImage}];
+    // Sử dụng hook để kiểm tra trạng thái tải hình ảnh
+    const imageLoadStatus = useImageLoadStatus(imageConfigs, 2000);
+
     const [userInfo, setUserInfo] = useState(null); // Thông tin user từ API
     const [displayName, setDisplayName] = useState(''); // Tên hiển thị
     const [phoneNumber, setPhoneNumber] = useState(''); // Số điện thoại
@@ -234,7 +241,7 @@ function Profile({onLogout}) {
                                 onClick={() => navigate('/')}
                             >
                                 <img
-                                    src={config?.logoImage || null}
+                                    src={imageLoadStatus.logoImage ? config.logoImage : '/images/logo.png'}
                                     alt="KT SpeakUp Logo"
                                     style={{
                                         width: '100%',

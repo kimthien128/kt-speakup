@@ -148,7 +148,8 @@ function InputArea({
             !isRecording &&
             transcript !== prevTranscript && // Chỉ chạy khi transcript thay đổi
             transcript.trim() &&
-            transcript.toLowerCase() !== 'no speech detected'
+            transcript.toLowerCase() !== 'no speech detected' &&
+            transcript.toLowerCase() !== 'failed to process audio'
         ) {
             setTimeLeft(10); // Bắt đầu đếm ngược từ 10s khi transcript được cập nhật
             const timeoutId = setTimeout(() => {
@@ -502,7 +503,12 @@ function InputArea({
 
                     <IconButton
                         onClick={onSend}
-                        disabled={!transcript.trim() || isSending || transcript.toLowerCase() === 'no speech detected'}
+                        disabled={
+                            !transcript.trim() ||
+                            isSending ||
+                            transcript.toLowerCase() === 'no speech detected' ||
+                            transcript.toLowerCase() === 'failed to process audio'
+                        }
                         sx={{
                             bgcolor: transcript.trim() ? 'primary.main' : 'grey.300',
                             color: transcript.trim() ? 'white' : 'grey.500',

@@ -49,7 +49,7 @@ const useLogin = ({setToken, setUserEmail}) => {
 
             window.location.href = '/'; // dùng href để chuyển trang và có refresh để mount lại app.jsx và set lại token
         } catch (err) {
-            setError('Invalid email or password');
+            setError(err.response?.data?.detail || err.message || 'Invalid email or password');
             console.error('Login error:', err.response?.data || err.message);
         } finally {
             setLoading(false); // Tắt trạng thái loading

@@ -3,7 +3,16 @@ import React, {useState} from 'react';
 import {Link} from 'react-router-dom';
 import axios from '../axiosInstance';
 import TermsDialog from './TermsDialog';
-import {TextField, Button, Typography, Link as MuiLink, FormControlLabel, Checkbox, Alert} from '@mui/material';
+import {
+    TextField,
+    Button,
+    Typography,
+    Link as MuiLink,
+    FormControlLabel,
+    Checkbox,
+    Alert,
+    CircularProgress,
+} from '@mui/material';
 
 const RegisterForm = ({onSuccess}) => {
     const [email, setEmail] = useState('');
@@ -13,6 +22,7 @@ const RegisterForm = ({onSuccess}) => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
     const [emailError, setEmailError] = useState(''); //lỗi gửi email
+    const [isLoading, setIsLoading] = useState(false);
     const [termOpen, setTermOpen] = useState(false);
 
     const passwordPattern = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
@@ -24,24 +34,29 @@ const RegisterForm = ({onSuccess}) => {
         e.preventDefault();
         setError('');
         setSuccess(false);
+        setIsLoading(true);
 
         // Validate form
         if (!email || !password || !confirmPassword) {
             setError('Please fill in all fields');
+            setIsLoading(false);
             return;
         }
         if (!passwordPattern.test(password)) {
             setError(
                 'Password must be at least 8 characters long and contain at least one number, one lowercase letter, and one uppercase letter'
             );
+            setIsLoading(false);
             return;
         }
         if (password !== confirmPassword) {
             setError('Password do not match');
+            setIsLoading(false);
             return;
         }
         if (!agree) {
             setError('Please agree to the terms and conditions');
+            setIsLoading(false);
             return;
         }
 
@@ -70,6 +85,8 @@ const RegisterForm = ({onSuccess}) => {
                 setError('Registration failed: ' + (err.response?.data?.detail || err.message));
             }
             console.error(err);
+        } finally {
+            setIsLoading(false);
         }
     };
     return (
@@ -151,9 +168,10 @@ const RegisterForm = ({onSuccess}) => {
                         py: 1.5,
                         fontSize: '1rem',
                     }}
-                    disabled={!agree}
+                    disabled={!agree || isLoading}
+                    startIcon={isLoading ? <CircularProgress size={20} /> : null}
                 >
-                    Register
+                    {isLoading ? 'Registering...' : 'Register'}
                 </Button>
             </form>
             <Typography align="center" sx={{mt: 2}}>
