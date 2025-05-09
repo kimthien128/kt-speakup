@@ -1,7 +1,7 @@
 //components/TermsDialog.jsx
 import React, {useState} from 'react';
 import {Link} from 'react-router-dom';
-import axios from '../axiosInstance';
+import {register} from '../services/authService';
 import TermsDialog from './TermsDialog';
 import {
     TextField,
@@ -61,14 +61,7 @@ const RegisterForm = ({onSuccess}) => {
         }
 
         try {
-            const res = await axios.post(
-                `${import.meta.env.VITE_API_URL}/auth/register`,
-                {
-                    email,
-                    password,
-                },
-                {headers: {'Content-Type': 'application/json'}}
-            );
+            await register(email, password);
             setSuccess('Registration successful! Please check your email to confirm your account.');
             setEmail('');
             setPassword('');

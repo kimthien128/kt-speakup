@@ -1,7 +1,7 @@
 //components/ChangePassword.jsx
 import React, {useState} from 'react';
 import {useNavigate} from 'react-router-dom';
-import axios from '../axiosInstance';
+import {changePassword} from '../services/authService';
 import {Box, TextField, Button, Alert, CircularProgress, Typography} from '@mui/material';
 
 function ChangePassword({setConfirmDialog}) {
@@ -57,10 +57,7 @@ function ChangePassword({setConfirmDialog}) {
                 setPasswordSuccess('');
 
                 try {
-                    await axios.post('/auth/change-password', {
-                        oldPassword,
-                        newPassword,
-                    });
+                    await changePassword(oldPassword, newPassword);
                     setPasswordSuccess('Password changed successfully! You will be logged out.');
                     // Đăng xuất người dùng (xóa token) và điều hướng về trang đăng nhập
                     setTimeout(() => {

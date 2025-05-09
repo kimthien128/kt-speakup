@@ -82,9 +82,6 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
     }, [isMobile]);
 
     // Xử lý config, đặt trước return
-    if (configLoading) {
-        return <CircularProgress />;
-    }
     if (configError) {
         return <Alert severity="error">{configError}</Alert>;
     }

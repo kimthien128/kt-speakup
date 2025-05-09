@@ -1,4 +1,4 @@
-//services/apiService.js
+//services/chatsService.js
 import axios from '../axiosInstance';
 import {logger} from '../utils/logger';
 
@@ -10,57 +10,6 @@ export const createChat = async () => {
     } catch (err) {
         logger.error('Error creating chat:', err.response?.data || err.message);
         throw new Error('Failed to create chat');
-    }
-};
-
-// Hàm gọi API để lấy phản hồi từ AI
-export const generateResponse = async ({method, transcript, chatId}) => {
-    try {
-        const response = await axios.post(
-            `/generate?method=${method}`,
-            {
-                transcript,
-                chat_id: chatId,
-            },
-            {
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            }
-        );
-        if (response.data.error) {
-            throw new Error(response.data.error);
-        }
-        return response.data.response; // Trả về phản hồi từ AI
-    } catch (err) {
-        logger.error('Error in generateResponse:', err.response?.data || err.message);
-        throw err; // Ném lỗi để xử lý ở cấp cao hơn
-    }
-};
-
-// Hàm gọi API để dịch văn bản
-export const translate = async ({method, text, sourceLang, targetLang}) => {
-    try {
-        const response = await axios.post(
-            `/generate/translate?method=${method}`,
-            {
-                text,
-                source_lang: sourceLang,
-                target_lang: targetLang,
-            },
-            {
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            }
-        );
-        if (response.data.error) {
-            throw new Error(response.data.error);
-        }
-        return response.data.translated_text; // Trả về văn bản đã dịch
-    } catch (err) {
-        logger.error('Error in translate:', err.response?.data || err.message);
-        throw err;
     }
 };
 
@@ -76,25 +25,6 @@ export const getChatHistory = async (chatId) => {
     } catch (err) {
         logger.error('Error getting chat history:', err.response?.data || err.message);
         throw new Error('Failed to get chat history');
-    }
-};
-
-// Hàm lấy audio từ TTS
-export const getTTS = async ({method, text}) => {
-    try {
-        const response = await axios.post(
-            `/tts?method=${method}`,
-            {text},
-            {
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            }
-        );
-        return response.headers['x-audio-url']; // Trả về URL audio
-    } catch (err) {
-        logger.error('Error getting TTS:', err.response?.data || err.message);
-        throw new Error('Failed to get audio');
     }
 };
 
@@ -144,7 +74,7 @@ export const saveChatTitle = async (chatId, title) => {
     }
 };
 
-// Hàm cập nhật URL audio
+// Hàm cập nhật URL audio cho mỗi tin nhắn từ AI
 export const updateAudioUrl = async (chatId, index, audioUrl) => {
     try {
         await axios.patch(

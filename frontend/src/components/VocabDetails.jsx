@@ -2,9 +2,9 @@
 import React, {useState, useEffect} from 'react';
 import {fetchWordInfo} from '../services/dictionaryService';
 import {useDictionary} from '../context/DictionaryContext';
+import {translateText, translateMultipleTexts} from '../services/translateService';
 import useTranslate from '../hooks/useTranslate';
 import {logger} from '../utils/logger';
-import axios from '../axiosInstance';
 
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -17,7 +17,12 @@ import CircularProgress from '@mui/material/CircularProgress';
 import CircleIcon from '@mui/icons-material/Circle';
 
 function VocabDetails({word}) {
-    const {translatedText, loading: translateLoading, error: translateError, translateText} = useTranslate();
+    const {
+        translatedText,
+        loading: translateLoading,
+        error: translateError,
+        translateText: hookTranslateText,
+    } = useTranslate();
     const {dictionarySource} = useDictionary();
 
     const [wordDetails, setWordDetails] = useState(null);
@@ -78,22 +83,19 @@ function VocabDetails({word}) {
         setErrorTranslations((prev) => ({...prev, [type]: null}));
 
         try {
-            let textToTranslate = content;
+            let translatedContent;
+
             if (type === 'examples') {
-                const translationPromises = content.map((example) =>
-                    axios.post('/translate', {text: example, target_lang: 'vi'})
-                );
-                const responses = await Promise.all(translationPromises);
-                textToTranslate = responses.map((res) => res.data.translatedText || 'Translation not available');
+                translatedContent = await translateMultipleTexts(content);
             } else if (type === 'definition' && content === 'No definition found') {
-                textToTranslate = ''; // Không dịch nếu là "No definition found"
+                translatedContent = ''; // Không dịch nếu là "No definition found"
             } else {
-                textToTranslate = await translateText(content);
+                translatedContent = await hookTranslateText(content);
             }
 
             setTranslations((prev) => ({
                 ...prev,
-                [type]: textToTranslate,
+                [type]: translatedContent,
             }));
         } catch (err) {
             setErrorTranslations((prev) => ({

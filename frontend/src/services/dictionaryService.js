@@ -15,14 +15,7 @@ const DEFAULT_RESPONSE = {
     topExample: '',
 };
 
-/**
- * Lấy thông tin từ vựng từ API với retry logic
- * @param {string} word - Từ cần tra cứu
- * @param {string} source - Nguồn từ điển (dictionaryapi hoặc wordnik)
- * @param {number} limit - Giới hạn số lượng kết quả
- * @returns {Promise<Object>} - Thông tin từ vựng
- * @throws {Error} - Nếu có lỗi xảy ra
- */
+// Lấy thông tin từ vựng từ API
 export const fetchWordInfo = async (word, source = DEFAULT_DICTIONARY_SOURCE, limit = 2) => {
     if (!word || typeof word !== 'string') {
         throw new Error('Word must be a non-empty string');
@@ -58,6 +51,6 @@ export const fetchWordInfo = async (word, source = DEFAULT_DICTIONARY_SOURCE, li
         };
     } catch (error) {
         logger.error(`Error fetching word info for ${word}: ${error.message}`);
-        throw error; // Ném lỗi để frontend xử lý
+        throw error;
     }
 };

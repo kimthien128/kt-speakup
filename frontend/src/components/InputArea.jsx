@@ -8,11 +8,11 @@ import {useWordTooltip} from '../hooks/useWordTooltip';
 import {useClickOutside} from '../hooks/useClickOutside';
 import useAudioPlayer from '../hooks/useAudioPlayer';
 import {useDictionary} from '../context/DictionaryContext';
-import {createChat, generateResponse, translate} from '../services/apiService';
+import {createChat} from '../services/chatsService';
+import {translate} from '../services/generateService';
 
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
-import Switch from '@mui/material/Switch';
 import TextareaAutosize from '@mui/material/TextareaAutosize';
 import Collapse from '@mui/material/Collapse';
 import Typography from '@mui/material/Typography';
@@ -213,7 +213,6 @@ function InputArea({
                 if (refreshChats) await refreshChats(); // Cập nhật danh sách chat nếu có
             }
 
-            // Gọi generateResponse với chatId đã được đảm bảo
             const translatedText = await translate({
                 method: generateMethod,
                 text: sourceText,

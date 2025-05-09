@@ -1,6 +1,6 @@
 //components/SiteConfig.jsx
 import React, {useState, useEffect} from 'react';
-import axios from '../axiosInstance';
+import {updateConfig} from '../services/configService';
 import {Typography, Alert, CircularProgress, IconButton, Button, Box} from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
@@ -79,23 +79,23 @@ function SiteConfig({config: initialConfig, setConfig}) {
                     if (heroFile) formData.append('hero', heroFile);
                     if (saveWordFile) formData.append('saveWord', saveWordFile);
 
-                    const res = await axios.patch('/config', formData, {
-                        headers: {
-                            'Content-Type': 'multipart/form-data',
-                        },
-                    });
+                    const updatedConfig = await updateConfig(formData);
+                    setConfig(updatedConfig);
 
-                    setConfig(res.data);
-                    setBackgroundPreview(res.data.backgroundImage || '');
-                    setLogoPreview(res.data.logoImage || '');
-                    setAiIconPreview(res.data.aiChatIcon || '');
-                    setHeroPreview(res.data.heroImage || '');
-                    setSaveWordPreview(res.data.saveWordImage || '');
+                    // Cập nhật previews với dữ liệu mới
+                    setBackgroundPreview(updatedConfig.backgroundImage || '');
+                    setLogoPreview(updatedConfig.logoImage || '');
+                    setAiIconPreview(updatedConfig.aiChatIcon || '');
+                    setHeroPreview(updatedConfig.heroImage || '');
+                    setSaveWordPreview(updatedConfig.saveWordImage || '');
+
+                    // Reset file states
                     setBackgroundFile(null);
                     setLogoFile(null);
                     setAiIconFile(null);
                     setHeroFile(null);
                     setSaveWordFile(null);
+
                     setSuccess('Config updated successfully');
                 } catch (err) {
                     setError(err.response?.data?.detail || 'Failed to update config');

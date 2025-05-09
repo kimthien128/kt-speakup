@@ -2,7 +2,7 @@
 // hàm xử lý dịch văn bản bất kỳ
 
 import {useState, useCallback} from 'react';
-import axios from '../axiosInstance';
+import {translateText as translateTextService} from '../services/translateService';
 import {logger} from '../utils/logger';
 
 const useTranslate = () => {
@@ -20,19 +20,9 @@ const useTranslate = () => {
 
         setLoading(true);
         setError(null);
+
         try {
-            logger.info(`Translating text: "${text}" to targetLang: ${targetLang}`);
-            const res = await axios.post(
-                `/translate`,
-                {text, target_lang: targetLang},
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
-            logger.info('Translation response:', res.data);
-            const result = res.data.translatedText || 'Translation not available';
+            const result = await translateTextService(text, targetLang);
             setTranslatedText(result);
             return result;
         } catch (err) {

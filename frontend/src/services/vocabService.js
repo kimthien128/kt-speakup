@@ -5,12 +5,7 @@ import axios from '../axiosInstance';
 import {logger} from '../utils/logger';
 
 export const vocabService = {
-    /**
-     * Lấy danh sách từ vựng của một chat
-     * @param {string} chatId - ID của chat
-     * @returns {Promise<Array>} - Danh sách từ vựng
-     * @throws {Error} - Nếu có lỗi xảy ra
-     */
+    // Lấy danh sách từ vựng của một chat
     async fetchVocab(chatId) {
         if (!chatId || chatId === 'null' || chatId === 'undefined') {
             return [];
@@ -25,14 +20,7 @@ export const vocabService = {
         }
     },
 
-    /**
-     * Xóa một từ vựng
-     * @param {string} chatId - ID của chat
-     * @param {string} vocabId - ID của từ vựng
-     * @returns {Promise<void>}
-     * @throws {Error} - Nếu có lỗi xảy ra
-     */
-
+    // Xóa một từ vựng
     async deleteVocab(chatId, vocabId) {
         try {
             await axios.delete(`/vocab/${chatId}/${vocabId}`);

@@ -1,7 +1,7 @@
 //components/UserManagement.jsx
 //sẽ cung cấp giao diện và chức năng để quản lý danh sách người dùng, bao gồm các thao tác như xem danh sách, chỉnh sửa thông tin, xóa user, và có thể thêm user mới
 import React, {useState, useEffect} from 'react';
-import axios from '../axiosInstance';
+import {getUsers, createUser, updateUser, deleteUser} from '../services/userService';
 import {toast, ToastContainer} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -69,8 +69,8 @@ function UserManagement() {
             setLoading(true);
             setError('');
             try {
-                const res = await axios.get('/users');
-                setUsers(res.data);
+                const usersArray = await getUsers();
+                setUsers(usersArray);
             } catch (err) {
                 setError(err.response?.data?.detail || 'Failed to load users');
                 console.error('Error fetching users:', err.response?.data || err.message);
@@ -157,8 +157,8 @@ function UserManagement() {
         setError('');
         setSuccess('');
         try {
-            const res = await axios.patch(`/users/${updatedUser.id}`, updatedUser);
-            setUsers(users.map((u) => (u.id === updatedUser.id ? res.data : u)));
+            const data = await updateUser(updatedUser.id, updatedUser);
+            setUsers(users.map((u) => (u.id === updatedUser.id ? data : u)));
             setSuccess('User updated successfully');
         } catch (err) {
             setError(err.response?.data?.detail || 'Failed to update user');
@@ -182,8 +182,8 @@ function UserManagement() {
         setError('');
         setSuccess('');
         try {
-            const res = await axios.post('/users', createForm);
-            setUsers([...users, res.data]);
+            const data = await createUser(createForm);
+            setUsers([...users, data]);
             setSuccess('User created successfully');
         } catch (err) {
             setError(err.response?.data?.detail || 'Failed to create user');
@@ -211,7 +211,7 @@ function UserManagement() {
         setError('');
         setSuccess('');
         try {
-            await axios.delete(`/users/${userId}`);
+            await deleteUser(userId);
             setUsers(users.filter((u) => u.id !== userId));
             setSuccess('User deleted successfully');
         } catch (err) {

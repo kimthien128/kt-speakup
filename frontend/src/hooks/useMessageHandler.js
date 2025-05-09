@@ -1,7 +1,9 @@
 // hooks/useMessageHandler.js
 // Quản lý gửi tin nhắn và phản hồi AI
 
-import {createChat, generateResponse, saveChatHistory, getTTS} from '../services/apiService';
+import {createChat, saveChatHistory} from '../services/chatsService';
+import {generateResponse} from '../services/generateService';
+import {getTTS} from '../services/ttsServices';
 import {logger} from '../utils/logger';
 
 export const useMessageHandler = (

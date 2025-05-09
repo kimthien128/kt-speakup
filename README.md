@@ -18,21 +18,26 @@ pip install -r backend/requirements.txt
 -   Tải file và lưu ở "D:\minio" (đường dẫn có thể tùy chọn bất kỳ, nhưng đường dẫn này sẽ được sử dụng ở các lệnh cmd bên dưới):\
     https://dl.min.io/server/minio/release/windows-amd64/minio.exe
 -   Tạo thư mục "data" để lưu trữ hình ảnh & âm thanh: vd: "D:\minio\data"
--   Chạy cmd truy cập vào thư mục chứa file minio.exe, chạy lệnh:
+-   Chạy cmd truy cập vào thư mục chứa file minio.exe, chạy các lệnh:
     ```cmd
     cd D:\minio
     set MINIO_ROOT_USER=admin
     set MINIO_ROOT_PASSWORD=abc@123A
     minio.exe server D:\minio\data --console-address ":9001"
     ```
--   Hoặc đặt biến global vĩnh viễn cho máy tính bằng lệnh `setx MINIO_ROOT_USER your_new_username` và `setx MINIO_ROOT_PASSWORD your_new_password`
--   Có thể đặt username và password tự chọn, nhưng cần thay đổi tương ứng trong biến môi trường "backend/.env"
+-   Để không phải đặt lại biến username và password cho minio mỗi lần khởi chạy, có thể khởi tạo biến global vĩnh viễn cho máy tính bằng lệnh:
+    ```cmd
+    setx MINIO_ROOT_USER admin
+    setx MINIO_ROOT_PASSWORD abc@123A
+    ```
+    _Lưu ý: Phải khởi động lại máy tính để áp dụng biến global._
+-   Có thể đặt username và password tùy chọn, nhưng cần thay đổi tương ứng trong biến môi trường "backend/.env"
 -   Giữ cho server của minio luôn chạy khi dùng app
 
 ## Database MongoDB
 
 -   Biến môi trường "backend/.env" đã có sẵn kết nối tới Mongo Cloud thông qua connection string `MONGODB_URL`
-    -   Dùng tài khoản bên dưới để đăng nhập ứng dụng với quyền admin
+    -   Dùng tài khoản bên dưới để đăng nhập vào ứng dụng với quyền admin
     ```
     username: admin.speakup@ktstudio.vn
     password: abc@123A
@@ -40,12 +45,11 @@ pip install -r backend/requirements.txt
 -   Có thể thay thế kết nối đến tài khoản MongoDB Cloud khác\
     _Lưu ý: Mở Network Access đến ip: 0.0.0.0/0 để kết nối được ở mọi nơi_
 -   MongoDB tự tạo Database, Collection và Document và 1 tài khoản admin như trên khi ứng dụng khởi chạy.
--   Nếu không dùng Mongo Cloud, triển khai MongoDB Community Server ở local và thay thế connection string thành:\
-    `MONGODB_URL=mongodb://localhost:27017`
+-   Trong trường hợp Mongo Cloud bị lỗi, cần triển khai MongoDB Community Server ở local và thay thế connection string thành: `MONGODB_URL=mongodb://localhost:27017`
     -   Hướng dẫn cài MongoDB Community Server ở local:\
         `https://www.youtube.com/watch?v=tC49Nzm6SyM&ab_channel=AmitThinks`
 -   Có thể cài thêm Mongo Compass (GUI) hoặc Mongo Shell (command line) để kiểm tra nội dung database.
--   Với tài khoản user thông thường có thể thực hiện bằng chức năng đăng ký xác thực qua email hoặc vào Admin Panel trong ứng dụng (với tài khoản admin) để tạo tài khoản.
+-   Để tạo tài khoản user thông thường, có thể tạo được bằng chức năng Register của app và xác thực qua email hoặc dùng Admin Panel trong ứng dụng (với tài khoản admin) để tạo.
 
 ## Run server backend
 
@@ -54,7 +58,7 @@ pip install -r backend/requirements.txt
 
 ## Optional (Tùy chọn không bắt buộc cài đặt)
 
--   Là các model AI chạy local, được dùng trong giai đoạn phát triển app để đảm bảo tính liên tục & không giới hạn số lượng token như các dịch vụ api.
+-   Bên dưới là các model AI chạy local, được dùng trong giai đoạn phát triển app để đảm bảo tính liên tục & không giới hạn số lượng token như các dịch vụ api.
 
 ### Vosk (SpeedToText)
 
@@ -63,7 +67,7 @@ pip install -r backend/requirements.txt
 -   Đặt lại biến môi trường trong file "backend/.env" `VOSK_MODEL_DIR` nếu dùng model khác
 -   Giải nén & đặt trong folder "backend/models"
 
-### Mistral (Generate) (rất nặng, không khuyến khích dùng, chỉ áp dụng để test ứng dụng giai đoạn dev)
+### Mistral (GenerateTextToText) (rất nặng, không khuyến khích dùng, chỉ áp dụng để test ứng dụng giai đoạn dev)
 
 python -m pip install llama-cpp-python
 

@@ -3,7 +3,7 @@ import React, {useState} from 'react';
 import useSiteConfig from '../hooks/useSiteConfig';
 import {useImageLoadStatus} from '../utils/imageLoader';
 import {Link} from 'react-router-dom';
-import axios from '../axiosInstance';
+import {forgotPassword} from '../services/authService';
 import {Grid, Box, TextField, Button, Typography, Link as MuiLink, Alert} from '@mui/material';
 
 function ForgotPassword() {
@@ -20,7 +20,7 @@ function ForgotPassword() {
     const handleForgotPassword = async (e) => {
         e.preventDefault();
         try {
-            const res = await axios.post('/auth/forgot-password', {email});
+            const res = await forgotPassword(email);
             setMessage(res.data.message || 'A password reset link has been sent to your email.');
             setError('');
         } catch (err) {

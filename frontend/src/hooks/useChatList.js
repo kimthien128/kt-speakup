@@ -5,7 +5,7 @@ import {useState, useEffect, useCallback} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {toast} from 'react-toastify';
 import {logger} from '../utils/logger';
-import {fetchChatList, createChat, deleteChat, saveChatTitle} from '../services/apiService';
+import {fetchChatList, createChat, deleteChat, saveChatTitle} from '../services/chatsService';
 
 export const useChatList = (onSelectChat, refreshChatsCallback) => {
     const [chats, setChats] = useState([]);

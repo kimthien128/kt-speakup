@@ -13,8 +13,8 @@ export const methodsConfig = {
         type: 'stt',
         options: [
             {value: 'assemblyai', label: 'AssemblyAI (API)'},
-            {value: 'vosk', label: 'Vosk (Local)'},
             {value: 'google', label: 'Google Text to Speech (API)'},
+            {value: 'vosk', label: 'Vosk (Local)'},
         ],
     },
 
@@ -23,10 +23,10 @@ export const methodsConfig = {
         name: 'Generate Model',
         type: 'generate',
         options: [
-            {value: 'mistral', label: 'Mistral'},
-            {value: 'gemini', label: 'Gemini'},
             {value: 'chatgpt', label: 'Chat GPT'},
             {value: 'deepseek', label: 'DeepSeek'},
+            {value: 'gemini', label: 'Gemini'},
+            {value: 'mistral', label: 'Mistral'},
             {value: 'openrouter', label: 'OpenRouter'},
         ],
     },

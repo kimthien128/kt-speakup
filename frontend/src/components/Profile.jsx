@@ -4,19 +4,17 @@ import ConfirmDialog from './ConfirmDialog';
 import {getAvatarInitial} from '../utils/avatarUtils';
 import useSiteConfig from '../hooks/useSiteConfig';
 import {useImageLoadStatus} from '../utils/imageLoader';
+import {getCurrentUser, updateUserProfile} from '../services/authService';
 import ChangePassword from './ChangePassword';
 
 import {Box, Typography, Avatar, TextField, Button, Chip, IconButton, Grid, MenuItem, Tabs, Tab} from '@mui/material';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
-
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import SettingsIcon from '@mui/icons-material/Settings';
 import LockIcon from '@mui/icons-material/Lock';
 import LogoutIcon from '@mui/icons-material/Logout';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-
-import axios from '../axiosInstance';
 
 // Component TabPanel để hiển thị nội dung của tab
 function TabPanel(props) {
@@ -72,13 +70,13 @@ function Profile({onLogout}) {
                     return;
                 }
 
-                const res = await axios.get('/auth/me');
-                setUserInfo(res.data);
-                setDisplayName(res.data.displayName || '');
-                setPhoneNumber(res.data.phoneNumber || '');
-                setGender(res.data.gender || '');
-                setLocation(res.data.location || '');
-                setAvatarPreview(res.data.avatarPath || '');
+                const currentUser = await getCurrentUser();
+                setUserInfo(currentUser);
+                setDisplayName(currentUser.displayName || '');
+                setPhoneNumber(currentUser.phoneNumber || '');
+                setGender(currentUser.gender || '');
+                setLocation(currentUser.location || '');
+                setAvatarPreview(currentUser.avatarPath || '');
             } catch (err) {
                 setError('Failed to load user info');
                 console.error('Error fetching user info:', err.response?.data || err.message);
@@ -146,22 +144,18 @@ function Profile({onLogout}) {
                         formData.append('avatar', avatarFile);
                     }
 
-                    const res = await axios.patch('/auth/update', formData, {
-                        headers: {
-                            'Content-Type': 'multipart/form-data',
-                        },
-                    });
+                    const currentUser = await updateUserProfile(formData);
 
                     // Cập nhật userInfo và avatarPreview
                     setUserInfo({
                         ...userInfo,
-                        displayName: res.data.displayName,
-                        phoneNumber: res.data.phoneNumber,
-                        gender: res.data.gender,
-                        location: res.data.location,
-                        avatarPath: res.data.avatarPath,
+                        displayName: currentUser.displayName,
+                        phoneNumber: currentUser.phoneNumber,
+                        gender: currentUser.gender,
+                        location: currentUser.location,
+                        avatarPath: currentUser.avatarPath,
                     });
-                    setAvatarPreview(res.data.avatarPath || '');
+                    setAvatarPreview(currentUser.avatarPath || '');
                     setAvatarFile(null); // Reset file sau khi upload
                     setSuccess('Profile updated successfully');
                 } catch (err) {

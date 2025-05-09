@@ -1,5 +1,6 @@
 import {useRef} from 'react';
-import {fetchAudioUrl, generateUrlByTts} from '../services/audioService';
+import {fetchAudioUrl} from '../services/audioService';
+import {getTTS} from '../services/ttsServices';
 import {sanitizeFilename} from '../utils/sanitizeFilename';
 
 const useAudioPlayer = () => {
@@ -39,7 +40,7 @@ const useAudioPlayer = () => {
                     const audioBlob = await audioResponse.blob();
                     if (!audioBlob || audioBlob.size === 0) {
                         console.log(`Audio file ${filename} returned empty, generating TTS`);
-                        const {audioUrl: urlGenerate} = await generateUrlByTts(sanitizedWord, ttsMethod);
+                        const urlGenerate = await getTTS(ttsMethod, sanitizedWord);
                         const newAudioResponse = await fetch(urlGenerate);
                         const newAudioBlob = await newAudioResponse.blob();
                         await playAudioBlob(newAudioBlob, `TTS (${ttsMethod})`);
@@ -52,7 +53,7 @@ const useAudioPlayer = () => {
                     // nếu không fetch được từ filename
                     if (err.response && (err.response.status === 400 || err.response.status === 404)) {
                         console.log(`Audio file ${filename} not found, generating TTS`);
-                        const {audioUrl: urlGenerate} = await generateUrlByTts(sanitizedWord, ttsMethod);
+                        const urlGenerate = await getTTS(ttsMethod, sanitizedWord);
                         const audioResponse = await fetch(urlGenerate);
                         const audioBlob = await audioResponse.blob();
                         await playAudioBlob(audioBlob, `TTS (${ttsMethod})`);
@@ -64,7 +65,7 @@ const useAudioPlayer = () => {
                 }
             } else {
                 // nếu là đoạn text dài thì generate TTS luôn
-                const {audioUrl: urlGenerate} = await generateUrlByTts(text, ttsMethod);
+                const urlGenerate = await getTTS(ttsMethod, text);
                 const audioResponse = await fetch(urlGenerate);
                 const audioBlob = await audioResponse.blob();
                 await playAudioBlob(audioBlob, `TTS (${ttsMethod})`);

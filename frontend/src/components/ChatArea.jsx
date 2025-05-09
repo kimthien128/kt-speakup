@@ -84,9 +84,9 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
     }, [chatHistory, isSending]);
 
     // Xử lý config
-    if (configLoading || userLoading) {
-        return <CircularProgress />;
-    }
+    // if (configLoading || userLoading) {
+    //     return <CircularProgress />;
+    // }
     if (configError || userError) {
         return (
             <Alert severity="error">

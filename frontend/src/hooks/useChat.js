@@ -3,7 +3,7 @@
 
 import {useState, useEffect, useCallback, useRef} from 'react';
 import {toast} from 'react-toastify';
-import {getChatHistory, updateAudioUrl} from '../services/apiService';
+import {getChatHistory, updateAudioUrl} from '../services/chatsService';
 import {logger} from '../utils/logger';
 
 export const useChat = (chatId, onSendMessage) => {

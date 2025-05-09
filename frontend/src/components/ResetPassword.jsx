@@ -2,7 +2,7 @@
 import React, {useState, useEffect} from 'react';
 import {Link, useNavigate, useSearchParams} from 'react-router-dom';
 import useSiteConfig from '../hooks/useSiteConfig';
-import axios from '../axiosInstance';
+import {resetPassword} from '../services/authService';
 import {Grid, Box, TextField, Button, Typography, Link as MuiLink, Alert} from '@mui/material';
 
 function ResetPassword() {
@@ -56,11 +56,7 @@ function ResetPassword() {
         }
 
         try {
-            const response = await axios.post('/auth/reset-password', {
-                email,
-                token,
-                newPassword,
-            });
+            const response = await resetPassword(email, token, newPassword);
             setMessage(response.data.message || 'Password reset successfully! Redirecting to login...');
 
             // Đăng xuất người dùng (xóa token) nếu họ đã đăng nhập

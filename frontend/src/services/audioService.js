@@ -13,29 +13,3 @@ export const fetchAudioUrl = async (filename) => {
         throw error;
     }
 };
-
-// Tự generate audio từ text, trả về url đã upload lên bucket
-export const generateUrlByTts = async (text, ttsMethod = 'gtts') => {
-    try {
-        const res = await axios.post(
-            `/tts?method=${ttsMethod}`,
-            {text},
-            {
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            }
-        );
-        const audioUrl = res.headers['x-audio-url'];
-        if (!audioUrl) {
-            throw new Error('No audio URL returned from TTS');
-        }
-
-        return {
-            audioUrl,
-            filename: res.headers['x-audio-filename'],
-        };
-    } catch (err) {
-        throw new Error(err.response?.data?.detail || 'Failed to generate TTS');
-    }
-};

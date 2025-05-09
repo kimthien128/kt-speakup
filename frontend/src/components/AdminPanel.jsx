@@ -2,7 +2,7 @@ import React, {useState, useEffect} from 'react';
 import {useNavigate} from 'react-router-dom';
 import UserManagement from './UserManagement';
 import SiteConfig from './SiteConfig';
-import axios from '../axiosInstance';
+import {getConfig} from '../services/configService';
 
 import {Box, Typography, Button, Tabs, Tab} from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -35,8 +35,8 @@ function AdminPanel() {
     useEffect(() => {
         const fetchConfig = async () => {
             try {
-                const res = await axios.get('/config');
-                setConfig(res.data);
+                const configData = await getConfig();
+                setConfig(configData);
             } catch (err) {
                 if (err.response?.status === 403) {
                     navigate('/profile');
