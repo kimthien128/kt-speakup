@@ -133,7 +133,7 @@ export const updateSuggestion = async (chatId, suggestionData) => {
         const response = await axios.put(`/chats/${chatId}/suggestion`, suggestionData, {
             headers: {'Content-Type': 'application/json'},
         });
-        logger.info(`Updated suggestion for chatId ${chatId}`);
+        // logger.info(`Updated suggestion for chatId ${chatId}`);
         return response.data; // Trả về dữ liệu đã cập nhật
     } catch (err) {
         logger.error(`Error updating suggestion for ${chatId}:`, err.response?.data || err.message);

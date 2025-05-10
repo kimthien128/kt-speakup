@@ -33,13 +33,10 @@ class OpenAIClient(AIClient):
         return result["choices"][0]["message"]["content"].strip()
     
     def translate(self, text: str, source_lang: str, target_lang: str) -> str:
-        messages = [
-            {"role": "system", "content": "You are a translator. Provide accurate translations in a natural tone."},
-            {"role": "user", "content": f"Translate the following {source_lang} text to {target_lang}: {text}"}
-        ]
+        prompt = f"Translate the following text from {source_lang} to {target_lang}: {text}"
         payload = {
             "model": "gpt-3.5-turbo",
-            "messages": messages,
+            "messages": [{"role": "user", "content": prompt}],
             "max_tokens": 100,  # Tăng giới hạn token cho dịch
             "temperature": 0.3  # Giảm temperature để dịch chính xác hơn
         }

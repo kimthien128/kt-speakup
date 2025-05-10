@@ -3,6 +3,7 @@ import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import TextareaAutosize from '@mui/material/TextareaAutosize';
 import {Tooltip as MuiTooltip} from '@mui/material';
+import CircularProgress from '@mui/material/CircularProgress';
 import MicIcon from '@mui/icons-material/Mic';
 import StopIcon from '@mui/icons-material/Stop';
 import SendIcon from '@mui/icons-material/Send';
@@ -15,6 +16,7 @@ const InputControls = ({
     startRecording,
     stopRecording,
     isSending,
+    isProcessing,
     isPlayingWord,
     onSend,
     translateOpen,
@@ -35,7 +37,7 @@ const InputControls = ({
                 gap: 2,
             }}
         >
-            {/* Icon Micro */}
+            {/* Icon Micro || CircularProgress khi sending */}
             <IconButton
                 onClick={isRecording ? stopRecording : startRecording}
                 sx={{
@@ -47,7 +49,18 @@ const InputControls = ({
                 }}
                 disabled={isSending || isPlayingWord} // Disable khi đang gửi hoặc phát âm
             >
-                {isRecording ? <StopIcon /> : <MicIcon />}
+                {isProcessing ? (
+                    <CircularProgress
+                        size={24}
+                        sx={{
+                            color: 'white',
+                        }}
+                    />
+                ) : isRecording ? (
+                    <StopIcon />
+                ) : (
+                    <MicIcon />
+                )}
             </IconButton>
 
             {/* Textarea */}
@@ -92,7 +105,6 @@ const InputControls = ({
             </MuiTooltip>
 
             {/* Icon Send */}
-
             <IconButton
                 onClick={onSend}
                 disabled={

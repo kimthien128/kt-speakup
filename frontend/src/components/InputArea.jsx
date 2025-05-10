@@ -58,7 +58,8 @@ function InputArea({
     const {playSound, audioRef} = useAudioPlayer();
 
     // Hook để quản lý speech-to-text
-    const {transcript, setTranscript, isRecording, startRecording, stopRecording} = useSpeechToText(sttMethod);
+    const {transcript, setTranscript, isRecording, isProcessing, startRecording, stopRecording} =
+        useSpeechToText(sttMethod);
 
     // Hook để quản lý gửi tin nhắn
     const {handleSend} = useMessageHandler(
@@ -139,7 +140,7 @@ function InputArea({
             transcript.toLowerCase() !== 'no speech detected' &&
             transcript.toLowerCase() !== 'failed to process audio'
         ) {
-            setTimeLeft(10); // Bắt đầu đếm ngược từ 10s khi transcript được cập nhật
+            setTimeLeft(8); // Bắt đầu đếm ngược từ 10s khi transcript được cập nhật
             const timeoutId = setTimeout(() => {
                 onSend(); // Gửi tin nhắn sau 10 giây
             }, 10000);
@@ -268,6 +269,7 @@ function InputArea({
                     startRecording={startRecording}
                     stopRecording={stopRecording}
                     isSending={isSending}
+                    isProcessing={isProcessing}
                     isPlayingWord={isPlayingWord}
                     onSend={onSend}
                     translateOpen={translateOpen}

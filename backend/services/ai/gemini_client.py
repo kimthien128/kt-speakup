@@ -21,12 +21,14 @@ class GeminiClient(AIClient):
         
     def generate_response(self, messages: list) -> str:
         try:
-            chat_history = [
-                {"role": "user", "parts": [{"text": "You are a friendly English conversation partner. Help me practice speaking by replying with short, natural, and complete sentences suitable for daily conversation. After each reply, ask a follow-up question to keep the conversation going. Use clear and simple language appropriate for an intermediate learner."}]},
-                {"role": "model", "parts": [{"text": "Understood, I'll keep my responses short!"}]}
-            ]
-            for msg in messages[1:]:  # Bỏ message "system" đầu tiên
-                if msg["role"] == "user":
+            # Chuyển đổi messages sang định dạng parts mà Gemini yêu cầu
+            chat_history = []
+            for msg in messages:
+                # Khi gặp role là "system", thêm vào chat_history với vai trò "user"
+                if msg["role"] == "system":
+                    chat_history.append({"role": "user", "parts": [{"text": msg["content"]}]})
+                    chat_history.append({"role": "model", "parts": [{"text": "Understood, I'll follow your instructions."}]})
+                elif msg["role"] == "user":
                     chat_history.append({"role": "user", "parts": [{"text": msg["content"]}]})
                 elif msg["role"] == "assistant":
                     chat_history.append({"role": "model", "parts": [{"text": msg["content"]}]})
@@ -42,13 +44,7 @@ class GeminiClient(AIClient):
     def translate(self, text: str, source_lang: str, target_lang: str) -> str:
         try:
             prompt = f"Translate the following {source_lang} text to {target_lang}: {text}"
-            chat_history = [
-                {"role": "user", "parts": [{"text": "You are a translator. Provide accurate translations in a natural tone."}]},
-                {"role": "model", "parts": [{"text": "Understood, I'll provide accurate translations."}]},
-                {"role": "user", "parts": [{"text": prompt}]}
-            ]
-            chat_session = self.model.start_chat(history=chat_history)
-            response = chat_session.send_message(prompt)
+            response = self.model.generate_content(prompt)
             return response.text.strip()
         except genai.types.generation_types.BrokenResponseError as e:
             logger.error(f'Gemini API translation error: {e}')

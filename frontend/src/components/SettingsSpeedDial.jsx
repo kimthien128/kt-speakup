@@ -102,7 +102,7 @@ function SettingsSpeedDial({sttMethod, setSttMethod, ttsMethod, setTtsMethod, ge
                 sx={{
                     zIndex: 2,
                     borderRadius: {md: 0, lg: 10},
-                    bgcolor: 'rgba(0, 0, 0, 0.5)',
+                    bgcolor: 'rgba(0, 0, 0, 0.6)',
                 }}
                 onClick={handleSpeedDialClose}
             />

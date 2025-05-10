@@ -15,12 +15,12 @@ export const useSuggestions = (chatId, updateSuggestionData, generateMethod, tts
 
     // Lấy gợi ý từ AI
     const fetchSuggestions = async (baseText, currentChatId) => {
-        const promt = `Suggest a natural and simple follow-up question or response to keep this daily English conversation going: "${baseText}"`;
+        const prompt = `Suggest a natural and simple follow-up question or response to keep this daily English conversation going: "${baseText}"`;
 
         try {
             const latestSuggestion = await generateResponse({
                 method: generateMethod,
-                transcript: promt,
+                transcript: prompt,
                 chatId: currentChatId,
             });
 
