@@ -9,7 +9,7 @@ import {toast, ToastContainer} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; // Import CSS của thư viện toastify
 
 import {useTheme} from '@mui/material/styles';
-import {useMediaQuery} from '@mui/material';
+import {Avatar, Icon, useMediaQuery} from '@mui/material';
 
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
@@ -27,7 +27,6 @@ import SaveIcon from '@mui/icons-material/Save';
 import SearchIcon from '@mui/icons-material/Search';
 import Tooltip from '@mui/material/Tooltip';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import HomeIcon from '@mui/icons-material/Home'; // sau này thay logo
 
 function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
     const theme = useTheme();
@@ -328,14 +327,14 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                         alignItems: 'center',
                         height: '100%',
                         gap: 2,
-                        py: 8,
+                        pt: 12,
                         transition: 'all .3s ease',
                     }}
                 >
                     {/* Icon Logo */}
                     <Tooltip title="Home" placement="right">
                         <IconButton>
-                            {config?.logoImage ? (
+                            {imageLoadStatus.logoImage ? (
                                 <img
                                     src={config.logoImage}
                                     alt="KT SpeakUp Logo"
@@ -346,7 +345,7 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                                     }}
                                 />
                             ) : (
-                                <HomeIcon sx={{fontSize: '32px', color: 'primary.main'}} />
+                                <Avatar src="/images/logo.png" alt="KT SpeakUp Logo" />
                             )}
                         </IconButton>
                     </Tooltip>
@@ -365,17 +364,26 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                 <IconButton
                     sx={{
                         position: 'absolute',
-                        top: 20,
-                        right: isOpen ? 0 : 5,
+                        top: 35,
+                        left: isOpen ? 259 : -1,
                         transition: 'left 0.3s ease',
                         zIndex: 1,
+                        borderRadius: isOpen
+                            ? '50% 0 0 50%' // Bán nguyệt bên trái khi mở
+                            : '0 50% 50% 0', // Bán nguyệt bên phải khi đóng
+                        width: 40,
+                        height: 40,
+                        backgroundColor: 'primary.light',
+                        '&:hover': {
+                            backgroundColor: 'primary.dark',
+                        },
                     }}
                     onClick={() => setIsOpen(!isOpen)}
                 >
                     <ChevronLeftIcon
                         sx={{
                             fontSize: '32px',
-                            color: 'primary.main',
+                            color: 'primary.contrastText',
                             transform: isOpen ? 'rotate(0deg)' : 'rotate(-180deg)',
                             transition: 'transform 0.6s ease',
                         }}

@@ -194,7 +194,7 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                         alignItems: 'center',
                         height: '100%',
                         gap: 2,
-                        py: 8,
+                        py: 12,
                         transition: 'all 0.3s ease',
                     }}
                 >
@@ -220,17 +220,24 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                 <IconButton
                     sx={{
                         position: 'absolute',
-                        top: 20,
-                        right: isOpen ? 250 : 5,
+                        top: 35,
+                        right: isOpen ? 259 : -1,
                         transition: 'right 0.3s ease',
                         zIndex: 1,
+                        borderRadius: isOpen ? '0 50% 50% 0' : '50% 0 0 50%',
+                        width: 40,
+                        height: 40,
+                        backgroundColor: 'primary.light',
+                        '&:hover': {
+                            backgroundColor: 'primary.dark',
+                        },
                     }}
                     onClick={() => setIsOpen(!isOpen)}
                 >
                     <ChevronRightIcon
                         sx={{
                             fontSize: '32px',
-                            color: 'primary.main',
+                            color: 'primary.contrastText',
                             transform: isOpen ? 'rotate(0deg)' : 'rotate(180deg)',
                             transition: 'transform 0.6s ease',
                         }}
