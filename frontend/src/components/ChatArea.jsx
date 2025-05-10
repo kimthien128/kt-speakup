@@ -3,15 +3,12 @@ import React, {useEffect, useRef} from 'react';
 import {Tooltip as MuiTooltip, Tooltip} from '@mui/material';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
 import Avatar from '@mui/material/Avatar';
 import IconButton from '@mui/material/IconButton';
-import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 
 import TranslateIcon from '@mui/icons-material/Translate';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
-import BookmarkAddIcon from '@mui/icons-material/BookmarkAdd';
 
 import useAudioPlayer from '../hooks/useAudioPlayer';
 import useSiteConfig from '../hooks/useSiteConfig';
@@ -26,6 +23,8 @@ import 'react-toastify/dist/ReactToastify.css'; // Import CSS của thư viện 
 
 import {useChat} from '../hooks/useChat';
 import {useDictionary} from '../context/DictionaryContext';
+
+import WordTooltip from './WordTooltip';
 
 function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded}) {
     const {config, loading: configLoading, error: configError} = useSiteConfig(); // Lấy config từ backend
@@ -331,101 +330,15 @@ function ChatArea({userEmail, chatId, onWordClick, onSendMessage, onVocabAdded})
                 <MuiTooltip
                     open
                     title={
-                        <div
-                            ref={wordTooltipRef} // Gắn ref cho vùng tooltip
-                        >
-                            <Box sx={{p: 1}}>
-                                <Typography variant="subtitle1" sx={{fontSize: '1.2rem', textTransform: 'capitalize'}}>
-                                    <strong>{wordTooltip.word}</strong>
-                                </Typography>
-                                <Typography
-                                    variant="body2"
-                                    sx={{
-                                        fontSize: '.85rem',
-                                        color: 'text.secondary',
-                                    }}
-                                >
-                                    {wordTooltip.translatedWord}
-                                </Typography>
-
-                                <Typography
-                                    variant="body2"
-                                    sx={{
-                                        fontSize: '.95rem',
-                                        mt: 1,
-                                    }}
-                                >
-                                    {wordTooltip.definition}
-                                </Typography>
-                                <Typography
-                                    variant="body2"
-                                    sx={{
-                                        fontSize: '.85rem',
-                                        color: 'text.secondary',
-                                    }}
-                                >
-                                    {wordTooltip.translatedDefinition}
-                                </Typography>
-
-                                <Typography
-                                    variant="body2"
-                                    sx={{
-                                        fontSize: '.95rem',
-                                        my: 1,
-                                    }}
-                                >
-                                    {wordTooltip.phonetic}
-                                </Typography>
-
-                                {/* Button phất âm và Add to vocab */}
-                                <Box
-                                    sx={{
-                                        display: 'flex',
-                                        gap: 1,
-                                    }}
-                                >
-                                    <Button
-                                        variant="outlined"
-                                        size="small"
-                                        startIcon={<VolumeUpIcon fontSize="small" />}
-                                        onClick={() => handlePlay(wordTooltip.audio, wordTooltip.word)}
-                                        sx={{
-                                            textTransform: 'none',
-                                            color: 'text.secondary',
-                                            borderColor: 'divider',
-                                            '&:hover': {
-                                                backgroundColor: 'action.hover',
-                                                borderColor: 'text.secondary',
-                                            },
-                                        }}
-                                        disabled={isLoadingWord || isPlayingWord}
-                                    >
-                                        {isPlayingWord ? 'Fetching...' : 'Pronounce'}
-                                    </Button>
-                                    <Button
-                                        variant="outlined"
-                                        size="small"
-                                        startIcon={<BookmarkAddIcon fontSize="small" />}
-                                        onClick={handleAddToVocab}
-                                        disabled={isLoadingWord || wordTooltip.definition == 'No definition found'}
-                                        sx={{
-                                            textTransform: 'none',
-                                            color: 'text.secondary',
-                                            borderColor: 'divider',
-                                            '&:hover': {
-                                                backgroundColor: 'action.hover',
-                                                borderColor: 'text.secondary',
-                                            },
-                                            '&.Mui-disabled': {
-                                                opacity: 0.5,
-                                            },
-                                        }}
-                                    >
-                                        {isLoadingWord ? 'Fetching...' : 'Add to Vocab'}
-                                    </Button>
-                                </Box>
-                            </Box>
-                        </div>
+                        <WordTooltip
+                            wordTooltip={wordTooltip}
+                            wordTooltipRef={wordTooltipRef}
+                            handlePlay={handlePlay}
+                            handleAddToVocab={handleAddToVocab}
+                            isPlayingWord={isPlayingWord}
+                            isLoadingWord={isLoadingWord}
+                            showTranslated={true}
+                        />
                     }
                     placement="bottom-start"
                     componentsProps={{

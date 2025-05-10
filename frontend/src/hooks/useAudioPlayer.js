@@ -2,6 +2,7 @@ import {useRef} from 'react';
 import {fetchAudioUrl} from '../services/audioService';
 import {getTTS} from '../services/ttsServices';
 import {sanitizeFilename} from '../utils/sanitizeFilename';
+import {logger} from '../utils/logger';
 
 const useAudioPlayer = () => {
     const audioRef = useRef(null);
@@ -9,6 +10,8 @@ const useAudioPlayer = () => {
     // Nếu có audioUrl (từ API): Phát trực tiếp.
     // Nếu không có cả hai, kiểm tra và tạo TTS với text.
     const playSound = async ({audioUrl = '', text = '', ttsMethod = 'gtts'} = {}) => {
+        logger.info('playSound called with:', {audioUrl, text, ttsMethod});
+
         // Phát âm thanh từ blob, source là ghi chú để biết nguồn phát âm thanh
         const playAudioBlob = async (blob, source) => {
             if (!blob || blob.size === 0) {
@@ -64,6 +67,7 @@ const useAudioPlayer = () => {
                     }
                 }
             } else {
+                // logger.info('Text is long, generating TTS:', text);
                 // nếu là đoạn text dài thì generate TTS luôn
                 const urlGenerate = await getTTS(ttsMethod, text);
                 const audioResponse = await fetch(urlGenerate);

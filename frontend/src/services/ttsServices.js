@@ -4,7 +4,7 @@ import axios from '../axiosInstance';
 import {logger} from '../utils/logger';
 
 // Tự generate audio từ text, trả về url đã upload lên bucket
-export const getTTS = async ({method, text}) => {
+export const getTTS = async (method, text) => {
     try {
         const response = await axios.post(
             `/tts?method=${method}`,

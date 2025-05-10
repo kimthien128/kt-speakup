@@ -1,6 +1,6 @@
 # Backend
 
-## Cài đặt môi trường python
+### Cài đặt môi trường python
 
 **_Yêu cầu python 3.12.x_**
 
@@ -13,7 +13,7 @@ python -m pip install --upgrade pip
 pip install -r backend/requirements.txt
 ```
 
-## Cài MinIO
+### Cài MinIO
 
 -   Tải file và lưu ở "D:\minio" (đường dẫn có thể tùy chọn bất kỳ, nhưng đường dẫn này sẽ được sử dụng ở các lệnh cmd bên dưới):\
     https://dl.min.io/server/minio/release/windows-amd64/minio.exe
@@ -34,7 +34,7 @@ pip install -r backend/requirements.txt
 -   Có thể đặt username và password tùy chọn, nhưng cần thay đổi tương ứng trong biến môi trường "backend/.env"
 -   Giữ cho server của minio luôn chạy khi dùng app
 
-## Database MongoDB
+### Database MongoDB
 
 -   Biến môi trường "backend/.env" đã có sẵn kết nối tới Mongo Cloud thông qua connection string `MONGODB_URL`
     -   Dùng tài khoản bên dưới để đăng nhập vào ứng dụng với quyền admin
@@ -51,7 +51,7 @@ pip install -r backend/requirements.txt
 -   Có thể cài thêm Mongo Compass (GUI) hoặc Mongo Shell (command line) để kiểm tra nội dung database.
 -   Để tạo tài khoản user thông thường, có thể tạo được bằng chức năng Register của app và xác thực qua email hoặc dùng Admin Panel trong ứng dụng (với tài khoản admin) để tạo.
 
-## Run server backend
+### Run server backend
 
 -   _Đứng ở thư mục gốc `kt-speakup` chạy lệnh:_\
     `python -m backend.server`
@@ -93,7 +93,9 @@ huggingface-cli download TheBloke/Mistral-7B-Instruct-v0.1-GGUF mistral-7b-instr
 
 **_Yêu cầu có Nodejs >= v20.0.0 và npm đi kèm_**
 
-```Nodejs
+-   Đứng ở thư mục frontend để gọi:
+
+```nodejs
 cd frontend
 npm install
 npm run dev

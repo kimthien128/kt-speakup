@@ -56,10 +56,7 @@ export const useMessageHandler = (
             });
 
             // Lấy audioUrl từ /tts và truyền vào playSound
-            const audioUrl = await getTTS({
-                method: ttsMethod,
-                text: aiResponse,
-            });
+            const audioUrl = await getTTS(ttsMethod, aiResponse);
             await playSound({audioUrl}); // Phát âm thanh với audioUrl
 
             // Lưu vào backend /chats/{chat_id}/history
