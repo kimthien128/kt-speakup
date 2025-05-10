@@ -1,7 +1,7 @@
 // src/hooks/useVocab.js
 
 import {useState, useEffect, useCallback} from 'react';
-import {vocabService} from '../services/vocabService';
+import * as vocabService from '../services/vocabService';
 
 export const useVocab = (chatId, onVocabAdded) => {
     const [vocabList, setVocabList] = useState([]);

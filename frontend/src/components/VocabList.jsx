@@ -40,7 +40,6 @@ function VocabList({
                 display: 'flex',
                 flexDirection: 'column',
                 maxHeight: selectedWord ? '40%' : 'calc(100% - 70px)',
-                minHeight: 0,
             }}
         >
             <Box

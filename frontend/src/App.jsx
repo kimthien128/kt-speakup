@@ -114,10 +114,11 @@ function ChatPage({userEmail, onLogout, onSendMessageRef}) {
                             borderBottom: 1,
                             borderColor: 'divider',
                             '& .MuiTabs-flexContainer': {
-                                justifyContent: 'center', // Căn giữa các tab
+                                justifyContent: 'space-around', // Căn giữa các tab
                             },
                             '& .MuiTab-root': {
-                                minWidth: '150px', // Đặt chiều rộng tối thiểu là 0 để các tab có thể co lại
+                                minWidth: 'unset',
+                                width: 'auto',
                                 textAlign: 'center',
                             },
                         }}

@@ -58,7 +58,7 @@ export const useChatList = (onSelectChat, refreshChatsCallback) => {
                 if (chatId === editingChatId) setEditingChatId(null);
                 // Nếu chat đang chọn bị xóa, reset onSelectChat
                 onSelectChat(null);
-                navigate('/'); // Quay về trang mặc định
+                navigate('/chat'); // Quay về trang mặc định
                 if (refreshChatsCallback) refreshChatsCallback();
             } catch (err) {
                 logger.error('Error deleting chat:', err.response?.data || err.message);

@@ -12,7 +12,7 @@ export const translateText = async (text, targetLang = 'vi') => {
     }
 
     try {
-        logger.info(`Translating text: "${text}" to targetLang: ${targetLang}`);
+        // logger.info(`Translating text: "${text}" to targetLang: ${targetLang}`);
         const response = await axios.post(
             '/translate',
             {text, target_lang: targetLang},
@@ -22,7 +22,7 @@ export const translateText = async (text, targetLang = 'vi') => {
                 },
             }
         );
-        logger.info('Translation response:', response.data);
+        // logger.info('Translation response:', response.data);
         return response.data.translatedText || 'Translation not available'; // Trả về văn bản đã dịch
     } catch (err) {
         logger.error(`Error translating text: ${err.response?.data || err.message}`);
@@ -39,7 +39,7 @@ export const translateMultipleTexts = async (texts, targetLang = 'vi') => {
     }
 
     try {
-        logger.info(`Translating ${texts.length} texts to ${targetLang}`);
+        // logger.info(`Translating ${texts.length} texts to ${targetLang}`);
         const translationPromises = texts.map((text) => translateText(text, targetLang));
         return await Promise.all(translationPromises); // Chờ tất cả các lời hứa dịch hoàn thành
     } catch (err) {

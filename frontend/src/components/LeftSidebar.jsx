@@ -246,7 +246,7 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                     <Box
                         sx={{
                             flex: 1,
-                            overflowY: 'scroll',
+                            overflowY: 'auto',
                             scrollbarWidth: 'thin',
                             scrollbarColor: 'rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.1)',
                         }}
