@@ -55,7 +55,7 @@ function MainLayout({children}) {
                     display: 'flex',
                     borderRadius: {md: 0, lg: 10},
                     border: {md: 'none', lg: '1px solid'},
-                    borderColor: {md: 'none', lg: 'rgba(255, 255, 255, 0.9)'},
+                    borderColor: {md: 'none', lg: 'rgba(255, 255, 255, .9)'},
                     boxShadow: '0 0 25px rgba(0, 0, 0, 0.15)',
                     boxSizing: 'border-box',
                     backdropFilter: 'blur(20px)',

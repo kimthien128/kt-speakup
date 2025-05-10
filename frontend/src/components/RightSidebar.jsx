@@ -30,8 +30,9 @@ import VocabList from './VocabList';
 
 function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
     const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // Kiểm tra nếu là thiết bị di động
-    const [isOpen, setIsOpen] = useState(!isMobile); // Mở rộng trên desktop, thu nhỏ trên mobile
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
+    const [isOpen, setIsOpen] = useState(true); // Mở rộng trên desktop, thu nhỏ trên mobile
     const [anchorEl, setAnchorEl] = useState(null); //state cho menu user
 
     const navigate = useNavigate();
@@ -74,10 +75,19 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
         });
     };
 
-    // tự động cập nhật isOpen khi kích thước màn hình thay đổi
+    // màn hình tablet thì tự động đóng sidebar
     useEffect(() => {
-        setIsOpen(!isMobile);
-    }, [isMobile]);
+        if (isTablet) {
+            setIsOpen(false);
+        }
+    }, [isTablet]);
+
+    // màn hình mobile thì tự động mở sidebar
+    useEffect(() => {
+        if (isMobile || !isTablet) {
+            setIsOpen(true);
+        }
+    }, [isMobile, isTablet]);
 
     // Xử lý config, đặt trước return
     if (configError) {
@@ -91,24 +101,42 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
     return (
         <Box
             sx={{
-                width: isOpen ? 300 : 60,
-                height: '100%',
+                width: {
+                    xs: '100%',
+                    sm: isOpen ? 300 : 60,
+                },
                 p: isOpen ? 2 : 0,
                 display: 'flex',
                 flexDirection: 'column',
                 flexShrink: 0,
                 position: 'relative',
                 transition: 'all .3s ease',
-                borderLeft: '1px solid',
-                borderColor: 'divider',
+                borderLeft: {
+                    xs: 'none',
+                    sm: '1px solid',
+                },
+                borderColor: {
+                    xs: 'transparent',
+                    sm: 'divider',
+                },
             }}
         >
             {/* Đóng mở sidebar */}
             {isOpen ? (
-                <Box sx={{height: '100%', display: 'flex', flexDirection: 'column'}}>
+                <Box
+                    sx={{
+                        height: {
+                            xs: 'calc(100vh - 64px)',
+                            sm: '100%',
+                        },
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 2,
+                    }}
+                >
                     {/* Phần 1: Thông tin user + Account Menu */}
                     {userEmail && userInfo && (
-                        <Box sx={{display: 'flex', alignItems: 'center', mb: 2}}>
+                        <Box sx={{display: 'flex', alignItems: 'center'}}>
                             {/* Link: Admin thì hiện link quản lý, user thì hiện Welcome + displayName */}
                             {userInfo.isAdmin ? (
                                 <Button
@@ -171,20 +199,7 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                     />
 
                     {/* Phần 3: Chi tiết từ vựng */}
-                    {vocabList.length > 0 && (
-                        <Box
-                            sx={{
-                                flexGrow: 1,
-                                minHeight: 0,
-                                overflow: 'hidden',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                mt: 2,
-                            }}
-                        >
-                            <VocabDetails word={selectedWord} />
-                        </Box>
-                    )}
+                    {vocabList.length > 0 && <VocabDetails word={selectedWord} />}
                 </Box>
             ) : (
                 <Box
@@ -216,34 +231,36 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
             )}
 
             {/* Nút toggle ẩn/hiện sidebar */}
-            <Tooltip title={isOpen ? 'Close Right Sidebar' : 'Open Right Sidebar'} placement="left">
-                <IconButton
-                    sx={{
-                        position: 'absolute',
-                        top: 35,
-                        right: isOpen ? 259 : -1,
-                        transition: 'right 0.3s ease',
-                        zIndex: 1,
-                        borderRadius: isOpen ? '0 50% 50% 0' : '50% 0 0 50%',
-                        width: 40,
-                        height: 40,
-                        backgroundColor: 'primary.light',
-                        '&:hover': {
-                            backgroundColor: 'primary.dark',
-                        },
-                    }}
-                    onClick={() => setIsOpen(!isOpen)}
-                >
-                    <ChevronRightIcon
+            {!isMobile && (
+                <Tooltip title={isOpen ? 'Close Right Sidebar' : 'Open Right Sidebar'} placement="left">
+                    <IconButton
                         sx={{
-                            fontSize: '32px',
-                            color: 'primary.contrastText',
-                            transform: isOpen ? 'rotate(0deg)' : 'rotate(180deg)',
-                            transition: 'transform 0.6s ease',
+                            position: 'absolute',
+                            top: 35,
+                            right: isOpen ? 259 : -1,
+                            transition: 'right 0.3s ease',
+                            zIndex: 1,
+                            borderRadius: isOpen ? '0 50% 50% 0' : '50% 0 0 50%',
+                            width: 40,
+                            height: 40,
+                            backgroundColor: 'primary.light',
+                            '&:hover': {
+                                backgroundColor: 'primary.dark',
+                            },
                         }}
-                    />
-                </IconButton>
-            </Tooltip>
+                        onClick={() => setIsOpen(!isOpen)}
+                    >
+                        <ChevronRightIcon
+                            sx={{
+                                fontSize: '32px',
+                                color: 'primary.contrastText',
+                                transform: isOpen ? 'rotate(0deg)' : 'rotate(180deg)',
+                                transition: 'transform 0.6s ease',
+                            }}
+                        />
+                    </IconButton>
+                </Tooltip>
+            )}
 
             <Menu
                 anchorEl={anchorEl}

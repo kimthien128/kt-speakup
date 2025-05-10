@@ -158,15 +158,22 @@ function VocabDetails({word}) {
     return (
         <Box
             sx={{
-                flexGrow: 1,
+                display: 'flex',
+                flexDirection: 'column',
                 minHeight: 0,
-                overflowY: 'auto',
-                overflowX: 'hidden',
-                scrollbarWidth: 'thin',
-                scrollbarColor: 'rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.1)', // Màu thứ 2 là màu khi hover
             }}
         >
-            <Box sx={{display: 'flex', flexDirection: 'column', gap: 2}}>
+            <Box
+                sx={{
+                    flex: 1,
+                    overflowY: 'auto',
+                    scrollbarWidth: 'thin',
+                    scrollbarColor: 'rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.1)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 2,
+                }}
+            >
                 {/* Definition */}
                 <Box>
                     <Typography variant="h6" sx={{fontWeight: 'medium', mb: 1}}>

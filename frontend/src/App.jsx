@@ -4,7 +4,7 @@ import axios from './axiosInstance';
 import {logger} from './utils/logger';
 import {DictionaryProvider} from './context/DictionaryContext';
 
-import {Box, Container} from '@mui/material';
+import {Box, Container, useMediaQuery, Tabs, Tab} from '@mui/material';
 import CircularProgress from '@mui/material/CircularProgress';
 
 import ChatArea from './components/ChatArea';
@@ -29,6 +29,10 @@ function ChatPage({userEmail, onLogout, onSendMessageRef}) {
         translate_suggestion: '',
         suggestion_audio_url: '',
     }); // Dữ liệu suggestion từ backend
+
+    const isMobile = useMediaQuery((theme) => theme.breakpoints.down('sm'));
+
+    const [tabValue, setTabValue] = useState(1); // Tab mặc định là ChatArea (index 1), 0 là LeftSidebar, 2 là RightSidebar
 
     useEffect(() => {
         if (chatId && chatId !== 'undefined' && chatId !== 'null') {
@@ -91,62 +95,146 @@ function ChatPage({userEmail, onLogout, onSendMessageRef}) {
         }));
     };
 
+    // Xử lý thay đổi tab
+    const handleTabChange = (event, newValue) => {
+        setTabValue(newValue);
+    };
+
     return (
         <DictionaryProvider>
-            {/* LeftSidebar */}
-            <LeftSidebar
-                onSelectChat={handleSelectChat}
-                refreshChatsCallback={(fn) => (refreshChatsRef.current = fn)}
-                selectedChatId={selectedChatId}
-            />
+            {isMobile ? (
+                <Box sx={{width: '100%'}}>
+                    <Tabs
+                        value={tabValue}
+                        onChange={handleTabChange}
+                        variant="scrollable"
+                        scrollButtons="auto"
+                        allowScrollButtonsMobile
+                        sx={{
+                            borderBottom: 1,
+                            borderColor: 'divider',
+                            '& .MuiTabs-flexContainer': {
+                                justifyContent: 'center', // Căn giữa các tab
+                            },
+                            '& .MuiTab-root': {
+                                minWidth: '150px', // Đặt chiều rộng tối thiểu là 0 để các tab có thể co lại
+                                textAlign: 'center',
+                            },
+                        }}
+                    >
+                        <Tab label="ChatsList" value={0} />
+                        <Tab label="Chat" value={1} />
+                        <Tab label="Vocabulary" value={2} />
+                    </Tabs>
 
-            {/* Main Content (ChatArea + InputArea) */}
-            <Box
-                sx={{
-                    flexGrow: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    height: '100%',
-                }}
-            >
-                <Box
-                    sx={{
-                        flexGrow: 1,
-                        pt: 2,
-                        overflow: 'hidden',
-                    }}
-                >
-                    <ChatArea
+                    <Box sx={{p: 2}}>
+                        {tabValue === 0 && (
+                            <LeftSidebar
+                                onSelectChat={handleSelectChat}
+                                refreshChatsCallback={(fn) => (refreshChatsRef.current = fn)}
+                                selectedChatId={selectedChatId}
+                            />
+                        )}
+                        {tabValue === 1 && (
+                            <Box
+                                sx={{
+                                    flexGrow: 1,
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    height: 'calc(100vh - 64px)', // Điều chỉnh chiều cao trừ đi chiều cao của Tabs
+                                }}
+                            >
+                                <Box sx={{flexGrow: 1, overflow: 'hidden'}}>
+                                    <ChatArea
+                                        userEmail={userEmail}
+                                        chatId={selectedChatId}
+                                        onWordClick={handleWordClick}
+                                        onSendMessage={onSendMessageRef}
+                                        onVocabAdded={refreshVocabRef}
+                                    />
+                                </Box>
+                                <InputArea
+                                    chatId={selectedChatId}
+                                    setChatId={(newChatId) => {
+                                        setSelectedChatId(newChatId);
+                                        navigate(`/chat/${newChatId}`);
+                                    }}
+                                    onSendMessage={onSendMessageRef}
+                                    refreshChats={refreshChatsRef.current} // Truyền refreshChats vào InputArea
+                                    suggestionData={suggestionData}
+                                    updateSuggestionData={updateSuggestionData} // Truyền callback
+                                    onVocabAdded={refreshVocabRef} // Truyền ref để cập nhật vocab
+                                />
+                            </Box>
+                        )}
+                        {tabValue === 2 && (
+                            <RightSidebar
+                                onLogout={handleLogout}
+                                userEmail={userEmail}
+                                chatId={selectedChatId}
+                                onVocabAdded={refreshVocabRef}
+                            />
+                        )}
+                    </Box>
+                </Box>
+            ) : (
+                <>
+                    {/* LeftSidebar */}
+                    <LeftSidebar
+                        onSelectChat={handleSelectChat}
+                        refreshChatsCallback={(fn) => (refreshChatsRef.current = fn)}
+                        selectedChatId={selectedChatId}
+                    />
+
+                    {/* Main Content (ChatArea + InputArea) */}
+                    <Box
+                        sx={{
+                            flexGrow: 1,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            height: '100%',
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                flexGrow: 1,
+                                pt: '1px',
+                                overflow: 'hidden',
+                            }}
+                        >
+                            <ChatArea
+                                userEmail={userEmail}
+                                chatId={selectedChatId}
+                                onWordClick={handleWordClick}
+                                onSendMessage={onSendMessageRef}
+                                onVocabAdded={refreshVocabRef}
+                            />
+                        </Box>
+
+                        {/* InputArea */}
+                        <InputArea
+                            chatId={selectedChatId}
+                            setChatId={(newChatId) => {
+                                setSelectedChatId(newChatId);
+                                navigate(`/chat/${newChatId}`);
+                            }}
+                            onSendMessage={onSendMessageRef}
+                            refreshChats={refreshChatsRef.current} // Truyền refreshChats vào InputArea
+                            suggestionData={suggestionData}
+                            updateSuggestionData={updateSuggestionData} // Truyền callback
+                            onVocabAdded={refreshVocabRef} // Truyền ref để cập nhật vocab
+                        />
+                    </Box>
+
+                    {/* RightSidebar */}
+                    <RightSidebar
+                        onLogout={handleLogout}
                         userEmail={userEmail}
                         chatId={selectedChatId}
-                        onWordClick={handleWordClick}
-                        onSendMessage={onSendMessageRef}
                         onVocabAdded={refreshVocabRef}
                     />
-                </Box>
-
-                {/* InputArea */}
-                <InputArea
-                    chatId={selectedChatId}
-                    setChatId={(newChatId) => {
-                        setSelectedChatId(newChatId);
-                        navigate(`/chat/${newChatId}`);
-                    }}
-                    onSendMessage={onSendMessageRef}
-                    refreshChats={refreshChatsRef.current} // Truyền refreshChats vào InputArea
-                    suggestionData={suggestionData}
-                    updateSuggestionData={updateSuggestionData} // Truyền callback
-                    onVocabAdded={refreshVocabRef} // Truyền ref để cập nhật vocab
-                />
-            </Box>
-
-            {/* RightSidebar */}
-            <RightSidebar
-                onLogout={handleLogout}
-                userEmail={userEmail}
-                chatId={selectedChatId}
-                onVocabAdded={refreshVocabRef}
-            />
+                </>
+            )}
         </DictionaryProvider>
     );
 }

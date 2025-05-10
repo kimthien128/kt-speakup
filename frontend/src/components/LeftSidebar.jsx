@@ -30,8 +30,9 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 
 function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
     const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // Kiểm tra nếu là thiết bị di động
-    const [isOpen, setIsOpen] = useState(!isMobile); // Mở rộng trên desktop, thu nhỏ trên mobile
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
+    const [isOpen, setIsOpen] = useState(true); // Mở rộng trên desktop, thu nhỏ trên mobile
 
     const {config, loading: configLoading, error: configError} = useSiteConfig();
     const navigate = useNavigate();
@@ -60,11 +61,6 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
         startEditChat,
         saveChatTitle,
     } = useChatList(onSelectChat, refreshChatsCallback);
-
-    // tự động cập nhật isOpen khi kích thước màn hình thay đổi
-    useEffect(() => {
-        setIsOpen(!isMobile);
-    }, [isMobile]);
 
     // Hủy chỉnh sửa khi click ra ngoài
     useEffect(() => {
@@ -114,11 +110,27 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
         });
     };
 
+    // màn hình tablet thì tự động đóng sidebar
+    useEffect(() => {
+        if (isTablet) {
+            setIsOpen(false);
+        }
+    }, [isTablet]);
+
+    // màn hình mobile thì tự động mở sidebar
+    useEffect(() => {
+        if (isMobile || !isTablet) {
+            setIsOpen(true);
+        }
+    }, [isMobile, isTablet]);
+
     return (
         <Box
             sx={{
-                height: '100%',
-                width: isOpen ? 300 : 60,
+                maxWidth: {
+                    xs: '100%',
+                    sm: isOpen ? 300 : 60, //từ sm trở lên thì áp dụng
+                },
                 p: isOpen ? 2 : 0,
                 display: 'flex',
                 flexDirection: 'column',
@@ -127,15 +139,30 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                 borderBottomLeftRadius: 40,
                 position: 'relative',
                 transition: 'all .3s ease',
-                borderRight: '1px solid',
-                borderColor: 'divider',
+                borderRight: {
+                    xs: 'none',
+                    sm: '1px solid',
+                },
+                borderColor: {
+                    xs: 'transparent',
+                    sm: 'divider',
+                },
             }}
         >
             {/* Đóng mở sidebar */}
             {isOpen ? (
-                <div>
+                <Box
+                    sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        height: {
+                            xs: 'calc(100vh - 64px)', // Trừ chiều cao của AppBar
+                            sm: '100%',
+                        },
+                        minHeight: 0,
+                    }}
+                >
                     {/* Logo */}
-
                     <Box
                         sx={{
                             display: 'flex',
@@ -216,7 +243,14 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                     </Box>
 
                     {/* Danh sách chat */}
-                    <Box sx={{overflowY: 'auto', flexGrow: 1}}>
+                    <Box
+                        sx={{
+                            flex: 1,
+                            overflowY: 'scroll',
+                            scrollbarWidth: 'thin',
+                            scrollbarColor: 'rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.1)',
+                        }}
+                    >
                         <List sx={{width: '100%'}}>
                             {filteredChats.map((chat) => (
                                 <ListItem
@@ -318,7 +352,7 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                             ))}
                         </List>
                     </Box>
-                </div>
+                </Box>
             ) : (
                 <Box
                     sx={{
@@ -333,7 +367,7 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                 >
                     {/* Icon Logo */}
                     <Tooltip title="Home" placement="right">
-                        <IconButton>
+                        <IconButton onClick={() => navigate('/')} sx={{borderRadius: 0}}>
                             {imageLoadStatus.logoImage ? (
                                 <img
                                     src={config.logoImage}
@@ -360,36 +394,38 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
             )}
 
             {/* Nút toggle ẩn/hiện sidebar */}
-            <Tooltip title={isOpen ? 'Close Left Sidebar' : 'Open Left Sidebar'} placement="right">
-                <IconButton
-                    sx={{
-                        position: 'absolute',
-                        top: 35,
-                        left: isOpen ? 259 : -1,
-                        transition: 'left 0.3s ease',
-                        zIndex: 1,
-                        borderRadius: isOpen
-                            ? '50% 0 0 50%' // Bán nguyệt bên trái khi mở
-                            : '0 50% 50% 0', // Bán nguyệt bên phải khi đóng
-                        width: 40,
-                        height: 40,
-                        backgroundColor: 'primary.light',
-                        '&:hover': {
-                            backgroundColor: 'primary.dark',
-                        },
-                    }}
-                    onClick={() => setIsOpen(!isOpen)}
-                >
-                    <ChevronLeftIcon
+            {!isMobile && (
+                <Tooltip title={isOpen ? 'Close Left Sidebar' : 'Open Left Sidebar'} placement="right">
+                    <IconButton
                         sx={{
-                            fontSize: '32px',
-                            color: 'primary.contrastText',
-                            transform: isOpen ? 'rotate(0deg)' : 'rotate(-180deg)',
-                            transition: 'transform 0.6s ease',
+                            position: 'absolute',
+                            top: 35,
+                            left: isOpen ? 259 : -1,
+                            transition: 'left 0.3s ease',
+                            zIndex: 1,
+                            borderRadius: isOpen
+                                ? '50% 0 0 50%' // Bán nguyệt bên trái khi mở
+                                : '0 50% 50% 0', // Bán nguyệt bên phải khi đóng
+                            width: 40,
+                            height: 40,
+                            backgroundColor: 'primary.light',
+                            '&:hover': {
+                                backgroundColor: 'primary.dark',
+                            },
                         }}
-                    />
-                </IconButton>
-            </Tooltip>
+                        onClick={() => setIsOpen(!isOpen)}
+                    >
+                        <ChevronLeftIcon
+                            sx={{
+                                fontSize: '32px',
+                                color: 'primary.contrastText',
+                                transform: isOpen ? 'rotate(0deg)' : 'rotate(-180deg)',
+                                transition: 'transform 0.6s ease',
+                            }}
+                        />
+                    </IconButton>
+                </Tooltip>
+            )}
 
             {/* Hiển thị ConfirmDialog */}
             <ConfirmDialog
