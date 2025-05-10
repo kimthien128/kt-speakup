@@ -1,5 +1,6 @@
 import {useState, useEffect} from 'react';
-import axios from '../axiosInstance';
+import {getCurrentUser} from '../services/authService';
+import {logger} from '../utils/logger';
 
 // Fetch thông tin user từ API /auth/me
 export default function useUserInfo(userEmail) {
@@ -11,6 +12,8 @@ export default function useUserInfo(userEmail) {
         const fetchUserInfo = async () => {
             try {
                 setLoading(true);
+                setError(null);
+
                 const token = localStorage.getItem('token');
 
                 if (!token) {
@@ -18,10 +21,11 @@ export default function useUserInfo(userEmail) {
                     return;
                 }
 
-                const res = await axios.get('/auth/me');
-                setUserInfo(res.data);
+                const userData = await getCurrentUser();
+                setUserInfo(userData);
             } catch (err) {
-                console.error('Error fetching user info:', err.response?.data || err.message);
+                logger.error('Error fetching user info:', err.response?.data || err.message);
+                setError(err.response?.data?.detail || err.message || 'Failed to load user information');
                 setUserInfo(null);
             } finally {
                 setLoading(false);

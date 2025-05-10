@@ -1,6 +1,7 @@
 //hooks/useLogin.js
 import {useState, useEffect} from 'react';
-import axios from '../axiosInstance';
+import {login} from '../services/authService';
+import {logger} from '../utils/logger';
 
 const useLogin = ({setToken, setUserEmail}) => {
     const [email, setEmail] = useState('');
@@ -27,14 +28,10 @@ const useLogin = ({setToken, setUserEmail}) => {
         setLoading(true); // Bật trạng thái loading
         setError('');
         try {
-            const formData = new URLSearchParams();
-            formData.append('username', email); // Gửi email như username
-            formData.append('password', password);
+            const data = await login(email, password); // Gọi hàm đăng nhập từ authService
+            const token = data.access_token;
 
-            const res = await axios.post('/auth/login', formData, {
-                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-            });
-            const token = res.data.access_token;
+            // Lưu token và cập nhật state
             localStorage.setItem('token', token);
             setToken(token);
             setUserEmail(email);

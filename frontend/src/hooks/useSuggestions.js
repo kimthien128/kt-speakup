@@ -2,7 +2,9 @@
 // Quản lý gợi ý
 
 import {useState} from 'react';
-import axios from '../axiosInstance';
+import {generateResponse} from '../services/generateService';
+import {updateSuggestion, getChatInfo, updateAudioUrl as updateAudioUrlService} from '../services/chatsService';
+import {translateText} from '../services/translateService';
 import {logger} from '../utils/logger';
 
 export const useSuggestions = (chatId, updateSuggestionData, generateMethod, ttsMethod, playSound) => {
@@ -13,54 +15,36 @@ export const useSuggestions = (chatId, updateSuggestionData, generateMethod, tts
 
     // Lấy gợi ý từ AI
     const fetchSuggestions = async (baseText, currentChatId) => {
-        const suggestionPrompts = [
-            // `Provide ONLY ONE direct follow-up question or response (without any introductory phrase) for this sentence: "${baseText}"`,
-            // `Short next question after: "${baseText}"`,
-            `Suggest a follow-up question or response for: "${baseText}"`,
-        ];
-        const newSuggestions = [];
-        for (const prompt of suggestionPrompts) {
-            try {
-                const res = await axios.post(
-                    `/generate?method=${generateMethod}`,
-                    {transcript: prompt, chat_id: currentChatId},
-                    {
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                    }
-                );
-                if (!res.data.error) {
-                    newSuggestions.push(res.data.response);
+        const promt = `Suggest a natural and simple follow-up question or response to keep this daily English conversation going: "${baseText}"`;
 
-                    // Lưu suggestion mới nhất vào database
-                    if (newSuggestions.length > 0) {
-                        const latestSuggestion = newSuggestions[0];
-                        await axios.put(
-                            `/chats/${currentChatId}/suggestion`,
-                            {
-                                latest_suggestion: latestSuggestion,
-                                translate_suggestion: '',
-                                suggestion_audio_url: '',
-                            },
-                            {
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
-                            }
-                        );
-                        updateSuggestionData({
-                            latest_suggestion: latestSuggestion,
-                            translate_suggestion: '',
-                            suggestion_audio_url: '',
-                        });
-                    }
-                }
-            } catch (err) {
-                logger.error('Suggestion error:', err);
+        try {
+            const latestSuggestion = await generateResponse({
+                method: generateMethod,
+                transcript: promt,
+                chatId: currentChatId,
+            });
+
+            if (latestSuggestion) {
+                // Lưu suggestion mới nhất vào database
+                await updateSuggestion(currentChatId, {
+                    latest_suggestion: latestSuggestion,
+                    translate_suggestion: '',
+                    suggestion_audio_url: '',
+                });
+
+                // Cập nhật state trong component cha
+                updateSuggestionData({
+                    latest_suggestion: latestSuggestion,
+                    translate_suggestion: '',
+                    suggestion_audio_url: '',
+                });
+
+                return latestSuggestion;
             }
+        } catch (err) {
+            logger.error('Suggestion error:', err);
         }
-        return newSuggestions[0] || null;
+        return null;
     };
 
     // Phát âm thanh từ suggestion_audio_url
@@ -70,12 +54,8 @@ export const useSuggestions = (chatId, updateSuggestionData, generateMethod, tts
 
         try {
             // Kiểm tra có suggestion_audio_url trên database chưa
-            const chatResponse = await axios.get(`/chats/${currentChatId}`, {
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
-            let audioUrl = chatResponse.data.suggestion_audio_url;
+            const chatResponse = await getChatInfo(currentChatId);
+            let audioUrl = chatResponse.suggestion_audio_url;
 
             //Nếu đã có suggestion_audio_url, phát âm thanh trực tiếp
             if (audioUrl) {
@@ -105,23 +85,11 @@ export const useSuggestions = (chatId, updateSuggestionData, generateMethod, tts
     const updateAudioUrl = async ({chatId, index, audioUrl, updateSuggestionAudioUrl}) => {
         try {
             if (updateSuggestionAudioUrl && chatId) {
-                await axios.put(
-                    `/chats/${chatId}/suggestion`,
-                    {suggestion_audio_url: audioUrl},
-                    {
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                    }
-                );
-                logger.info(`Updated suggestion_audio_url for chatId: ${chatId}`);
+                await updateSuggestion(chatId, {
+                    suggestion_audio_url: audioUrl,
+                });
             } else if (chatId && index !== '') {
-                await axios.patch(
-                    `/chats/${chatId}/audioUrl`,
-                    {index, audioUrl},
-                    {headers: {'Content-Type': 'application/json'}}
-                );
-                logger.info(`Updated audioUrl for chatId: ${chatId}, index: ${index}`);
+                await updateAudioUrlService(chatId, index, audioUrl);
             }
         } catch (err) {
             logger.error('Error updating audio URL:', err);
@@ -141,30 +109,13 @@ export const useSuggestions = (chatId, updateSuggestionData, generateMethod, tts
         setLoading(true);
         try {
             // Gọi endpoint /translate để dịch suggestion
-            const translateResponse = await axios.post(
-                `/translate`,
-                {text: suggestion, target_lang: 'vi'},
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
-            const translatedText = translateResponse.data.translatedText;
+            const translatedText = await translateText(suggestion);
 
             // Lưu bản dịch vào database
             if (suggestionData.translate_suggestion !== translatedText) {
-                await axios.put(
-                    `/chats/${currentChatId}/suggestion`,
-                    {
-                        translate_suggestion: translatedText,
-                    },
-                    {
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                    }
-                );
+                await updateSuggestion(currentChatId, {
+                    translate_suggestion: translatedText,
+                });
                 // Cập nhật suggestionData qua callback từ ChatPage
                 updateSuggestionData({translate_suggestion: translatedText});
             }

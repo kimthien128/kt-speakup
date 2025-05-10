@@ -3,6 +3,23 @@
 import axios from '../axiosInstance';
 import {logger} from '../utils/logger';
 
+// Đăng nhập người dùng
+export const login = async (email, password) => {
+    try {
+        const formData = new URLSearchParams();
+        formData.append('username', email); // Gửi email như username theo yêu cầu API
+        formData.append('password', password);
+
+        const response = await axios.post('/auth/login', formData, {
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        });
+        return response.data;
+    } catch (err) {
+        logger.error('Login error:', err.response?.data || err.message);
+        throw err;
+    }
+};
+
 // Đăng ký người dùng mới
 export const register = async (email, password) => {
     try {

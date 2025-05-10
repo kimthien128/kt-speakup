@@ -2,7 +2,7 @@
 // Quản lý tooltip dịch câu chat
 
 import {useState, useRef} from 'react';
-import axios from '../axiosInstance';
+import {translateAIMessage} from '../services/chatsService';
 import {logger} from '../utils/logger';
 
 export const useTranslateTooltip = ({chatId}) => {
@@ -17,16 +17,8 @@ export const useTranslateTooltip = ({chatId}) => {
         }
 
         try {
-            const res = await axios.post(
-                `/chats/${chatId}/translate-ai`,
-                {text: text, target_lang: 'vi', chat_id: chatId, index: index},
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
-            setTranslateTooltip({text: res.data.translatedTextAi, x: event.pageX, y: event.pageY});
+            const result = await translateAIMessage(chatId, text, index);
+            setTranslateTooltip({text: result.translatedTextAi, x: event.pageX, y: event.pageY});
         } catch (err) {
             logger.error('Error translating:', err);
             setTranslateTooltip({text: 'Failed to translate', x: event.pageX, y: event.pageY});

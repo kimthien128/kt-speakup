@@ -28,3 +28,14 @@ export const updateConfig = async (formData) => {
         throw err;
     }
 };
+
+// Lấy danh sách các phương thức được kích hoạt
+export const getEnabledMethods = async () => {
+    try {
+        const response = await axios.get('/config/models');
+        return response.data; // Trả về danh sách các phương thức được kích hoạt
+    } catch (err) {
+        logger.error('Error fetching enabled methods:', err.response?.data || err.message);
+        throw err;
+    }
+};

@@ -1,5 +1,6 @@
 import {useState, useEffect} from 'react';
-import axios from '../axiosInstance';
+import {getConfig} from '../services/configService';
+import {logger} from '../utils/logger';
 
 export default function useSiteConfig() {
     const [config, setConfig] = useState(null);
@@ -10,10 +11,12 @@ export default function useSiteConfig() {
     useEffect(() => {
         const fetchConfig = async () => {
             try {
-                const res = await axios.get('/config');
-                setConfig(res.data);
+                const data = await getConfig();
+                setConfig(data);
+                setError(null);
             } catch (err) {
-                setError(err.response?.data || err.message);
+                setError(err.response?.data?.detail || err.message || 'Failed to load configuration');
+                logger.error('Error in useSiteConfig:', err);
             } finally {
                 setLoading(false);
             }

@@ -13,6 +13,19 @@ export const createChat = async () => {
     }
 };
 
+// Lấy thông tin chat bao gồm gợi ý mới nhất
+export const getChatInfo = async (chatId) => {
+    try {
+        const response = await axios.get(`/chats/${chatId}`, {
+            headers: {'Content-Type': 'application/json'},
+        });
+        return response.data;
+    } catch (err) {
+        logger.error(`Error fetching chat info for ${chatId}:`, err.response?.data || err.message);
+        throw err;
+    }
+};
+
 // Hàm lấy lịch sử chat
 export const getChatHistory = async (chatId) => {
     try {
@@ -82,9 +95,48 @@ export const updateAudioUrl = async (chatId, index, audioUrl) => {
             {index, audioUrl},
             {headers: {'Content-Type': 'application/json'}}
         );
-        logger.info('Audio URL updated successfully');
+        logger.info(`Updated audioUrl for chatId: ${chatId}, index: ${index}`);
     } catch (err) {
         logger.error(`Failed to update audioUrl: ${err.message}`);
+        throw err;
+    }
+};
+
+// Dịch tin nhắn AI trong một cuộc trò chuyện
+export const translateAIMessage = async (chatId, text, index, targetLang = 'vi') => {
+    try {
+        const response = await axios.post(
+            `/chats/${chatId}/translate-ai`,
+            {
+                text,
+                target_lang: targetLang,
+                chat_id: chatId,
+                index,
+            },
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+        return response.data;
+    } catch (err) {
+        logger.error('Error translating AI message:', err.response?.data || err.message);
+        throw new Error('Failed to translate message');
+    }
+};
+
+// Cập nhật gợi ý mới nhất cho cuộc trò chuyện (suggestionData là một object:
+// latest_suggestion, translate_suggestion, suggestion_audio_url
+export const updateSuggestion = async (chatId, suggestionData) => {
+    try {
+        const response = await axios.put(`/chats/${chatId}/suggestion`, suggestionData, {
+            headers: {'Content-Type': 'application/json'},
+        });
+        logger.info(`Updated suggestion for chatId ${chatId}`);
+        return response.data; // Trả về dữ liệu đã cập nhật
+    } catch (err) {
+        logger.error(`Error updating suggestion for ${chatId}:`, err.response?.data || err.message);
         throw err;
     }
 };

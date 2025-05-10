@@ -2,17 +2,20 @@
 // Quản lý ghi âm và speech-to-text
 
 import {useState, useRef} from 'react';
-import axios from '../axiosInstance';
+import {getSTT} from '../services/sttService';
 import {logger} from '../utils/logger';
 
 export const useSpeechToText = (sttMethod) => {
     const [transcript, setTranscript] = useState('');
     const [isRecording, setIsRecording] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [error, setError] = useState(null);
     const mediaRecorderRef = useRef(null);
 
     // Ghi âm
     const startRecording = async () => {
         try {
+            setError(null);
             const stream = await navigator.mediaDevices.getUserMedia({audio: true});
             mediaRecorderRef.current = new MediaRecorder(stream);
             mediaRecorderRef.current.start();
@@ -20,17 +23,23 @@ export const useSpeechToText = (sttMethod) => {
 
             mediaRecorderRef.current.ondataavailable = async (e) => {
                 const audioBlob = e.data; // Lấy trực tiếp từ event
-                // Gửi audioBlob tới /stt
+                // Gửi audioBlob tới service
                 try {
-                    const sttResponse = await axios.post(`/stt?method=${sttMethod}`, audioBlob, {
-                        headers: {
-                            'Content-Type': 'audio/webm',
-                        },
-                    });
-                    setTranscript(sttResponse.data.transcript || '');
+                    setIsProcessing(true);
+                    const result = await getSTT(audioBlob, sttMethod);
+
+                    if (result.success) {
+                        setTranscript(result.transcript);
+                    } else {
+                        setError(result.error);
+                        setTranscript('Failed to process audio');
+                    }
                 } catch (err) {
-                    logger.error('Fetch error:', err.response?.data || err.message);
-                    setTranscript('Failed to process audio');
+                    logger.error('Speech to text error:', err);
+                    setError('Failed to process audio');
+                    setTranscript('');
+                } finally {
+                    setIsProcessing(false);
                 }
             };
 
@@ -39,7 +48,8 @@ export const useSpeechToText = (sttMethod) => {
                 setIsRecording(false);
             };
         } catch (err) {
-            logger.error('Error:', err);
+            logger.error('Recording error:', err);
+            setError(`Could not access microphone: ${err.message}`);
             setIsRecording(false);
         }
     };
@@ -54,6 +64,8 @@ export const useSpeechToText = (sttMethod) => {
         transcript,
         setTranscript,
         isRecording,
+        isProcessing,
+        error,
         startRecording,
         stopRecording,
     };

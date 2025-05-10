@@ -22,7 +22,7 @@ function SettingsSpeedDial({sttMethod, setSttMethod, ttsMethod, setTtsMethod, ge
     const [error, setError] = useState(null);
 
     //lấy danh sách method được bật
-    const {enabledMethods, error: fetchError} = useEnabledMethods();
+    const {enabledMethods, error: fetchError, loading: fetchLoading} = useEnabledMethods();
 
     // Lấy và đặt dictionary source từ Context
     const {dictionarySource, setDictionarySource} = useDictionary();

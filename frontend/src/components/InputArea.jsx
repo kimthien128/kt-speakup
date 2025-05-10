@@ -272,7 +272,7 @@ function InputArea({
                                 mt: 0.5,
                             }}
                         >
-                            Translation: {suggestionData.translate_suggestion}
+                            {suggestionData.translate_suggestion}
                         </Typography>
                     )}
                 </Box>
