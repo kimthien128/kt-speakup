@@ -1,4 +1,4 @@
-#routes/vocab.py
+#routes/vocabs.py
 from fastapi import APIRouter, Request, HTTPException, Depends
 from fastapi.responses import Response
 from .auth import get_auth_service

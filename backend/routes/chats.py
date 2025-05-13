@@ -172,7 +172,7 @@ async def translate_chat_ai(
         raise HTTPException(status_code=500, detail="Failed to translate AI chat")
 
 # Lấy danh sách từ vựng của chat
-@router.get("/{chat_id}/vocab")
+@router.get("/{chat_id}/vocabs")
 async def get_chat_vocab(
     chat_id: str, 
     chat_service: ChatService = Depends(get_chat_service),

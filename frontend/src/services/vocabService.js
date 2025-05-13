@@ -11,7 +11,7 @@ export const fetchVocab = async (chatId) => {
     }
 
     try {
-        const response = await axios.get(`/vocab/${chatId}`);
+        const response = await axios.get(`/vocabs/${chatId}`);
         return response.data.vocab || [];
     } catch (error) {
         logger.error(`Error fetching vocab list for chat ${chatId}: ${error.message}`);
@@ -23,7 +23,7 @@ export const fetchVocab = async (chatId) => {
 export const addVocab = async (word, definition, phonetic, audio, chatId) => {
     try {
         await axios.post(
-            `/vocab`,
+            `/vocabs`,
             {word, definition, phonetic, audio, chat_id: chatId},
             {
                 headers: {
@@ -40,7 +40,7 @@ export const addVocab = async (word, definition, phonetic, audio, chatId) => {
 // Xóa một từ vựng
 export const deleteVocab = async (chatId, vocabId) => {
     try {
-        await axios.delete(`/vocab/${chatId}/${vocabId}`);
+        await axios.delete(`/vocabs/${chatId}/${vocabId}`);
     } catch (error) {
         logger.error(`Error deleting vocab ${vocabId} in chat ${chatId}: ${error.message}`);
         throw error;

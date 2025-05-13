@@ -18,7 +18,7 @@ class VocabRepository:
             "chat_id": ObjectId(chat_id),
             "user_id": user_id
         }
-        return await self.repository.find_one("vocab", query)
+        return await self.repository.find_one("vocabs", query)
     
     async def find_vocab_by_id_and_chat(self, vocab_id: str, chat_id:str, user_id:str):
         """Tìm từ vựng theo vocab_id, chat_id và user_id"""
@@ -27,14 +27,14 @@ class VocabRepository:
             "chat_id": ObjectId(chat_id),
             "user_id": user_id
         }
-        return await self.repository.find_one("vocab", query)
+        return await self.repository.find_one("vocabs", query)
     
     async def find_vocab_by_chat_id(self, chat_id: str):
         """Tìm tất cả từ vựng theo chat_id"""
         query = {
             "chat_id": ObjectId(chat_id)
         }
-        return await self.repository.find_many("vocab", query)
+        return await self.repository.find_many("vocabs", query)
     
     async def find_chat_by_id_and_user(self, chat_id: str, user_id:str):
         """Tìm chat theo chat_id và user_id để kiểm tra quyền sở hữu"""
@@ -46,14 +46,14 @@ class VocabRepository:
     
     async def add_vocab(self, vocab_data: dict):
         """Thêm từ vựng vào database"""
-        return await self.repository.insert_one("vocab", vocab_data)
+        return await self.repository.insert_one("vocabs", vocab_data)
     
     async def delete_vocab(self, vocab_id: str):
         """Xóa từ vựng khỏi database"""
         query = {
             "_id": ObjectId(vocab_id)
         }
-        return await self.repository.delete_one("vocab", query)
+        return await self.repository.delete_one("vocabs", query)
     
     async def update_chat_vocab_ids(self, chat_id:str, vocab_id:str, action:str):
         """Cập nhật vocab_ids trong chats (thêm hoặc xóa)"""

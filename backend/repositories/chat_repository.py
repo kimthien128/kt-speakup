@@ -32,7 +32,7 @@ class ChatRepository:
     async def delete_vocab_by_chat(self, chat_id: str, user_id: str):
         """Xóa các từ vựng liên quan đến chat"""
         query = {"chat_id": chat_id, "user_id": user_id}
-        return await self.repository.delete_many("vocab", query)
+        return await self.repository.delete_many("vocabs", query)
     
     async def update_chat(self, chat_id: str, user_id: str, update_data: dict):
         """Cập nhật chat theo ID và user ID"""
@@ -72,4 +72,4 @@ class ChatRepository:
     async def find_vocab_by_chat(self, chat_id: str, user_id: str):
         """Lấy danh sách từ vựng theo chat ID và user ID"""
         query = {"chat_id": chat_id, "user_id": user_id}
-        return await self.repository.find_many("vocab", query)
+        return await self.repository.find_many("vocabs", query)
