@@ -12,7 +12,6 @@ const DEFAULT_RESPONSE = {
     audio: [],
     examples: [],
     pronunciations: [],
-    topExample: '',
 };
 
 // Lấy thông tin từ vựng từ API
@@ -47,7 +46,6 @@ export const fetchWordInfo = async (word, source = DEFAULT_DICTIONARY_SOURCE, li
             pronunciations: Array.isArray(response.data.pronunciations)
                 ? response.data.pronunciations
                 : DEFAULT_RESPONSE.pronunciations,
-            topExample: response.data.topExample || DEFAULT_RESPONSE.topExample,
         };
     } catch (error) {
         logger.error(`Error fetching word info for ${word}: ${error.message}`);

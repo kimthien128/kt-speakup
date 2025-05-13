@@ -27,7 +27,6 @@ class WordnikClient(DictionaryClient):
             "audio": [],
             "examples": [],
             "pronunciations": [],
-            "topExample": ""
         }
         try:
             definitions_url = f"{self.base_url}/{word}/definitions?limit={limit}&includeRelated=false&useCanonical=false&includeTags=false"
@@ -50,9 +49,6 @@ class WordnikClient(DictionaryClient):
                 logger.warning(f"Failed to fetch definitions: {definitions_data.get('message', 'Unknown error')}")
             elif isinstance(definitions_data, list) and definitions_data:
                 result["definition"] = definitions_data[0].get("text", "No definition found")
-                # Nếu có ví dụ trong định nghĩa, dùng làm topExample
-                if definitions_data[0].get("exampleUses"):
-                    result["topExample"] = definitions_data[0]["exampleUses"][0].get("text", "")
 
             # Xử lý audio
             audio_data = responses[1]
@@ -68,9 +64,6 @@ class WordnikClient(DictionaryClient):
                 logger.warning(f"Failed to fetch examples: {examples_data.get('message', 'Unknown error')}")
             elif isinstance(examples_data, dict) and "examples" in examples_data:
                 result["examples"] = [example.get("text", "") for example in examples_data["examples"] if isinstance(example, dict) and "text" in example][:limit]
-                # Nếu không có topExample từ definitions, lấy từ examples
-                if not result["topExample"] and result["examples"]:
-                    result["topExample"] = result["examples"][0]
 
             # Xử lý pronunciations
             pronunciations_data = responses[3]

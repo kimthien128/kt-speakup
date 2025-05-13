@@ -32,11 +32,8 @@ export const addVocab = async (word, definition, phonetic, audio, chatId) => {
             }
         );
     } catch (err) {
-        if (err.response && err.response.status === 400) {
-            throw new Error(err.response.data.detail);
-        } else {
-            throw new Error('Failed to add to vocab');
-        }
+        logger.error(`Error adding vocab ${word} to chat ${chatId}: ${err.message}`);
+        throw err;
     }
 };
 

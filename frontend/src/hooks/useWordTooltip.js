@@ -109,7 +109,7 @@ export const useWordTooltip = ({chatId, onVocabAdded, dictionarySource = 'dictio
             // ko cần đóng tooltip sau khi thêm từ vào vocab
         } catch (err) {
             logger.error('Error adding to vocab:', err.message);
-            toast.error(err.message || 'Failed to add to vocab');
+            toast.error(err.message);
         }
     };
 

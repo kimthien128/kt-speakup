@@ -32,17 +32,14 @@ function VocabDetails({word}) {
     const [translations, setTranslations] = useState({
         definition: '',
         examples: [],
-        topExample: '',
     });
     const [loadingTranslations, setLoadingTranslations] = useState({
         definition: false,
         examples: false,
-        topExample: false,
     });
     const [errorTranslations, setErrorTranslations] = useState({
         definition: null,
         examples: null,
-        topExample: null,
     });
 
     // Hàm lấy chi tiết từ vựng
@@ -63,7 +60,6 @@ function VocabDetails({word}) {
                 audio: [],
                 examples: [],
                 pronunciations: [],
-                topExample: '',
             });
             setErrorDetails('Failed to load word details');
         } finally {
@@ -114,8 +110,8 @@ function VocabDetails({word}) {
             fetchWordDetails(word);
         } else {
             setWordDetails(null);
-            setTranslations({definition: '', examples: [], topExample: ''});
-            setErrorTranslations({definition: null, examples: null, topExample: null});
+            setTranslations({definition: '', examples: []});
+            setErrorTranslations({definition: null, examples: null});
         }
     }, [word]);
 
@@ -134,13 +130,6 @@ function VocabDetails({word}) {
             } else {
                 setTranslations((prev) => ({...prev, examples: []}));
                 setErrorTranslations((prev) => ({...prev, examples: null}));
-            }
-
-            if (wordDetails.topExample) {
-                translateContent('topExample', wordDetails.topExample);
-            } else {
-                setTranslations((prev) => ({...prev, topExample: ''}));
-                setErrorTranslations((prev) => ({...prev, topExample: null}));
             }
         }
     }, [wordDetails]);
@@ -341,44 +330,7 @@ function VocabDetails({word}) {
                                 ))}
                             </List>
                         </Box>
-                        <Divider sx={{my: 1}} />
                     </>
-                )}
-
-                {/* Top Example */}
-                {wordDetails.topExample && (
-                    <Box>
-                        <Typography variant="h6" sx={{fontWeight: 'medium', mb: 1}}>
-                            Top Example
-                        </Typography>
-                        <Typography variant="body2" sx={{ml: 2}}>
-                            {wordDetails.topExample}
-                        </Typography>
-
-                        {/* Hiển thị phần dịch nghĩa nếu có */}
-                        {loadingTranslations.topExample ? (
-                            <Typography variant="body2" sx={{ml: 2, fontSize: '.85rem', color: 'text.secondary'}}>
-                                Translating...
-                            </Typography>
-                        ) : errorTranslations.topExample ? (
-                            <Typography variant="body2" sx={{ml: 2, fontSize: '.85rem', color: 'error.main'}}>
-                                {errorTranslations.topExample}
-                            </Typography>
-                        ) : (
-                            translations.topExample && (
-                                <Typography
-                                    variant="body2"
-                                    sx={{
-                                        ml: 2,
-                                        fontSize: '.85rem',
-                                        color: 'text.secondary',
-                                    }}
-                                >
-                                    {translations.topExample}
-                                </Typography>
-                            )
-                        )}
-                    </Box>
                 )}
             </Box>
         </Box>

@@ -22,7 +22,6 @@ class DictionaryAPIClient(DictionaryClient):
             "audio": [],
             "examples": [],
             "pronunciations": [],
-            "topExample": ""
         }
         
         try:
@@ -57,14 +56,12 @@ class DictionaryAPIClient(DictionaryClient):
                 phonetic.get("audio", "") for phonetic in phonetics if phonetic.get("audio")
             ][:limit]
             
-            # Lấy examples và topExample
+            # Lấy examples
             for meaning in meanings:
                 for definition in meaning.get("definitions", []):
                     example = definition.get("example", "")
                     if example:
                         result["examples"].append(example)
-                    if not result["topExample"] and example:
-                        result["topExample"] = example
                     if len(result["examples"]) >= limit:
                         break
                 if len(result["examples"]) >= limit:
