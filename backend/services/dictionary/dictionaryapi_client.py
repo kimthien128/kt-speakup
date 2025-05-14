@@ -21,7 +21,6 @@ class DictionaryAPIClient(DictionaryClient):
             "phonetic": "N/A",
             "audio": [],
             "examples": [],
-            "pronunciations": [],
         }
         
         try:
@@ -42,14 +41,9 @@ class DictionaryAPIClient(DictionaryClient):
             if meanings and meanings[0].get("definitions"):
                 result["definition"] = meanings[0]["definitions"][0].get("definition", "No definition found")
 
-            # Lấy phonetic và pronunciations
+            # Lấy phonetic
             result["phonetic"] = entry.get("phonetic", "N/A")
             phonetics = entry.get("phonetics", [])
-            result["pronunciations"] = [
-                phonetic.get("text", "") for phonetic in phonetics if phonetic.get("text")
-            ][:limit]
-            if result["pronunciations"] and result["phonetic"] == "N/A":
-                result["phonetic"] = result["pronunciations"][0]
 
             # Lấy audio
             result["audio"] = [

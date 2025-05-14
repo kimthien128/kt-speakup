@@ -25,6 +25,7 @@ from .services.stt.vosk_stt_client import VoskSTTClient
 from .services.stt.assemblyai_stt_client import AssemblyAISTTClient
 from .services.stt.google_stt_client import GoogleSTTClient
 from .services.translation.google_translation_client import GoogleTranslationClient
+from .services.vocab_service import VocabService
 
 # Singleton instance cho database
 class DatabaseSingleton:
@@ -59,6 +60,7 @@ class DependencyContainer:
     _assemblyai_client = None
     _google_stt_client = None
     _google_translation_client = None
+    _vocab_service = None
     
     # Đọc cấu hình ENABLED_AI_CLIENTS từ biến môi trường
     @classmethod
@@ -100,7 +102,7 @@ class DependencyContainer:
             mongo_repo = await cls.get_mongo_repository()
             cls._config_repository = ConfigRepository(mongo_repo)
         return cls._config_repository
-
+#
     @classmethod
     def get_storage_client(cls):
         if cls._storage_client is None:
@@ -180,6 +182,15 @@ class DependencyContainer:
             http_client = cls.get_http_client()
             cls._wordnik_client = WordnikClient(http_client)
         return cls._wordnik_client
+    
+    @classmethod
+    async def get_vocab_service(cls):
+        if cls._vocab_service is None:
+            vocab_repository = await cls.get_vocab_repository()
+            dictionaryapi_client = cls.get_dictionaryapi_client()
+            wordnik_client = cls.get_wordnik_client()
+            cls._vocab_service = VocabService(vocab_repository, dictionaryapi_client, wordnik_client)
+        return cls._vocab_service
 
     @classmethod
     def get_gtts_client(cls):
@@ -268,6 +279,9 @@ def get_dictionaryapi_client():
 
 def get_wordnik_client():
     return DependencyContainer.get_wordnik_client()
+
+async def get_vocab_service():
+    return await DependencyContainer.get_vocab_service()
 
 def get_gtts_client():
     return DependencyContainer.get_gtts_client()

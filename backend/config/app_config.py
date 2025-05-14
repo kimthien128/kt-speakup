@@ -33,7 +33,6 @@ def configure_app(app: FastAPI):
     from ..routes.stt import router as stt_router
     from ..routes.generate import router as generate_router
     from ..routes.tts import router as tts_router
-    from ..routes.word_info import router as word_info_router
     from ..routes.vocabs import router as vocab_router
     from ..routes.chats import router as chats_router
     from ..routes.auth import router as auth_router
@@ -46,7 +45,6 @@ def configure_app(app: FastAPI):
     app.include_router(stt_router, prefix='/stt')
     app.include_router(generate_router, prefix='/generate')
     app.include_router(tts_router, prefix='/tts')
-    app.include_router(word_info_router, prefix='/word-info')
     app.include_router(vocab_router, prefix='/vocabs')
     app.include_router(translate_router, prefix='/translate')
     app.include_router(config_router, prefix='/config')

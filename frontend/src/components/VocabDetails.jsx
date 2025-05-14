@@ -1,6 +1,6 @@
 //components/SiteConfig.jsx
 import React, {useState, useEffect} from 'react';
-import {fetchWordInfo} from '../services/dictionaryService';
+import {fetchWordInfo} from '../services/vocabService';
 import {useDictionary} from '../context/DictionaryContext';
 import {translateText, translateMultipleTexts} from '../services/translateService';
 import useTranslate from '../hooks/useTranslate';
@@ -59,7 +59,6 @@ function VocabDetails({word}) {
                 phonetic: 'N/A',
                 audio: [],
                 examples: [],
-                pronunciations: [],
             });
             setErrorDetails('Failed to load word details');
         } finally {
@@ -163,6 +162,9 @@ function VocabDetails({word}) {
                     gap: 2,
                 }}
             >
+                <Typography variant="h5" sx={{fontWeight: 'bold'}}>
+                    <strong>{word}</strong>
+                </Typography>
                 {/* Definition */}
                 <Box>
                     <Typography variant="h6" sx={{fontWeight: 'medium', mb: 1}}>
@@ -304,28 +306,6 @@ function VocabDetails({word}) {
                                             }
                                             primaryTypographyProps={{variant: 'body2'}}
                                         />
-                                    </ListItem>
-                                ))}
-                            </List>
-                        </Box>
-                        <Divider sx={{my: 1}} />
-                    </>
-                )}
-
-                {/* Pronunciations */}
-                {wordDetails.pronunciations && wordDetails.pronunciations.length > 0 && (
-                    <>
-                        <Box>
-                            <Typography variant="h6" sx={{fontWeight: 'medium', mb: 1}}>
-                                Pronunciations
-                            </Typography>
-                            <List dense sx={{ml: 2, py: 0}}>
-                                {wordDetails.pronunciations.map((pron, index) => (
-                                    <ListItem key={index} sx={{py: 0.5}}>
-                                        <ListItemIcon sx={{minWidth: 24}}>
-                                            <CircleIcon sx={{fontSize: 8}} />
-                                        </ListItemIcon>
-                                        <ListItemText primary={pron} primaryTypographyProps={{variant: 'body2'}} />
                                     </ListItem>
                                 ))}
                             </List>

@@ -2,7 +2,7 @@
 // Quản lý tooltip tra từ và phát âm thanh.
 
 import {useState, useRef} from 'react';
-import {fetchWordInfo} from '../services/dictionaryService';
+import {fetchWordInfo} from '../services/vocabService';
 import {cleanWord, addToVocab} from '../utils/vocabUtils';
 import {toast} from 'react-toastify';
 import useAudioPlayer from './useAudioPlayer';

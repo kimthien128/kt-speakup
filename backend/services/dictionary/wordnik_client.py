@@ -26,19 +26,16 @@ class WordnikClient(DictionaryClient):
             "phonetic": "N/A",
             "audio": [],
             "examples": [],
-            "pronunciations": [],
         }
         try:
             definitions_url = f"{self.base_url}/{word}/definitions?limit={limit}&includeRelated=false&useCanonical=false&includeTags=false"
             audio_url = f"{self.base_url}/{word}/audio?limit={limit}"
             examples_url = f"{self.base_url}/{word}/examples?limit={limit}"
-            pronunciations_url = f"{self.base_url}/{word}/pronunciations?limit={limit}&typeFormat=IPA"
             
             tasks = [
                 self.http_client.get(definitions_url, headers=self.headers),
                 self.http_client.get(audio_url, headers=self.headers),
                 self.http_client.get(examples_url, headers=self.headers),
-                self.http_client.get(pronunciations_url, headers=self.headers)
             ]
             
             responses = await asyncio.gather(*tasks, return_exceptions=True)
@@ -64,14 +61,6 @@ class WordnikClient(DictionaryClient):
                 logger.warning(f"Failed to fetch examples: {examples_data.get('message', 'Unknown error')}")
             elif isinstance(examples_data, dict) and "examples" in examples_data:
                 result["examples"] = [example.get("text", "") for example in examples_data["examples"] if isinstance(example, dict) and "text" in example][:limit]
-
-            # Xử lý pronunciations
-            pronunciations_data = responses[3]
-            if isinstance(pronunciations_data, dict) and "status" in pronunciations_data and pronunciations_data["status"] != 200:
-                logger.warning(f"Failed to fetch pronunciations: {pronunciations_data.get('message', 'Unknown error')}")
-            elif isinstance(pronunciations_data, list) and pronunciations_data:
-                result["pronunciations"] = [pron.get("raw", "") for pron in pronunciations_data if isinstance(pron, dict) and "raw" in pron][:limit]
-                result["phonetic"] = result["pronunciations"][0] if result["pronunciations"] else "N/A"
 
             return result
 

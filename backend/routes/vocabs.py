@@ -5,14 +5,14 @@ from .auth import get_auth_service
 from ..security import get_current_user, UserInDB, oauth2_scheme
 from ..services.vocab_service import VocabService
 from ..services.auth_service import AuthService
-from ..dependencies import get_vocab_repository
+from ..dependencies import get_vocab_repository, get_vocab_service
 from ..logging_config import logger
 
 router = APIRouter()
 
 # Khởi tạo VocabService với repository tương ứng
-async def get_vocab_service(vocab_repository = Depends(get_vocab_repository)):
-    return VocabService(vocab_repository)
+# async def get_vocab_service(vocab_repository = Depends(get_vocab_repository)):
+#     return VocabService(vocab_repository)
 
 # Dependency để lấy current_user
 async def get_current_user_with_auth_service(
@@ -25,7 +25,7 @@ async def get_current_user_with_auth_service(
 @router.post("")
 async def add_vocab(
     request: Request, 
-    current_user: dict = Depends(get_current_user_with_auth_service), 
+    current_user: UserInDB = Depends(get_current_user_with_auth_service), 
     vocab_service: VocabService = Depends(get_vocab_service)):
     try:
         data = await request.json()
@@ -36,7 +36,7 @@ async def add_vocab(
         logger.error(f"Error adding vocab: {e}")
         raise HTTPException(status_code=500, detail="Failed to add vocab")
 
-# Lấy từ vựng theo chat_id
+# Lấy danh sách từ vựng theo chat_id
 @router.get("/{chat_id}")
 async def get_vocab(
     chat_id: str, 
@@ -65,3 +65,16 @@ async def delete_vocab(
     except Exception as e:
         logger.error(f"Error deleting vocab: {e}")
         raise HTTPException(status_code=500, detail="Failed to delete vocab")
+    
+@router.post("/word-info")
+async def word_info(
+    request: Request, 
+    vocab_service: VocabService = Depends(get_vocab_service)
+):
+    data = await request.json()
+    word = data.get("word", "").strip().lower()
+    source = data.get("source", "dictionaryapi").strip().lower()
+    limit = data.get("limit", 2)
+    logger.info(f"Fetching word info for word: {word}, source: {source}")
+    return await vocab_service.get_word_info(word, source, limit)
+    
