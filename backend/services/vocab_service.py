@@ -52,21 +52,8 @@ class VocabService:
         current_time = datetime.now(timezone.utc)
         word_data = {
             "word" : data.get("word", "").capitalize(), #viết hoa chữ cái đầu tiên
-            "sourceDictionary" : data.get("sourceDictionary", "dictionaryapi"),
-            "definition": data.get("definition", "No definition found"),
-            "translatedDefinition": data.get("translatedDefinition", ""),
-            "phonetic": data.get("phonetic", "N/A"),
-            "audio1": data.get("audio1", ""),
-            "audio2": data.get("audio2", ""),
-            "example1": data.get("example1", ""),
-            "translatedExample1": data.get("translatedExample1", ""),
-            "example2": data.get("example2", ""),
-            "translatedExample2": data.get("translatedExample2", ""),
             "chat_id": ObjectId(chat_id),
             "user_id": user_id,
-            "createdAt": current_time,
-            "updatedAt": current_time
-            
         }
         
         # Kiểm tra trùng lặp

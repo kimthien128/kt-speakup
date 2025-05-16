@@ -9,14 +9,17 @@ import {logger} from '../utils/logger';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
+import Tooltip from '@mui/material/Tooltip';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import CircularProgress from '@mui/material/CircularProgress';
 import CircleIcon from '@mui/icons-material/Circle';
+import ClearAllIcon from '@mui/icons-material/ClearAll';
+import {IconButton} from '@mui/material';
 
-function VocabDetails({word}) {
+function VocabDetails({word, onWordSelect}) {
     const {
         translatedText,
         loading: translateLoading,
@@ -30,14 +33,17 @@ function VocabDetails({word}) {
     const [errorDetails, setErrorDetails] = useState(null);
 
     const [translations, setTranslations] = useState({
+        word: '',
         definition: '',
         examples: [],
     });
     const [loadingTranslations, setLoadingTranslations] = useState({
+        word: false,
         definition: false,
         examples: false,
     });
     const [errorTranslations, setErrorTranslations] = useState({
+        word: null,
         definition: null,
         examples: null,
     });
@@ -109,14 +115,21 @@ function VocabDetails({word}) {
             fetchWordDetails(word);
         } else {
             setWordDetails(null);
-            setTranslations({definition: '', examples: []});
-            setErrorTranslations({definition: null, examples: null});
+            setTranslations({word: '', definition: '', examples: []});
+            setErrorTranslations({word: null, definition: null, examples: null});
         }
     }, [word]);
 
     // Dịch nội dung khi wordDetails thay đổi
     useEffect(() => {
         if (wordDetails) {
+            if (word) {
+                translateContent('word', word);
+            } else {
+                setTranslations((prev) => ({...prev, word: ''}));
+                setErrorTranslations((prev) => ({...prev, word: null}));
+            }
+
             if (wordDetails.definition && wordDetails.definition !== 'No definition found') {
                 translateContent('definition', wordDetails.definition);
             } else {
@@ -162,9 +175,41 @@ function VocabDetails({word}) {
                     gap: 2,
                 }}
             >
-                <Typography variant="h5" sx={{fontWeight: 'bold'}}>
-                    <strong>{word}</strong>
-                </Typography>
+                <Box
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="space-between"
+                    sx={{
+                        pr: 2,
+                    }}
+                >
+                    <Box display="flex" alignItems="baseline" gap={1}>
+                        <Typography variant="h5" sx={{fontWeight: 'bold'}}>
+                            <strong>{word}</strong>
+                        </Typography>
+                        {/* Hiển thị phần dịch nghĩa của word*/}
+                        {loadingTranslations.word ? (
+                            <Typography variant="body2" sx={{fontSize: '.85rem', color: 'text.secondary'}}>
+                                Translating...
+                            </Typography>
+                        ) : errorTranslations.word ? (
+                            <Typography variant="body2" sx={{fontSize: '.85rem', color: 'error.main'}}>
+                                {errorTranslations.word}
+                            </Typography>
+                        ) : (
+                            translations.word && (
+                                <Typography variant="body2" sx={{fontSize: '.85rem', color: 'text.secondary'}}>
+                                    ({translations.word})
+                                </Typography>
+                            )
+                        )}
+                    </Box>
+                    <Tooltip title="Stop selecting">
+                        <IconButton onClick={() => onWordSelect(null)}>
+                            <ClearAllIcon />
+                        </IconButton>
+                    </Tooltip>
+                </Box>
                 {/* Definition */}
                 <Box>
                     <Typography variant="h6" sx={{fontWeight: 'medium', mb: 1}}>

@@ -199,7 +199,7 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                     />
 
                     {/* Phần 3: Chi tiết từ vựng */}
-                    {vocabList.length > 0 && <VocabDetails word={selectedWord} />}
+                    {vocabList.length > 0 && <VocabDetails word={selectedWord} onWordSelect={setSelectedWord} />}
                 </Box>
             ) : (
                 <Box
