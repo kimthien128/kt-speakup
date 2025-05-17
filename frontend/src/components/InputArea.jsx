@@ -77,12 +77,12 @@ function InputArea({
         suggestionsOpen,
         setSuggestionsOpen,
         showTranslation,
-        loading,
+        translating,
         isPlaying,
         fetchSuggestions,
         generateSuggestionsAudio,
         translateSuggestion,
-    } = useSuggestions(chatId, updateSuggestionData, generateMethod, ttsMethod, playSound);
+    } = useSuggestions(chatId, updateSuggestionData, generateMethod, ttsMethod, playSound, targetLang, sourceLang); //dịch ngược từ targetLang sang sourceLang
 
     // Hook để quản lý tra từ
     const {
@@ -265,7 +265,7 @@ function InputArea({
                     translateSuggestion={translateSuggestion}
                     chatId={chatId}
                     isPlaying={isPlaying}
-                    loading={loading}
+                    translating={translating}
                     isSending={isSending}
                 />
 

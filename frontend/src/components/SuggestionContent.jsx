@@ -14,8 +14,8 @@ const SuggestionContent = ({
     generateSuggestionsAudio,
     translateSuggestion,
     chatId,
+    translating,
     isPlaying,
-    loading,
 }) => {
     // console.log('[SuggestionContent] suggestionData:', suggestionData);
 
@@ -85,7 +85,7 @@ const SuggestionContent = ({
                         },
                     }}
                 >
-                    {loading ? <CircularProgress size={20} /> : <TranslateIcon fontSize="small" />}
+                    {translating ? <CircularProgress size={20} color="white" /> : <TranslateIcon fontSize="small" />}
                 </IconButton>
             </MuiTooltip>
         </Box>

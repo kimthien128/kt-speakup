@@ -20,7 +20,7 @@ const SuggestionSection = ({
     translateSuggestion,
     chatId,
     isPlaying,
-    loading,
+    translating,
     isSending,
 }) => {
     // console.log('SuggestionSection received suggestionData:', suggestionData);
@@ -101,6 +101,7 @@ const SuggestionSection = ({
                                     generateSuggestionsAudio={generateSuggestionsAudio}
                                     translateSuggestion={translateSuggestion}
                                     chatId={chatId}
+                                    translating={translating}
                                     isPlaying={isPlaying}
                                 />
                             ) : (

@@ -2,15 +2,22 @@
 // Quản lý gợi ý
 
 import {useState} from 'react';
-import {generateResponse} from '../services/generateService';
+import {generateResponse, translate} from '../services/generateService';
 import {updateSuggestion, getChatInfo, updateAudioUrl as updateAudioUrlService} from '../services/chatsService';
-import {translateText} from '../services/translateService';
 import {logger} from '../utils/logger';
 
-export const useSuggestions = (chatId, updateSuggestionData, generateMethod, ttsMethod, playSound) => {
+export const useSuggestions = (
+    chatId,
+    updateSuggestionData,
+    generateMethod,
+    ttsMethod,
+    playSound,
+    sourceLang,
+    targetLang
+) => {
     const [suggestionsOpen, setSuggestionsOpen] = useState(false);
     const [showTranslation, setShowTranslation] = useState(false);
-    const [loading, setLoading] = useState(false);
+    const [translating, setTranslating] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
 
     // Lấy gợi ý từ AI
@@ -18,11 +25,13 @@ export const useSuggestions = (chatId, updateSuggestionData, generateMethod, tts
         const prompt = `Suggest a natural and simple follow-up question or response to keep this daily English conversation going: "${baseText}"`;
 
         try {
-            const latestSuggestion = await generateResponse({
-                method: generateMethod,
-                transcript: prompt,
-                chatId: currentChatId,
-            });
+            const latestSuggestion = (
+                await generateResponse({
+                    method: generateMethod,
+                    transcript: prompt,
+                    chatId: currentChatId,
+                })
+            ).replace(/^"|"$/g, ''); //loaị bỏ dấu "" ở 2 đầu nếu có
 
             if (latestSuggestion) {
                 // Lưu suggestion mới nhất vào database
@@ -106,10 +115,15 @@ export const useSuggestions = (chatId, updateSuggestionData, generateMethod, tts
         }
 
         // Nếu chưa có bản dịch, gọi API để dịch
-        setLoading(true);
+        setTranslating(true);
         try {
-            // Gọi endpoint /translate để dịch suggestion
-            const translatedText = await translateText(suggestion);
+            // Gọi endpoint generate/translate để dịch suggestion cho tự nhiên hơn google dịch
+            const translatedText = await translate({
+                method: generateMethod,
+                text: suggestion,
+                sourceLang: sourceLang,
+                targetLang: targetLang,
+            });
 
             // Lưu bản dịch vào database
             if (suggestionData.translate_suggestion !== translatedText) {
@@ -123,7 +137,7 @@ export const useSuggestions = (chatId, updateSuggestionData, generateMethod, tts
         } catch (err) {
             logger.error('Error translating suggestion:', err);
         } finally {
-            setLoading(false);
+            setTranslating(false);
         }
     };
 
@@ -132,7 +146,7 @@ export const useSuggestions = (chatId, updateSuggestionData, generateMethod, tts
         setSuggestionsOpen,
         showTranslation,
         setShowTranslation,
-        loading,
+        translating,
         isPlaying,
         fetchSuggestions,
         generateSuggestionsAudio,
