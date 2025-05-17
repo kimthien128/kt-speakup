@@ -140,7 +140,7 @@ function InputArea({
             transcript.toLowerCase() !== 'no speech detected' &&
             transcript.toLowerCase() !== 'failed to process audio'
         ) {
-            setTimeLeft(8); // Bắt đầu đếm ngược từ 10s khi transcript được cập nhật
+            setTimeLeft(5); // Bắt đầu đếm ngược từ 10s khi transcript được cập nhật
             const timeoutId = setTimeout(() => {
                 onSend(); // Gửi tin nhắn sau 10 giây
             }, 10000);

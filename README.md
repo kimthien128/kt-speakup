@@ -66,13 +66,13 @@ pip install -r backend/requirements.txt
     https://alphacephei.com/vosk/models
 -   Đặt lại biến môi trường trong file "backend/.env" `VOSK_MODEL_DIR` nếu dùng model khác
 -   Giải nén & đặt trong folder "backend/models"
+-   Khả năng phân tích giọng nói ở mức trung bình khá, nếu dùng model lớn hơn `vosk-model-en-us-0.42-gigaspeech` sẽ có cải thiện nhưng thời gian phân tích và generate ra kết quả lâu hơn
 
-### Mistral (GenerateTextToText) (rất nặng, không khuyến khích dùng, chỉ áp dụng để test ứng dụng giai đoạn dev)
+### Mistral (GenerateTextToText)
 
-python -m pip install llama-cpp-python
-
-huggingface-cli download TheBloke/Mistral-7B-Instruct-v0.1-GGUF mistral-7b-instruct-v0.1.Q4_K_M.gguf --local-dir D:\Code\kt-speakup\backend\models
-
+-   Không khuyến khích dùng vì phải tải nhiều thư viện offline đi kèm và rất nặng
+-   `python -m pip install llama-cpp-python`
+-   `huggingface-cli download TheBloke/Mistral-7B-Instruct-v0.1-GGUF mistral-7b-instruct-v0.1.Q4_K_M.gguf --local-dir D:\Code\kt-speakup\backend\models`
 -   Tải Visual Studio Build Tools: Vào visualstudio.microsoft.com/visual-cpp-build-tools/.
 -   Tải file cài đặt Build Tools for Visual Studio 2022.
 -   Cài đặt thành phần C++: Chạy file cài đặt.
@@ -83,10 +83,14 @@ huggingface-cli download TheBloke/Mistral-7B-Instruct-v0.1-GGUF mistral-7b-instr
 
 ### Piper (TextToSpeech)
 
--   https://github.com/rhasspy/piper
--   Tải file "piper_windows_amd64.zip" từ https://github.com/rhasspy/piper/releases
--   Giải nén để có được folder "piper"
--   Tải 2 file cấu hình cho voice (chọn giọng đọc bất kỳ) "en_US-amy-medium.onnx", và "en_US-amy-medium.onnx.json" vào folder piper vừa giải nén
+-   Docs: `https://github.com/rhasspy/piper`
+-   Tải file "piper_windows_amd64.zip" (window) & giải nén để có được folder "piper" `https://github.com/rhasspy/piper/releases`
+-   Nghe thử giọng đọc tại: `https://rhasspy.github.io/piper-samples/` để chọn được giọng đọc yêu thích
+-   Tải 2 file cấu hình từ `https://github.com/rhasspy/piper/blob/master/VOICES.md` cho voice đã chọn: ví dụ chọn
+    -   Language: en_US (English, United States)
+    -   Voice : amy
+    -   Quality: medium\
+        thì tải 2 file "en_US-amy-medium.onnx", và "en_US-amy-medium.onnx.json" vào folder piper vừa giải nén
 -   Đặt lại biến môi trường trong "backend/.env" `PIPER_VOICE` nếu khác giọng đọc
 
 # Frontend
