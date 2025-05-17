@@ -58,7 +58,12 @@ jobs:
               run: |
                   ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.SSH_SERVER_IP }} "
                   cd /root/kt-speakup/frontend
-                  npm ci --no-optional
+                  if [ -f package-lock.json ]; then
+                    npm ci --no-optional
+                  else
+                    npm install
+                    npm ci --no-optional
+                  fi
                   npm run build
                   sudo rsync -a --delete dist/ /var/www/kt-speakup/
                   sudo chown -R www-data:www-data /var/www/kt-speakup
