@@ -23,7 +23,7 @@ class OpenRouterClient(AIClient):
         
     def generate_response(self, messages: list) -> str:
         payload = {
-            "model": "deepseek/deepseek-chat:free", #lấy các model free tại https://openrouter.ai/models
+            "model": "google/gemma-3-27b-it:free", #lấy các model free tại https://openrouter.ai/models
             "messages": messages,
             "max_tokens": 30,
             "temperature": 0.7
