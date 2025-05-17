@@ -143,8 +143,8 @@ function InputArea({
             const seconds = 5; // Thời gian đếm ngược
             setTimeLeft(seconds); // Bắt đầu đếm ngược từ 10s khi transcript được cập nhật
             const timeoutId = setTimeout(() => {
-                onSend(); // Gửi tin nhắn sau {seconds} giây
-            }, seconds * 1000);
+                onSend();
+            }, 0);
             setAutoSendTimeout(timeoutId); // Lưu timeout ID để có thể xóa sau này
 
             // Cập nhật thời gian còn lại mỗi giây
