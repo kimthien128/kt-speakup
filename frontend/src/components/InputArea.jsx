@@ -142,10 +142,6 @@ function InputArea({
         ) {
             const seconds = 5; // Thời gian đếm ngược
             setTimeLeft(seconds); // Bắt đầu đếm ngược từ 10s khi transcript được cập nhật
-            const timeoutId = setTimeout(() => {
-                onSend();
-            }, 0);
-            setAutoSendTimeout(timeoutId); // Lưu timeout ID để có thể xóa sau này
 
             // Cập nhật thời gian còn lại mỗi giây
             const timer = setInterval(() => {
@@ -157,6 +153,17 @@ function InputArea({
                     return prev - 1; // Giảm thời gian còn lại mỗi giây
                 });
             }, 1000);
+
+            // Đặt timeout để gửi tin nhắn sau 5 giây
+            const timeoutId = setTimeout(() => {
+                onSend();
+            }, seconds * 1000);
+
+            setAutoSendTimeout(timeoutId); // Lưu timeout ID để có thể xóa sau này
+            return () => {
+                clearInterval(timer); // Dọn dẹp interval khi component unmount hoặc khi transcript thay đổi
+                clearTimeout(timeoutId); // Dọn dẹp timeout khi component unmount hoặc khi transcript thay đổi
+            };
         }
         setPrevTranscript(transcript); // Cập nhật transcript trước đó
     }, [transcript, isFocused, isRecording, prevTranscript]);
