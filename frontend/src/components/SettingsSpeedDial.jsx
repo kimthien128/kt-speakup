@@ -1,6 +1,7 @@
 //components/SettingsSpeedDial.jsx
 import React, {useState, useEffect} from 'react';
 import {methodsConfig} from '../config/methodsConfig';
+import {updateMethods, getCurrentUser} from '../services/authService';
 import {useEnabledMethods} from '../hooks/useEnabledMethods';
 import {toast} from 'react-toastify';
 import {logger} from '../utils/logger';
@@ -34,22 +35,48 @@ function SettingsSpeedDial({sttMethod, setSttMethod, ttsMethod, setTtsMethod, ge
         }
     }, [fetchError]);
 
-    // Đặt method mặc định là method đầu tiên được bật trong từng loại
+    //lấy sẵn các method được bật từ config
+    let sttOptions, generateOptions, ttsOptions, firstEnabledStt, firstEnabledGenerate, firstEnabledTts;
     useEffect(() => {
         if (enabledMethods.length > 0) {
-            const sttOptions = methodsConfig.stt.options.map((opt) => opt.value);
-            const generateOptions = methodsConfig.generate.options.map((opt) => opt.value);
-            const ttsOptions = methodsConfig.tts.options.map((opt) => opt.value);
+            sttOptions = methodsConfig.stt.options.map((opt) => opt.value);
+            generateOptions = methodsConfig.generate.options.map((opt) => opt.value);
+            ttsOptions = methodsConfig.tts.options.map((opt) => opt.value);
 
-            const firstEnabledStt = sttOptions.find((opt) => enabledMethods.includes(opt));
-            const firstEnabledGenerate = generateOptions.find((opt) => enabledMethods.includes(opt));
-            const firstEnabledTts = ttsOptions.find((opt) => enabledMethods.includes(opt));
-
-            if (firstEnabledStt) setSttMethod(firstEnabledStt);
-            if (firstEnabledGenerate) setGenerateMethod(firstEnabledGenerate);
-            if (firstEnabledTts) setTtsMethod(firstEnabledTts);
+            firstEnabledStt = sttOptions.find((opt) => enabledMethods.includes(opt));
+            firstEnabledGenerate = generateOptions.find((opt) => enabledMethods.includes(opt));
+            firstEnabledTts = ttsOptions.find((opt) => enabledMethods.includes(opt));
         }
-    }, [enabledMethods]);
+    }, []);
+
+    // Đặt method cho người dùng
+    useEffect(() => {
+        const initializeMethods = async () => {
+            try {
+                // Load methods đã lưu từ database
+                const userData = await getCurrentUser();
+                // console.log('User data:', userData);
+                const userMethods = userData.methods || {};
+
+                setSttMethod(userMethods.stt || firstEnabledStt || 'assemblyai');
+                setGenerateMethod(userMethods.generate || firstEnabledGenerate || 'gemini');
+                setTtsMethod(userMethods.tts || firstEnabledTts || 'gtts');
+                setDictionarySource(userMethods.dictionary || 'dictionaryapi');
+
+                // Ưu tiên methods từ database, nếu không có thì dùng mặc định
+            } catch (err) {
+                logger.error('Error initializing methods:', err.message);
+                setSttMethod(firstEnabledStt || 'assemblyai');
+                setGenerateMethod(firstEnabledGenerate || 'gemini');
+                setTtsMethod(firstEnabledTts || 'gtts');
+                setDictionarySource('dictionaryapi');
+            }
+        };
+        // Chỉ chạy khi enabledMethods đã load xong
+        if (!fetchLoading) {
+            initializeMethods();
+        }
+    }, [fetchLoading, enabledMethods]);
 
     // Xử lý mở/đóng SpeedDial
     const handleSpeedDialOpen = () => setSpeedDialOpen(true);
@@ -79,7 +106,23 @@ function SettingsSpeedDial({sttMethod, setSttMethod, ttsMethod, setTtsMethod, ge
         if (menuType === 'dictionary') setDictionarySource(method);
         logger.info(`Selected ${menuType} method: ${method}`);
         toast.info(`Selected ${menuType} method: ${method}`);
+
+        // (1) Gọi API để lưu method vào database
+        saveMethodToDatabase(menuType, method);
+
         handleMenuClose();
+    };
+
+    // Hàm lưu method vào database
+    const saveMethodToDatabase = async (type, method) => {
+        try {
+            const methods = {[type]: method};
+            await updateMethods(methods);
+
+            logger.info(`Saved ${type} method: ${method}`);
+        } catch (err) {
+            logger.error(`Error saving ${type} method: ${err.message}`);
+        }
     };
 
     return (

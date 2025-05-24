@@ -148,6 +148,7 @@ class AuthService:
             "isAdmin": current_user.isAdmin,
             "status": current_user.status,
             "createdAt": user.get("createdAt"),
+            "methods": user.get("methods", {}),
         }
         
     async def update_user(self, displayName: str, phoneNumber: str, gender: str, location: str, avatar: UploadFile, current_user: UserInDB):
@@ -412,3 +413,16 @@ class AuthService:
         })
         
         return {"message": "Password reset successfully"}
+    
+    async def update_user_methods(self, methods: dict, current_user: UserInDB):
+        """Cập nhật các method được chọn của người dùng"""
+        # Lấy thông tin người dùng hiện tại
+        user = await self.auth_repository.find_user_by_email(current_user.email)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Cập nhật các method
+        current_methods = user.get("methods", {})
+        updated_methods = {**current_methods, **methods}  # Hợp nhất, ưu tiên method mới
+        await self.auth_repository.update_user(current_user.email, {"methods": updated_methods})
+        logger.info(f"Updated methods for {current_user.email}: {updated_methods}")

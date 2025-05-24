@@ -229,3 +229,18 @@ async def reset_password(
     except Exception as e:
         logger.error(f"Error resetting password: {e}")
         raise HTTPException(status_code=500, detail="Failed to reset password")
+    
+#Cập nhật các methods người dùng
+@router.post("/update-methods")
+async def update_methods(
+    methods: dict,
+    current_user: UserInDB = Depends(get_current_user_with_auth_service),
+    auth_service: AuthService = Depends(get_auth_service)
+):
+    try:
+        return await auth_service.update_user_methods(methods, current_user)
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        logger.error(f"Error updating user methods: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update user methods")

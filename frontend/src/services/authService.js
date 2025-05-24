@@ -99,3 +99,14 @@ export const resetPassword = async (email, token, newPassword) => {
         throw err;
     }
 };
+
+// Cập nhật methods model AI
+export const updateMethods = async (methods) => {
+    try {
+        const response = await axios.post('/auth/update-methods', methods);
+        return response.data;
+    } catch (err) {
+        logger.error('Update methods error:', err.response?.data || err.message);
+        throw err;
+    }
+};
