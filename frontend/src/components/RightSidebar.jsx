@@ -119,6 +119,7 @@ function RightSidebar({userEmail, onLogout, chatId, onVocabAdded}) {
                     xs: 'transparent',
                     sm: 'divider',
                 },
+                height: '100%',
             }}
         >
             {/* Đóng mở sidebar */}

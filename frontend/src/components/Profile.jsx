@@ -7,7 +7,20 @@ import {useImageLoadStatus} from '../utils/imageLoader';
 import {getCurrentUser, updateUserProfile} from '../services/authService';
 import ChangePassword from './ChangePassword';
 
-import {Box, Typography, Avatar, TextField, Button, Chip, IconButton, Grid, MenuItem, Tabs, Tab} from '@mui/material';
+import {
+    Box,
+    Typography,
+    Avatar,
+    TextField,
+    Button,
+    Chip,
+    IconButton,
+    Grid,
+    MenuItem,
+    Tabs,
+    Tab,
+    useMediaQuery,
+} from '@mui/material';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
@@ -34,6 +47,7 @@ function TabPanel(props) {
 }
 
 function Profile({onLogout}) {
+    const isMobile = useMediaQuery((theme) => theme.breakpoints.down('sm'));
     const {config, loading: configLoading, error: configError} = useSiteConfig();
 
     // Cấu hình các hình ảnh cần kiểm tra
@@ -197,7 +211,7 @@ function Profile({onLogout}) {
             {userInfo && (
                 <Box
                     sx={{
-                        p: {xs: 2, md: 4},
+                        p: {xs: 0, md: 4},
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'center',
@@ -210,6 +224,7 @@ function Profile({onLogout}) {
                         sx={{
                             display: 'flex',
                             justifyContent: 'space-between',
+                            p: {xs: 2, md: 0},
                         }}
                     >
                         {/* Logo & Back */}
@@ -225,8 +240,8 @@ function Profile({onLogout}) {
                             {/* Logo */}
                             <Box
                                 sx={{
-                                    width: 100,
-                                    height: 100,
+                                    width: {xs: 60, md: 100},
+                                    height: {xs: 60, md: 100},
                                     cursor: 'pointer',
                                 }}
                                 onClick={() => navigate('/')}
@@ -251,11 +266,11 @@ function Profile({onLogout}) {
                                 startIcon={<ArrowBackIcon />}
                                 sx={{
                                     textTransform: 'none',
-                                    fontSize: '1rem',
+                                    fontSize: {xs: '0.8rem', md: '1rem'},
                                     borderRadius: 1,
                                 }}
                             >
-                                Back to Chat
+                                {isMobile ? 'Back' : 'Back to Chat'}
                             </Button>
                         </Box>
 
@@ -266,6 +281,8 @@ function Profile({onLogout}) {
                                 flexDirection: 'column',
                                 alignItems: 'center',
                                 justifyContent: 'center',
+                                flexShrink: 0,
+                                flexGrow: 1,
                             }}
                         >
                             <Typography
@@ -274,6 +291,7 @@ function Profile({onLogout}) {
                                     mt: 1,
                                     fontWeight: 'bold',
                                     color: 'text.primary',
+                                    fontSize: {xs: '1.2rem', md: '1.5rem'},
                                 }}
                             >
                                 {userInfo.displayName || 'Please create a display name !'}
@@ -282,6 +300,7 @@ function Profile({onLogout}) {
                                 variant="body1"
                                 sx={{
                                     color: 'text.secondary',
+                                    fontSize: {xs: '0.8rem', md: '1rem'},
                                 }}
                             >
                                 {userInfo.email}
@@ -316,8 +335,8 @@ function Profile({onLogout}) {
                                 <Avatar
                                     src={avatarPreview}
                                     sx={{
-                                        width: {xs: 80, md: 100},
-                                        height: {xs: 80, md: 100},
+                                        width: {xs: 60, md: 100},
+                                        height: {xs: 60, md: 100},
                                         border: '2px solid white',
                                         boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                                         bgcolor: 'primary.main',
@@ -340,7 +359,11 @@ function Profile({onLogout}) {
                                         boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
                                     }}
                                 >
-                                    <CameraAltIcon fontSize="small" />
+                                    <CameraAltIcon
+                                        sx={{
+                                            fontSize: {xs: '0.8rem', md: '1.5rem'},
+                                        }}
+                                    />
                                     <input type="file" accept="image/*" hidden onChange={handleAvatarChange} />
                                 </IconButton>
                             </Box>
@@ -353,7 +376,7 @@ function Profile({onLogout}) {
                                 startIcon={<LogoutIcon />}
                                 sx={{
                                     textTransform: 'none',
-                                    fontSize: '1rem',
+                                    fontSize: {xs: '0.8rem', md: '1rem'},
                                     borderRadius: 1,
                                 }}
                             >
@@ -367,45 +390,95 @@ function Profile({onLogout}) {
                     <Box
                         sx={{
                             p: {xs: 2, md: 4},
-                            borderRadius: 5,
+                            borderRadius: {xs: 0, md: 5},
                             boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
                             bgcolor: 'rgba(255,255,255,0.9)',
                             display: 'flex',
                             flexGrow: 1,
+                            overflow: 'hidden', //Cần có để làm cho phần nội dung cuộn được
+                            flexDirection: {xs: 'column', md: 'row'},
                         }}
                     >
                         {/* Cấu hình Tabs */}
-                        <Tabs
-                            orientation="vertical"
-                            value={tabValue}
-                            onChange={handleTabChange}
+                        {/* Tabs cho desktop (md trở lên) */}
+                        <Box
                             sx={{
+                                display: {xs: 'none', md: 'block'},
                                 borderRight: 1,
                                 borderColor: 'divider',
                                 minWidth: 200,
                             }}
                         >
-                            <Tab
-                                label="Account Settings"
-                                icon={<SettingsIcon />}
-                                iconPosition="start"
+                            <Tabs orientation="vertical" value={tabValue} onChange={handleTabChange}>
+                                <Tab
+                                    label="Account Settings"
+                                    icon={<SettingsIcon />}
+                                    iconPosition="start"
+                                    sx={{
+                                        justifyContent: 'flex-start',
+                                    }}
+                                />
+                                <Tab
+                                    label="Change Password"
+                                    icon={<LockIcon />}
+                                    iconPosition="start"
+                                    sx={{
+                                        justifyContent: 'flex-start',
+                                    }}
+                                />
+                            </Tabs>
+                        </Box>
+
+                        {/* Tabs cho mobile (xs) */}
+                        <Box
+                            sx={{
+                                display: {xs: 'block', md: 'none'},
+                                minWidth: 200,
+                            }}
+                        >
+                            <Tabs
+                                orientation="horizontal"
+                                variant="scrollable"
+                                scrollButtons="auto"
+                                allowScrollButtonsMobile
+                                value={tabValue}
+                                onChange={handleTabChange}
                                 sx={{
-                                    justifyContent: 'flex-start',
+                                    borderBottom: 1,
+                                    borderColor: 'divider',
+                                    '& .MuiTabs-flexContainer': {
+                                        justifyContent: 'space-around', // Căn giữa các tab
+                                    },
+                                    '& .MuiTab-root': {
+                                        minWidth: 'unset',
+                                        width: 'auto',
+                                        textAlign: 'center',
+                                    },
                                 }}
-                            />
-                            <Tab
-                                label="Change Password"
-                                icon={<LockIcon />}
-                                iconPosition="start"
-                                sx={{
-                                    justifyContent: 'flex-start',
-                                }}
-                            />
-                        </Tabs>
+                            >
+                                <Tab
+                                    label="Account Settings"
+                                    icon={<SettingsIcon />}
+                                    iconPosition="start"
+                                    sx={{
+                                        justifyContent: 'flex-start',
+                                    }}
+                                />
+                                <Tab
+                                    label="Change Password"
+                                    icon={<LockIcon />}
+                                    iconPosition="start"
+                                    sx={{
+                                        justifyContent: 'flex-start',
+                                    }}
+                                />
+                            </Tabs>
+                        </Box>
 
                         <Box
                             sx={{
                                 flexGrow: 1,
+                                overflowY: 'auto', //Cần có để làm cho phần nội dung cuộn được
                             }}
                         >
                             {/* Tab 1: Account Settings */}
@@ -491,7 +564,7 @@ function Profile({onLogout}) {
                                         disabled={loading}
                                         fullWidth
                                         sx={{
-                                            py: 1,
+                                            py: 1.5,
                                             px: 3,
                                             textTransform: 'none',
                                             fontSize: '1rem',

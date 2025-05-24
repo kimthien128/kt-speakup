@@ -147,6 +147,7 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                     xs: 'transparent',
                     sm: 'divider',
                 },
+                height: '100%',
             }}
         >
             {/* Đóng mở sidebar */}
@@ -156,10 +157,9 @@ function LeftSidebar({onSelectChat, refreshChatsCallback, selectedChatId}) {
                         display: 'flex',
                         flexDirection: 'column',
                         height: {
-                            xs: 'calc(100vh - 64px)', // Trừ chiều cao của AppBar
+                            xs: 'calc(100vh - 72px)', // Trừ chiều cao của AppBar
                             sm: '100%',
                         },
-                        minHeight: 0,
                     }}
                 >
                     {/* Logo */}

@@ -36,7 +36,7 @@ const TranslateSection = ({open, onTranslate, sourceLang, targetLang}) => {
                 <TextareaAutosize
                     value={sourceText}
                     onChange={(e) => setSourceText(e.target.value)}
-                    placeholder={`Enter text in ${sourceLang}...`}
+                    placeholder={`Nhập nội dung ${sourceLang}...`}
                     minRows={1}
                     maxRows={3}
                     style={{
@@ -62,7 +62,7 @@ const TranslateSection = ({open, onTranslate, sourceLang, targetLang}) => {
                     disabled={isTranslating || !sourceText.trim()}
                     sx={{textTransform: 'none', ml: 2}}
                 >
-                    {isTranslating ? <CircularProgress size={20} /> : 'Translate'}
+                    {isTranslating ? <CircularProgress size={20} /> : 'Chuyển ngữ'}
                 </Button>
             </Box>
             {targetText && (

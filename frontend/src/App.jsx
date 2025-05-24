@@ -103,7 +103,7 @@ function ChatPage({userEmail, onLogout, onSendMessageRef}) {
     return (
         <DictionaryProvider>
             {isMobile ? (
-                <Box sx={{width: '100%'}}>
+                <Box sx={{width: '100%', height: '100%'}}>
                     <Tabs
                         value={tabValue}
                         onChange={handleTabChange}

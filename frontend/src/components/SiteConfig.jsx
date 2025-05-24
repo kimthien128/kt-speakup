@@ -150,8 +150,8 @@ function SiteConfig({config: initialConfig, setConfig}) {
                                     component="img"
                                     src={backgroundPreview || null}
                                     sx={{
-                                        width: 170,
-                                        height: 170,
+                                        width: {xs: 130, md: 170},
+                                        height: {xs: 130, md: 170},
                                         objectFit: 'cover',
                                         borderRadius: 2,
                                         border: '2px solid white',
@@ -198,8 +198,8 @@ function SiteConfig({config: initialConfig, setConfig}) {
                                     component="img"
                                     src={logoPreview || null}
                                     sx={{
-                                        width: 170,
-                                        height: 170,
+                                        width: {xs: 130, md: 170},
+                                        height: {xs: 130, md: 170},
                                         objectFit: 'cover',
                                         borderRadius: 2,
                                         border: '2px solid white',
@@ -246,8 +246,8 @@ function SiteConfig({config: initialConfig, setConfig}) {
                                     component="img"
                                     src={aiIconPreview || null}
                                     sx={{
-                                        width: 170,
-                                        height: 170,
+                                        width: {xs: 130, md: 170},
+                                        height: {xs: 130, md: 170},
                                         objectFit: 'cover',
                                         borderRadius: 2,
                                         border: '2px solid white',
@@ -294,8 +294,8 @@ function SiteConfig({config: initialConfig, setConfig}) {
                                     component="img"
                                     src={heroPreview || null}
                                     sx={{
-                                        width: 170,
-                                        height: 170,
+                                        width: {xs: 130, md: 170},
+                                        height: {xs: 130, md: 170},
                                         objectFit: 'cover',
                                         borderRadius: 2,
                                         border: '2px solid white',
@@ -342,8 +342,8 @@ function SiteConfig({config: initialConfig, setConfig}) {
                                     component="img"
                                     src={saveWordPreview || null}
                                     sx={{
-                                        width: 170,
-                                        height: 170,
+                                        width: {xs: 130, md: 170},
+                                        height: {xs: 130, md: 170},
                                         objectFit: 'cover',
                                         borderRadius: 2,
                                         border: '2px solid white',
@@ -404,7 +404,7 @@ function SiteConfig({config: initialConfig, setConfig}) {
                             fullWidth
                             sx={{
                                 px: 4,
-                                py: 2,
+                                py: 1.5,
                                 textTransform: 'none',
                                 fontSize: '1rem',
                                 borderRadius: 2,

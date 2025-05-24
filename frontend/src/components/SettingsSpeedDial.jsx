@@ -102,10 +102,11 @@ function SettingsSpeedDial({sttMethod, setSttMethod, ttsMethod, setTtsMethod, ge
                 sx={{
                     zIndex: 2,
                     borderRadius: {md: 0, lg: 10},
-                    bgcolor: 'rgba(0, 0, 0, 0.6)',
+                    bgcolor: 'rgba(0, 0, 0, 0.7)',
                 }}
                 onClick={handleSpeedDialClose}
             />
+            {/* icon Setting */}
             <MuiTooltip title="Select Method" placement="top">
                 <IconButton
                     onClick={() => setSpeedDialOpen((prev) => !prev)} //Toggle
@@ -129,11 +130,13 @@ function SettingsSpeedDial({sttMethod, setSttMethod, ttsMethod, setTtsMethod, ge
             <Box
                 sx={{
                     position: 'absolute',
-                    top: 0,
-                    left: 120,
+                    top: {xs: -320, md: -150},
+                    left: {xs: 40, md: 0},
                     display: speedDialOpen ? 'flex' : 'none',
-                    gap: 12,
+                    gap: {xs: 20, md: 15},
                     zIndex: 2,
+                    flexWrap: {xs: 'wrap', md: 'nowrap'}, // (2) Sử dụng wrap-reverse trên mobile để xếp từ dưới lên
+                    width: {xs: '300px', md: 'auto'},
                 }}
             >
                 {Object.values(methodsConfig).map((action) => (
@@ -177,7 +180,7 @@ function SettingsSpeedDial({sttMethod, setSttMethod, ttsMethod, setTtsMethod, ge
 
             {/* Menu cho các phương thức */}
             {menuType && methodsConfig[menuType] && (
-                <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose} sx={{mt: 1}}>
+                <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose} sx={{mt: 1, p: 0.5}}>
                     {methodsConfig[menuType].options
                         .filter((option) => (menuType === 'dictionary' ? true : enabledMethods.includes(option.value))) // Lọc các phương thức được bật // Ngoại lệ cho dictionary: luôn hiển thị tất cả tùy chọn
                         .map((option) => (
@@ -192,6 +195,7 @@ function SettingsSpeedDial({sttMethod, setSttMethod, ttsMethod, setTtsMethod, ge
                                         (menuType === 'dictionary' && dictionarySource === option.value)
                                             ? 'primary.light'
                                             : 'inherit',
+                                    fontSize: '0.9rem',
                                 }}
                             >
                                 {option.label}

@@ -4,7 +4,7 @@ import UserManagement from './UserManagement';
 import SiteConfig from './SiteConfig';
 import {getConfig} from '../services/configService';
 
-import {Box, Typography, Button, Tabs, Tab} from '@mui/material';
+import {Box, Typography, Button, Tabs, Tab, useMediaQuery} from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SettingsIcon from '@mui/icons-material/Settings';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
@@ -27,6 +27,7 @@ function TabPanel(props) {
 }
 
 function AdminPanel() {
+    const isMobile = useMediaQuery((theme) => theme.breakpoints.down('sm'));
     const [config, setConfig] = useState(null);
     const [tabValue, setTabValue] = useState(0); // Giá trị của tab hiện tại
     const navigate = useNavigate();
@@ -54,7 +55,7 @@ function AdminPanel() {
     return (
         <Box
             sx={{
-                p: {xs: 2, md: 4},
+                p: {xs: 0, md: 4},
                 display: 'flex',
                 justifyContent: 'center',
                 width: '100%',
@@ -64,7 +65,7 @@ function AdminPanel() {
             <Box
                 sx={{
                     display: 'flex',
-                    flexDirection: 'column',
+                    flexDirection: {xs: 'column', md: 'column'},
                     width: '100%',
                 }}
             >
@@ -74,7 +75,8 @@ function AdminPanel() {
                         display: 'flex',
                         alignItems: 'center',
                         textAlign: 'center',
-                        my: 4,
+                        my: {xs: 2, md: 4},
+                        px: {xs: 4, md: 0},
                         position: 'relative',
                         flexShrink: 0, // Đảm bảo phần này không bị co lại
                     }}
@@ -87,18 +89,20 @@ function AdminPanel() {
                         startIcon={<ArrowBackIcon />}
                         sx={{
                             textTransform: 'none',
-                            fontSize: '1rem',
+                            fontSize: {xs: '0.875rem', md: '1rem'},
                             borderRadius: 1,
                             position: 'absolute',
                         }}
                     >
-                        Back to Chat
+                        {isMobile ? 'Back' : 'Back to Chat'}
                     </Button>
 
                     <Typography
                         variant="h4"
                         sx={{
                             flexGrow: 1,
+                            fontSize: {xs: '1.8rem', md: '2.125rem'},
+                            textAlign: {xs: 'right', md: 'center'},
                         }}
                     >
                         Admin Panel
@@ -108,43 +112,93 @@ function AdminPanel() {
                 <Box
                     sx={{
                         pr: 0,
-                        borderRadius: 5,
+                        borderRadius: {xs: 0, md: 5},
                         boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
                         bgcolor: 'rgba(255,255,255,0.9)',
                         display: 'flex',
                         flexGrow: 1,
                         overflow: 'hidden',
+                        flexDirection: {xs: 'column', md: 'row'},
                     }}
                 >
                     {/* Cấu hình Tabs */}
-                    <Tabs
-                        orientation="vertical"
-                        value={tabValue}
-                        onChange={handleTabChange}
+
+                    {/* Tabs cho desktop (md trở lên) */}
+                    <Box
                         sx={{
+                            display: {xs: 'none', md: 'block'},
                             borderRight: 1,
                             borderColor: 'divider',
                             minWidth: 180,
                             pt: 2,
                         }}
                     >
-                        <Tab
-                            label="Site Config"
-                            icon={<SettingsIcon />}
-                            iconPosition="top"
+                        <Tabs orientation="vertical" value={tabValue} onChange={handleTabChange}>
+                            <Tab
+                                label="Site Config"
+                                icon={<SettingsIcon />}
+                                iconPosition="top"
+                                sx={{
+                                    justifyContent: 'flex-start',
+                                }}
+                            />
+                            <Tab
+                                label="User Management"
+                                icon={<ManageAccountsIcon />}
+                                iconPosition="top"
+                                sx={{
+                                    justifyContent: 'flex-start',
+                                }}
+                            />
+                        </Tabs>
+                    </Box>
+
+                    {/* Tabs cho mobile (xs) */}
+                    <Box
+                        sx={{
+                            display: {xs: 'block', md: 'none'},
+                            minWidth: 180,
+                            pt: 2,
+                        }}
+                    >
+                        <Tabs
+                            orientation="horizontal"
+                            variant="scrollable"
+                            scrollButtons="auto"
+                            allowScrollButtonsMobile
+                            value={tabValue}
+                            onChange={handleTabChange}
                             sx={{
-                                justifyContent: 'flex-start',
+                                borderBottom: 1,
+                                borderColor: 'divider',
+                                '& .MuiTabs-flexContainer': {
+                                    justifyContent: 'space-around', // Căn giữa các tab
+                                },
+                                '& .MuiTab-root': {
+                                    minWidth: 'unset',
+                                    width: 'auto',
+                                    textAlign: 'center',
+                                },
                             }}
-                        />
-                        <Tab
-                            label="User Management"
-                            icon={<ManageAccountsIcon />}
-                            iconPosition="top"
-                            sx={{
-                                justifyContent: 'flex-start',
-                            }}
-                        />
-                    </Tabs>
+                        >
+                            <Tab
+                                label="Site Config"
+                                icon={<SettingsIcon />}
+                                iconPosition="top"
+                                sx={{
+                                    justifyContent: 'flex-start',
+                                }}
+                            />
+                            <Tab
+                                label="User Management"
+                                icon={<ManageAccountsIcon />}
+                                iconPosition="top"
+                                sx={{
+                                    justifyContent: 'flex-start',
+                                }}
+                            />
+                        </Tabs>
+                    </Box>
 
                     <Box
                         sx={{

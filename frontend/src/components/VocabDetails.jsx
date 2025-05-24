@@ -162,6 +162,7 @@ function VocabDetails({word, onWordSelect}) {
                 display: 'flex',
                 flexDirection: 'column',
                 minHeight: 0,
+                overflow: 'hidden',
             }}
         >
             <Box
