@@ -60,7 +60,7 @@ const TranslateSection = ({open, onTranslate, sourceLang, targetLang}) => {
                     variant="contained"
                     onClick={handleTranslate}
                     disabled={isTranslating || !sourceText.trim()}
-                    sx={{textTransform: 'none', ml: 2}}
+                    sx={{textTransform: 'none', ml: 2, minWidth: '120px'}}
                 >
                     {isTranslating ? <CircularProgress size={20} /> : 'Chuyển ngữ'}
                 </Button>

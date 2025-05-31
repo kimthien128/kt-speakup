@@ -7,7 +7,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import MicIcon from '@mui/icons-material/Mic';
 import StopIcon from '@mui/icons-material/Stop';
 import SendIcon from '@mui/icons-material/Send';
-import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+
 
 const InputControls = ({
     transcript,
@@ -87,22 +87,6 @@ const InputControls = ({
                     },
                 }}
             />
-
-            {/* Icon Chuyển ngữ */}
-            <MuiTooltip title={`Translate from ${sourceLang} to ${targetLang}`} placement="top">
-                <IconButton
-                    onClick={() => setTranslateOpen(!translateOpen)}
-                    sx={{
-                        bgcolor: 'primary.main',
-                        color: 'white',
-                        '&:hover': {
-                            bgcolor: 'primary.dark',
-                        },
-                    }}
-                >
-                    <SwapHorizIcon />
-                </IconButton>
-            </MuiTooltip>
 
             {/* Icon Send */}
             <IconButton

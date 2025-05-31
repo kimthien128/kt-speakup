@@ -15,6 +15,10 @@ import Box from '@mui/material/Box';
 import Collapse from '@mui/material/Collapse';
 import {Tooltip as MuiTooltip} from '@mui/material';
 import Alert from '@mui/material/Alert';
+import Button from '@mui/material/Button';
+import Divider from '@mui/material/Divider';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+import LiveTvIcon from '@mui/icons-material/LiveTv';
 
 import SettingsSpeedDial from './SettingsSpeedDial';
 import InputControls from './InputControls';
@@ -238,125 +242,149 @@ function InputArea({
                     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
                 }}
             >
-                {/* Hiển thị lỗi nếu có */}
-                {error && (
-                    <Alert severity="error" sx={{mb: 2, width: '100%'}}>
-                        {error}
-                    </Alert>
-                )}
-                {/* Khu vực 1: Icon Settings (SpeedDial) */}
-                <SettingsSpeedDial
-                    sttMethod={sttMethod}
-                    setSttMethod={setSttMethod}
-                    ttsMethod={ttsMethod}
-                    setTtsMethod={setTtsMethod}
-                    generateMethod={generateMethod}
-                    setGenerateMethod={setGenerateMethod}
-                />
+                <Box sx={{width: '100%'}}>
+                    {/* Hiển thị lỗi nếu có */}
+                    {error && (
+                        <Alert severity="error" sx={{mb: 2, width: '100%'}}>
+                            {error}
+                        </Alert>
+                    )}
+                    {/* Khu vực 1: Icon Settings (SpeedDial) */}
+                    <SettingsSpeedDial
+                        sttMethod={sttMethod}
+                        setSttMethod={setSttMethod}
+                        ttsMethod={ttsMethod}
+                        setTtsMethod={setTtsMethod}
+                        generateMethod={generateMethod}
+                        setGenerateMethod={setGenerateMethod}
+                    />
 
-                {/* Khu vực 2: Suggestions (Lightbulb Icon) */}
-                <SuggestionSection
-                    suggestionsOpen={suggestionsOpen}
-                    setSuggestionsOpen={setSuggestionsOpen}
-                    suggestionData={suggestionData}
-                    showTranslation={showTranslation}
-                    handleWordClick={handleWordClick}
-                    generateSuggestionsAudio={generateSuggestionsAudio}
-                    translateSuggestion={translateSuggestion}
-                    chatId={chatId}
-                    isPlaying={isPlaying}
-                    translating={translating}
-                    isSending={isSending}
-                />
+                    {/* Khu vực 2: Suggestions (Lightbulb Icon) */}
+                    <SuggestionSection
+                        suggestionsOpen={suggestionsOpen}
+                        setSuggestionsOpen={setSuggestionsOpen}
+                        suggestionData={suggestionData}
+                        showTranslation={showTranslation}
+                        handleWordClick={handleWordClick}
+                        generateSuggestionsAudio={generateSuggestionsAudio}
+                        translateSuggestion={translateSuggestion}
+                        chatId={chatId}
+                        isPlaying={isPlaying}
+                        translating={translating}
+                        isSending={isSending}
+                    />
 
-                {/* Khu vực 3: Input và Actions */}
-                <InputControls
-                    transcript={transcript}
-                    setTranscript={setTranscript}
-                    isRecording={isRecording}
-                    startRecording={startRecording}
-                    stopRecording={stopRecording}
-                    isSending={isSending}
-                    isProcessing={isProcessing}
-                    isPlayingWord={isPlayingWord}
-                    onSend={onSend}
-                    translateOpen={translateOpen}
-                    setTranslateOpen={setTranslateOpen}
-                    sourceLang={sourceLang}
-                    targetLang={targetLang}
-                    handleTranscriptChange={handleTranscriptChange}
-                    handleTextareaFocus={handleTextareaFocus}
-                    handleTextareaBlur={handleTextareaBlur}
-                />
-
-                {/* Khu vực 4: Chuyển ngữ */}
-                <Collapse in={translateOpen} sx={{width: '100%', maxWidth: '900px'}}>
-                    <TranslateSection
-                        open={translateOpen}
-                        onTranslate={handleTranslate}
+                    {/* Khu vực 3: Input và Actions */}
+                    <InputControls
+                        transcript={transcript}
+                        setTranscript={setTranscript}
+                        isRecording={isRecording}
+                        startRecording={startRecording}
+                        stopRecording={stopRecording}
+                        isSending={isSending}
+                        isProcessing={isProcessing}
+                        isPlayingWord={isPlayingWord}
+                        onSend={onSend}
+                        translateOpen={translateOpen}
+                        setTranslateOpen={setTranslateOpen}
                         sourceLang={sourceLang}
                         targetLang={targetLang}
+                        handleTranscriptChange={handleTranscriptChange}
+                        handleTextareaFocus={handleTextareaFocus}
+                        handleTextareaBlur={handleTextareaBlur}
                     />
-                </Collapse>
+                </Box>
+                
+                {/* Khu vực 5: Các chức năng thêm */}
+                <Box sx={{width: '100%'}}>
+                    <Box sx={{display: 'flex', gap: 2, float: 'right'}}>
+                        {/* Icon Chuyển ngữ */}
+                        <MuiTooltip title={`Dịch từ ${sourceLang} sang ${targetLang}`} placement="top">
+                            <Button variant="outlined" startIcon={<SwapHorizIcon />}
+                                onClick={() => setTranslateOpen(!translateOpen)}
+                            >
+                                Chuyển ngữ
+                            </Button>
+                        </MuiTooltip>
 
-                {/* Hiển thị tiến trình tự động gửi (nếu có) */}
-                {timeLeft > 0 && <AutoSendProgress timeLeft={timeLeft} />}
+                        {/* Icon Live chat */}
+                        <MuiTooltip title={`Live chat`} placement="top">
+                            <Button variant="outlined" color='error' startIcon={<LiveTvIcon />}
+                                onClick={() => alert('Chức năng Live chat đang triển khai...')}
+                            >
+                                Live chat
+                            </Button>
+                        </MuiTooltip>
+                    </Box>
 
-                {/* Tooltip cho từ vựng */}
-                {wordTooltip && (
-                    <MuiTooltip
-                        open
-                        title={
-                            <WordTooltip
-                                wordTooltip={wordTooltip}
-                                wordTooltipRef={wordTooltipRef}
-                                handlePlay={handlePlay}
-                                handleAddToVocab={handleAddToVocab}
-                                isPlayingWord={isPlayingWord}
-                                showTranslated={true}
-                            />
-                        }
-                        placement="top"
-                        componentsProps={{
-                            tooltip: {
-                                sx: {
-                                    bgcolor: 'white',
-                                    color: 'text.primary',
-                                    p: 2,
-                                    fontSize: '1.4rem',
-                                    maxWidth: 400,
-                                    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.3)',
-                                    borderRadius: 2,
-                                },
-                            },
-                        }}
-                        PopperProps={{
-                            anchorEl: {
-                                getBoundingClientRect: () => ({
-                                    top: wordTooltip.y,
-                                    left: wordTooltip.x,
-                                    right: wordTooltip.x,
-                                    bottom: wordTooltip.y,
-                                    width: 0,
-                                    height: 0,
-                                }),
-                            },
-                        }}
-                    >
-                        <Box
-                            sx={{
-                                position: 'absolute',
-                                top: wordTooltip.y + 20,
-                                left: wordTooltip.x,
-                                zIndex: 999,
-                            }}
-                        ></Box>
-                    </MuiTooltip>
-                )}
-
-                {/* Audio element ẩn */}
-                <audio ref={audioRef} style={{display: 'none'}} />
+                    {/* Khu vực 4: Chuyển ngữ */}
+                    <Collapse in={translateOpen} sx={{width: '100%', maxWidth: '900px'}}>
+                        <TranslateSection
+                            open={translateOpen}
+                            onTranslate={handleTranslate}
+                            sourceLang={sourceLang}
+                            targetLang={targetLang}
+                        />
+                    </Collapse>
+                </Box>
             </Box>
+            {/* Hiển thị tiến trình tự động gửi (nếu có) */}
+            {timeLeft > 0 && <AutoSendProgress timeLeft={timeLeft} />}
+
+            {/* Tooltip cho từ vựng */}
+            {wordTooltip && (
+                <MuiTooltip
+                    open
+                    title={
+                        <WordTooltip
+                            wordTooltip={wordTooltip}
+                            wordTooltipRef={wordTooltipRef}
+                            handlePlay={handlePlay}
+                            handleAddToVocab={handleAddToVocab}
+                            isPlayingWord={isPlayingWord}
+                            showTranslated={true}
+                        />
+                    }
+                    placement="top"
+                    componentsProps={{
+                        tooltip: {
+                            sx: {
+                                bgcolor: 'white',
+                                color: 'text.primary',
+                                p: 2,
+                                fontSize: '1.4rem',
+                                maxWidth: 400,
+                                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.3)',
+                                borderRadius: 2,
+                            },
+                        },
+                    }}
+                    PopperProps={{
+                        anchorEl: {
+                            getBoundingClientRect: () => ({
+                                top: wordTooltip.y,
+                                left: wordTooltip.x,
+                                right: wordTooltip.x,
+                                bottom: wordTooltip.y,
+                                width: 0,
+                                height: 0,
+                            }),
+                        },
+                    }}
+                >
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            top: wordTooltip.y + 20,
+                            left: wordTooltip.x,
+                            zIndex: 999,
+                        }}
+                    ></Box>
+                </MuiTooltip>
+            )}
+
+            {/* Audio element ẩn */}
+            <audio ref={audioRef} style={{display: 'none'}} />
         </Box>
     );
 }

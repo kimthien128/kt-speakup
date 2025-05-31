@@ -41,29 +41,33 @@ const SuggestionSection = ({
                     position: 'relative',
                 }}
             >
-                <MuiTooltip title={!suggestionsOpen ? 'Show Suggestion' : 'Hide Suggestion'} placement="top">
-                    <IconButton
-                        // disabled={!suggestionData.latest_suggestion}
-                        onClick={() => setSuggestionsOpen(!suggestionsOpen)}
-                        sx={{
-                            position: 'absolute',
-                            top: -32,
-                            right: -8,
-                            bgcolor: suggestionData.latest_suggestion ? 'primary.light' : 'grey.200',
-                            color: suggestionData.latest_suggestion ? 'primary.contrastText' : 'grey.primary',
-                            '&:hover': {
-                                bgcolor: suggestionData.latest_suggestion ? 'primary.main' : 'grey.300',
-                            },
-                            '&: disabled': {
-                                bgcolor: 'grey.200',
-                                color: 'grey.500',
-                            },
-                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
-                        }}
-                    >
-                        <LightbulbIcon />
-                    </IconButton>
-                </MuiTooltip>
+                {suggestionData.latest_suggestion && (
+
+                    
+                    <MuiTooltip title={!suggestionsOpen ? 'Show Suggestion' : 'Hide Suggestion'} placement="top">
+                        <IconButton
+                            // disabled={!suggestionData.latest_suggestion}
+                            onClick={() => setSuggestionsOpen(!suggestionsOpen)}
+                            sx={{
+                                position: 'absolute',
+                                top: -32,
+                                right: -8,
+                                bgcolor: suggestionData.latest_suggestion ? 'primary.light' : 'grey.200',
+                                color: suggestionData.latest_suggestion ? 'primary.contrastText' : 'grey.primary',
+                                '&:hover': {
+                                    bgcolor: suggestionData.latest_suggestion ? 'primary.main' : 'grey.300',
+                                },
+                                '&: disabled': {
+                                    bgcolor: 'grey.200',
+                                    color: 'grey.500',
+                                },
+                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+                            }}
+                        >
+                            <LightbulbIcon />
+                        </IconButton>
+                    </MuiTooltip>
+                )}
             </Box>
 
             <Collapse in={suggestionsOpen}>
