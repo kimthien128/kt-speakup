@@ -296,8 +296,8 @@ function InputArea({
                 </Box>
                 
                 {/* Khu vực 5: Các chức năng thêm */}
-                <Box sx={{width: '100%'}}>
-                    <Box sx={{display: 'flex', gap: 2, float: '', mt:2}}>
+                <Box sx={{width: '100%', mt:3}}>
+                    <Box sx={{display: 'flex', gap: 2, float: ''}}>
                         {/* Icon Chuyển ngữ */}
                         <MuiTooltip title={`Dịch từ ${sourceLang} sang ${targetLang}`} placement="top">
                             <Button variant="outlined" startIcon={<SwapHorizIcon />}
