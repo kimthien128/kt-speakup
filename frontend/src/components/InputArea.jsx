@@ -297,7 +297,7 @@ function InputArea({
                 
                 {/* Khu vực 5: Các chức năng thêm */}
                 <Box sx={{width: '100%'}}>
-                    <Box sx={{display: 'flex', gap: 2, float: 'right'}}>
+                    <Box sx={{display: 'flex', gap: 2, float: '', mt:2}}>
                         {/* Icon Chuyển ngữ */}
                         <MuiTooltip title={`Dịch từ ${sourceLang} sang ${targetLang}`} placement="top">
                             <Button variant="outlined" startIcon={<SwapHorizIcon />}
@@ -308,13 +308,13 @@ function InputArea({
                         </MuiTooltip>
 
                         {/* Icon Live chat */}
-                        <MuiTooltip title={`Live chat`} placement="top">
+                        {/* <MuiTooltip title={`Live chat`} placement="top">
                             <Button variant="outlined" color='error' startIcon={<LiveTvIcon />}
                                 onClick={() => alert('Chức năng Live chat đang triển khai...')}
                             >
                                 Live chat
                             </Button>
-                        </MuiTooltip>
+                        </MuiTooltip> */}
                     </Box>
 
                     {/* Khu vực 4: Chuyển ngữ */}
