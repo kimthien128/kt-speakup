@@ -283,12 +283,13 @@ class AuthService:
     async def send_confirmation_email(self, email: str, token: str):
         """Gửi email xác nhận"""
         app_url = os.getenv("APP_URL", "http://localhost:8000")
+        logger.info(f"app_url = {app_url}")
         confirm_url = f"{app_url}/auth/confirm?email={email}&token={token}"
         data = {
             'Messages': [
                 {
                     'From': {
-                        'Email': 'kimthien128@gmail.com',
+                        'Email': 'no-reply@ktstudio.vn',
                         'Name': "KT-SpeakUp"
                     },
                     'To': [
@@ -343,12 +344,13 @@ class AuthService:
     async def send_reset_password_email(self, email: str, token: str):
         """Gửi email đặt lại mật khẩu"""
         domain_url = os.getenv("DOMAIN_URL", "http://localhost:5173")
+        logger.info(f"domain_url = {domain_url}")
         reset_url = f"{domain_url}/reset-password?email={email}&token={token}"
         data = {
             'Messages': [
                 {
                     'From': {
-                        'Email': 'kimthien128@gmail.com',
+                        'Email': 'no-reply@ktstudio.vn',
                         'Name': "KT-SpeakUp"
                     },
                     'To': [

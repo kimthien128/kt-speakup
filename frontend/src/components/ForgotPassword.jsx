@@ -25,6 +25,10 @@ function ForgotPassword() {
             setMessage(responseMessage);
             setError('');
             setEmail(''); // Reset email field after successful submission
+
+            setTimeout(() => {
+                navigate('/');
+            }, 3000); // Chuyển hướng sau 3 giây
         } catch (err) {
             const errorMessage = err.response?.data?.detail || err.response?.data?.message || 'Failed to send reset link. Please try again.'
             setError(errorMessage);
