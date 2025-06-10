@@ -2,6 +2,7 @@
 import React, {useState, useEffect} from 'react';
 import {Link, useNavigate, useSearchParams} from 'react-router-dom';
 import useSiteConfig from '../hooks/useSiteConfig';
+import {useImageLoadStatus} from '../utils/imageLoader';
 import {resetPassword} from '../services/authService';
 import {Grid, Box, TextField, Button, Typography, Link as MuiLink, Alert} from '@mui/material';
 
@@ -13,6 +14,11 @@ function ResetPassword() {
     const [message, setMessage] = useState('');
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
+
+    // Cấu hình các hình ảnh cần kiểm tra
+    const imageConfigs = [{key: 'heroImage', url: config?.heroImage}];
+    // Sử dụng hook để kiểm tra trạng thái tải hình ảnh
+    const imageLoadStatus = useImageLoadStatus(imageConfigs, 2000);
 
     // Lấy email và token từ query params
     const email = searchParams.get('email');
@@ -56,8 +62,11 @@ function ResetPassword() {
         }
 
         try {
-            const response = await resetPassword(email, token, newPassword);
-            setMessage(response.data.message || 'Password reset successfully! Redirecting to login...');
+            const res = await resetPassword(email, token, newPassword);
+            const responseMessage = res.data?.message || res.message || 'Password reset successfully! Redirecting to login...';
+            setMessage(responseMessage);
+            setNewPassword('');
+            setConfirmPassword('');
 
             // Đăng xuất người dùng (xóa token) nếu họ đã đăng nhập
             localStorage.removeItem('token');
@@ -66,7 +75,9 @@ function ResetPassword() {
                 navigate('/');
             }, 3000); // Chuyển hướng sau 3 giây
         } catch (err) {
-            setError(err.response?.data?.detail || 'Failed to reset password. Please try again.');
+            const errorMessage = err.response?.data?.detail || err.response?.data?.message || 'Failed to reset password. Please try again.';
+            setError(errorMessage);
+            setMessage('');
             console.error('Reset password error:', err.response?.data || err.message);
         }
     };
@@ -78,9 +89,9 @@ function ResetPassword() {
                 <Box
                     sx={{
                         height: '100%',
-                        backgroundImage: config?.heroImage
+                        backgroundImage: imageLoadStatus.heroImage
                             ? `url(${config.heroImage})`
-                            : 'linear-gradient(135deg, #3a7bd5 0%, #00d2ff 100%)',
+                            : `url(/images/default-hero.jpg)`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                         backgroundRepeat: 'no-repeat',

@@ -21,10 +21,13 @@ function ForgotPassword() {
         e.preventDefault();
         try {
             const res = await forgotPassword(email);
-            setMessage(res.data.message || 'A password reset link has been sent to your email.');
+            const responseMessage = res.data?.message || res.message || 'A password reset link has been sent to your email.'
+            setMessage(responseMessage);
             setError('');
+            setEmail(''); // Reset email field after successful submission
         } catch (err) {
-            setError(err.response?.data?.detail || 'Failed to send reset link. Please try again.');
+            const errorMessage = err.response?.data?.detail || err.response?.data?.message || 'Failed to send reset link. Please try again.'
+            setError(errorMessage);
             setMessage('');
             console.error('Forgot password error:', err.response?.data || err.message);
         }
