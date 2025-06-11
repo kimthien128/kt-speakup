@@ -43,7 +43,7 @@ class GeminiClient(AIClient):
         
     def translate(self, text: str, source_lang: str, target_lang: str) -> str:
         try:
-            prompt = f"Translate the following {source_lang} text to {target_lang}: {text}"
+            prompt = f"Translate the following {source_lang} text to {target_lang} in a concise manner: {text}"
             response = self.model.generate_content(prompt)
             return response.text.strip()
         except genai.types.generation_types.BrokenResponseError as e:

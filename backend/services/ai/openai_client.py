@@ -33,7 +33,7 @@ class OpenAIClient(AIClient):
         return result["choices"][0]["message"]["content"].strip()
     
     def translate(self, text: str, source_lang: str, target_lang: str) -> str:
-        prompt = f"Translate the following text from {source_lang} to {target_lang}: {text}"
+        prompt = f"Translate the following text from {source_lang} to {target_lang}in a concise manner: {text}"
         payload = {
             "model": "gpt-3.5-turbo",
             "messages": [{"role": "user", "content": prompt}],

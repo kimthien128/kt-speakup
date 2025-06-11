@@ -4,11 +4,15 @@ import TextareaAutosize from '@mui/material/TextareaAutosize';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
+import IconButton from '@mui/material/IconButton'
+import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 
-const TranslateSection = ({open, onTranslate, sourceLang, targetLang}) => {
+const TranslateSection = ({open, onTranslate, sourceLang, targetLang, playSound, ttsMethod}) => {
     const [sourceText, setSourceText] = useState('');
     const [targetText, setTargetText] = useState('');
     const [isTranslating, setIsTranslating] = useState(false);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [ttsError, setTtsError] = useState('');
 
     const handleTranslate = async () => {
         if (!sourceText.trim()) return;
@@ -20,6 +24,26 @@ const TranslateSection = ({open, onTranslate, sourceLang, targetLang}) => {
             setIsTranslating(false);
         }
     };
+    const handlePlayAudio = async () => {
+        if (!targetText.trim()) return;
+        setIsPlaying(true);
+        setTtsError('');
+        try {
+            await playSound({
+                text: targetText,
+                ttsMethod: ttsMethod,
+            });
+        } catch(error){
+            setTtsError('The selected audio method is not compatible with the characters you entered.');
+            await playSound({
+                text: targetText,
+                ttsMethod: 'gtts',
+            });
+            console.error('TTS error:', error);
+        }finally {
+            setIsPlaying(false);
+        }
+    }
 
     return (
         <Box
@@ -56,18 +80,38 @@ const TranslateSection = ({open, onTranslate, sourceLang, targetLang}) => {
                     }}
                 />
 
+                
                 <Button
                     variant="contained"
                     onClick={handleTranslate}
                     disabled={isTranslating || !sourceText.trim()}
-                    sx={{textTransform: 'none', ml: 2, minWidth: '120px'}}
+                    sx={{textTransform: 'none', ml: 2, minWidth: '100px'}}
                 >
-                    {isTranslating ? <CircularProgress size={20} /> : 'Chuyển ngữ'}
+                    {isTranslating ? <CircularProgress size={20} /> : 'Translate'}
                 </Button>
             </Box>
             {targetText && (
-                <Typography variant="body1" sx={{mt: 2, fontSize: '1rem', fontStyle: 'italic', color: 'text.primary'}}>
-                    {targetText}
+                <Box sx={{mt: 2, display: 'flex', alignItems: 'center', gap: 1}}>
+                    <Typography variant="body1" sx={{mt: 2, fontSize: '1rem', fontStyle: 'italic', color: 'text.primary'}}>
+                        {targetText}
+                    </Typography>
+
+                    <IconButton
+                        onClick={handlePlayAudio}
+                        disabled={isPlaying || !sourceText.trim()}
+                        sx={{ml: 1, bgcolor: 'primary.main', color: 'white',
+                            '&:hover': {
+                                bgcolor: 'primary.dark',
+                            }
+                        }}
+                    >
+                        {isPlaying ? <CircularProgress size={20} /> : <VolumeUpIcon fontSize="small" />}
+                    </IconButton>
+                </Box>
+            )}
+            {ttsError && (
+                <Typography variant="body2" sx={{mt: 1, color: 'error.main'}}>
+                    {ttsError}
                 </Typography>
             )}
         </Box>

@@ -36,7 +36,7 @@ class DeepSeekClient(AIClient):
             raise HTTPException(status_code=503, detail=f"Failed to generate response from DeepSeek: {str(e)}")
         
     def translate(self, text: str, source_lang: str, target_lang: str) -> str:
-        prompt = f"Translate the following text from {source_lang} to {target_lang}: {text}"
+        prompt = f"Translate the following text from {source_lang} to {target_lang}in a concise manner: {text}"
         payload = {
             "model": "deepseek-chat",
             "messages": [{"role": "user", "content": prompt}],

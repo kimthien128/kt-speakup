@@ -295,15 +295,17 @@ function InputArea({
                     />
                 </Box>
                 
-                {/* Khu vực 5: Các chức năng thêm */}
+                {/* Khu vực 4: Các chức năng thêm */}
                 <Box sx={{width: '100%', mt:3}}>
                     <Box sx={{display: 'flex', gap: 2, float: ''}}>
                         {/* Icon Chuyển ngữ */}
-                        <MuiTooltip title={`Dịch từ ${sourceLang} sang ${targetLang}`} placement="top">
-                            <Button variant="outlined" startIcon={<SwapHorizIcon />}
+                        <MuiTooltip title={`Translate from ${sourceLang} to ${targetLang}`} placement="top">
+                            <Button variant="outlined"
+                            sx={{bgcolor: translateOpen ? 'primary.main' : 'background.paper', color: translateOpen ? 'white' : 'text'}}
+                            startIcon={<SwapHorizIcon />}
                                 onClick={() => setTranslateOpen(!translateOpen)}
                             >
-                                Chuyển ngữ
+                                Translation
                             </Button>
                         </MuiTooltip>
 
@@ -317,13 +319,15 @@ function InputArea({
                         </MuiTooltip> */}
                     </Box>
 
-                    {/* Khu vực 4: Chuyển ngữ */}
+                    {/* Khu vực 5: Chuyển ngữ */}
                     <Collapse in={translateOpen} sx={{width: '100%', maxWidth: '900px'}}>
                         <TranslateSection
                             open={translateOpen}
                             onTranslate={handleTranslate}
                             sourceLang={sourceLang}
                             targetLang={targetLang}
+                            playSound={playSound}
+                            ttsMethod={ttsMethod}
                         />
                     </Collapse>
                 </Box>

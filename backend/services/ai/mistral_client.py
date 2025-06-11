@@ -24,7 +24,7 @@ class MistralClient(AIClient):
         return response["choices"][0]["message"]["content"].strip()
     
     def translate(self, text: str, source_lang: str, target_lang: str) -> str:
-        prompt = f"Translate the following text from {source_lang} to {target_lang}: {text}"
+        prompt = f"Translate the following text from {source_lang} to {target_lang}in a concise manner: {text}"
         messages = [{"role": "user", "content": prompt}]
         response = self.llm.create_chat_completion(
             messages=messages,
