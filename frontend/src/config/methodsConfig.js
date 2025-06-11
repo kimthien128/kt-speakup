@@ -14,7 +14,8 @@ export const methodsConfig = {
     options: [
       { value: "assemblyai", label: "AssemblyAI (API)" },
       { value: "google", label: "Google Text to Speech (API)" },
-      { value: "vosk", label: "Vosk (Local)" },
+      { value: "vosk", label: "Vosk (Server)" },
+      { value: "web-speech", label: "Web Speech (Client)" },
     ],
   },
 
@@ -37,7 +38,7 @@ export const methodsConfig = {
     type: "tts",
     options: [
       { value: "gtts", label: "gTTS (Google)" },
-      { value: "piper", label: "Piper (Local)" },
+      { value: "piper", label: "Piper (Server)" },
     ],
   },
 

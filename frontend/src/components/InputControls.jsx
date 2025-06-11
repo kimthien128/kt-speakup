@@ -92,6 +92,7 @@ const InputControls = ({
             <IconButton
                 onClick={onSend}
                 disabled={
+                    isRecording ||
                     !transcript.trim() ||
                     isSending ||
                     transcript.toLowerCase() === 'no speech detected' ||

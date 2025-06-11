@@ -6,6 +6,7 @@ import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import IconButton from '@mui/material/IconButton'
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
+import { logger } from '../utils/logger';
 
 const TranslateSection = ({open, onTranslate, sourceLang, targetLang, playSound, ttsMethod}) => {
     const [sourceText, setSourceText] = useState('');
@@ -39,7 +40,7 @@ const TranslateSection = ({open, onTranslate, sourceLang, targetLang, playSound,
                 text: targetText,
                 ttsMethod: 'gtts',
             });
-            console.error('TTS error:', error);
+            logger.error('TTS error:', error);
         }finally {
             setIsPlaying(false);
         }

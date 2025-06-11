@@ -47,7 +47,7 @@ function SettingsSpeedDial({sttMethod, setSttMethod, ttsMethod, setTtsMethod, ge
             firstEnabledGenerate = generateOptions.find((opt) => enabledMethods.includes(opt));
             firstEnabledTts = ttsOptions.find((opt) => enabledMethods.includes(opt));
         }
-    }, []);
+    });
 
     // Đặt method cho người dùng
     useEffect(() => {
@@ -55,10 +55,11 @@ function SettingsSpeedDial({sttMethod, setSttMethod, ttsMethod, setTtsMethod, ge
             try {
                 // Load methods đã lưu từ database
                 const userData = await getCurrentUser();
-                // console.log('User data:', userData);
+                logger.info('User data:', userData);
                 const userMethods = userData.methods || {};
 
-                setSttMethod(userMethods.stt || firstEnabledStt || 'assemblyai');
+                // Ưu tiên web-speech làm mặc định nếu không có method STT nào được chọn
+                setSttMethod(userMethods.stt || 'web-speech');
                 setGenerateMethod(userMethods.generate || firstEnabledGenerate || 'gemini');
                 setTtsMethod(userMethods.tts || firstEnabledTts || 'gtts');
                 setDictionarySource(userMethods.dictionary || 'dictionaryapi');
@@ -66,7 +67,7 @@ function SettingsSpeedDial({sttMethod, setSttMethod, ttsMethod, setTtsMethod, ge
                 // Ưu tiên methods từ database, nếu không có thì dùng mặc định
             } catch (err) {
                 logger.error('Error initializing methods:', err.message);
-                setSttMethod(firstEnabledStt || 'assemblyai');
+                setSttMethod(firstEnabledStt || 'web-speech');
                 setGenerateMethod(firstEnabledGenerate || 'gemini');
                 setTtsMethod(firstEnabledTts || 'gtts');
                 setDictionarySource('dictionaryapi');
@@ -95,7 +96,7 @@ function SettingsSpeedDial({sttMethod, setSttMethod, ttsMethod, setTtsMethod, ge
     // Xử lý chọn method
     const handleMethodSelect = (method) => {
         // Kiểm tra xem method có trong mảng enabledMethods không, ngoại trừ loại dictionary
-        if (menuType !== 'dictionary' && !enabledMethods.includes(method)) {
+        if (menuType !== 'dictionary' && method !== 'web-speech' && !enabledMethods.includes(method)) {
             toast.error(`Method "${method}" is disabled or unsupported.`);
             return;
         }
@@ -225,7 +226,12 @@ function SettingsSpeedDial({sttMethod, setSttMethod, ttsMethod, setTtsMethod, ge
             {menuType && methodsConfig[menuType] && (
                 <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose} sx={{mt: 1, p: 0.5}}>
                     {methodsConfig[menuType].options
-                        .filter((option) => (menuType === 'dictionary' ? true : enabledMethods.includes(option.value))) // Lọc các phương thức được bật // Ngoại lệ cho dictionary: luôn hiển thị tất cả tùy chọn
+                        .filter((option) => {
+                            // Luôn cho phép web-speech trong stt
+                            if(menuType === 'stt' && option.value === 'web-speech') return true;
+                            if (menuType === 'dictionary') return true;
+                            return enabledMethods.includes(option.value);
+                        }) // Lọc các phương thức được bật // Ngoại lệ cho dictionary: luôn hiển thị tất cả tùy chọn
                         .map((option) => (
                             <MenuItem
                                 key={option.value}
