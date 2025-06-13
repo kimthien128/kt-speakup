@@ -238,7 +238,7 @@ function InputArea({
                     flexDirection: 'column',
                     alignItems: 'center',
                     position: 'relative',
-                    bgcolor: 'background.paper',
+                    bgcolor: 'rgba(255, 255, 255, 0.7)',
                     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
                 }}
             >
@@ -301,7 +301,7 @@ function InputArea({
                         {/* Icon Chuyển ngữ */}
                         <MuiTooltip title={`Translate from ${sourceLang} to ${targetLang}`} placement="top">
                             <Button variant="outlined"
-                            sx={{bgcolor: translateOpen ? 'primary.main' : 'background.paper', color: translateOpen ? 'white' : 'text'}}
+                            sx={{bgcolor: translateOpen ? 'primary.main' : 'transparent', color: translateOpen ? 'white' : 'text'}}
                             startIcon={<SwapHorizIcon />}
                                 onClick={() => setTranslateOpen(!translateOpen)}
                             >

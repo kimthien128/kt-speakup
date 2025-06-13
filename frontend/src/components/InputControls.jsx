@@ -71,7 +71,7 @@ const InputControls = ({
                 onBlur={handleTextareaBlur}
                 placeholder="Your speech here..."
                 minRows={1}
-                maxRows={3}
+                maxRows={2}
                 style={{
                     flexGrow: 1,
                     padding: '8px 12px',
@@ -81,10 +81,7 @@ const InputControls = ({
                     fontSize: '1rem',
                     fontFamily: 'inherit',
                     outline: 'none',
-                    '&:focus': {
-                        borderColor: 'primary.main',
-                        boxShadow: '0 0 0 2px rgba(25, 118, 210, 0.2)',
-                    },
+                    backgroundColor: 'transparent',
                 }}
             />
 
