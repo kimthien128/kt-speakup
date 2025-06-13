@@ -144,7 +144,7 @@ function InputArea({
             transcript.toLowerCase() !== 'no speech detected' &&
             transcript.toLowerCase() !== 'failed to process audio'
         ) {
-            const seconds = 5; // Thời gian đếm ngược
+            const seconds = 3; // Thời gian đếm ngược
             setTimeLeft(seconds); // Bắt đầu đếm ngược từ 10s khi transcript được cập nhật
 
             // Cập nhật thời gian còn lại mỗi giây
