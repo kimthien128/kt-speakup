@@ -1,4 +1,4 @@
-**_Các file cấu hình môi trường không được public trên github_**
+**_Các file cấu hình, file môi trường không sẽ không upload public trên github_**
 
 # Backend
 
