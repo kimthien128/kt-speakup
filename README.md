@@ -1,3 +1,5 @@
+**_Các file cấu hình môi trường không được public trên github_**
+
 # Backend
 
 ## Cài đặt môi trường python
