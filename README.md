@@ -4,7 +4,7 @@
 
 **_Yêu cầu chính xác python 3.12.x_**
 
-- Kiểm tra phiên bản python 3.12 đã có chưa `py -3.12 --version`.
+- Kiểm tra phiên bản python 3.12 đã có chưa `py -3.12 --version`, nếu chưa có cần phải cài đặt để có thể khởi chạy backend.
 - Đứng ở thư mục gốc `kt-speakup`
 
 ```python
