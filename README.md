@@ -1,5 +1,3 @@
-**_Các file cấu hình, file môi trường không upload public trên github, sẽ được gửi riêng khi project được chia sẽ_**
-
 # Backend
 
 ## Cài đặt môi trường python
